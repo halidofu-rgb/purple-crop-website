@@ -1,55 +1,66 @@
-# Site club Brawl Stars
+# Purple Corp — site Brawl Stars
 
-Petit site Next.js qui affiche en direct les trophées et le classement de ton club (et de tes potes), sur le même principe que le site "Projet X" que tu m'as montré.
+Site Next.js pour Purple Corp : Accueil, Clubs, Classement général et Pusheurs (qui progresse le plus).
 
-## Comment ça marche
+## Pages
 
-- **Next.js** génère les pages. La page d'accueil affiche ton club (tag défini dans `CLUB_TAG`), et `/clubs/UN_AUTRE_TAG` affiche n'importe quel autre club.
-- Le code appelle l'**API officielle Brawl Stars**, mais jamais directement depuis le navigateur : tout passe par une fonction serveur (`lib/brawlstars.ts`), donc ta clé API n'est jamais visible par les visiteurs.
-- Comme Vercel n'a pas d'IP fixe, on passe par le **proxy gratuit de RoyaleAPI** (`bsproxy.royaleapi.dev`), qui a lui une IP fixe. C'est la méthode standard recommandée par Supercell pour ce cas — pas un contournement bricolé.
+- `/` — Accueil, logo, trophées cumulés de tout Purple Corp
+- `/clubs` — liste des clubs (Purple Line, Indigo Line)
+- `/clubs/[tag]` — fiche détaillée d'un club (roster trié par trophées)
+- `/classement` — classement global : tous les membres de tous les clubs, mélangés et triés
+- `/pusheurs` — qui a gagné le plus de trophées depuis la dernière photo (nécessite l'étape Redis ci-dessous)
 
-## Étape 1 — Créer ta clé API Brawl Stars
+## Étape 1 — Clé API Brawl Stars
 
-1. Va sur https://developer.brawlstars.com et connecte-toi avec ton compte Supercell.
-2. "My Account" → "Create New Key".
-3. Nom : ce que tu veux (ex. "Site club").
-4. **IP à whitelister : `45.79.218.79`** (c'est l'IP du proxy RoyaleAPI, pas la tienne — sinon rien ne fonctionnera une fois déployé). Vérifie sur https://docs.royaleapi.com/proxy.html que cette IP est toujours la bonne au moment où tu le fais, RoyaleAPI la documente et la met à jour si besoin.
-5. Crée la clé, copie-la (tu ne la reverras qu'une fois).
+Voir la section équivalente du README précédent : va sur developer.brawlstars.com, crée une clé, **whiteliste l'IP `45.79.218.79`** (celle du proxy RoyaleAPI, pas la tienne).
 
-## Étape 2 — Lancer le site en local
+## Étape 2 — Redis pour l'historique des pusheurs
 
+La page `/pusheurs` a besoin d'un historique jour par jour, donc d'une petite base de données. Vercel KV a été remplacé par une intégration Marketplace (Upstash Redis), gratuite pour ce volume de données :
+
+1. Dans ton projet sur vercel.com → onglet **Storage**.
+2. **Create Database** (ou "Marketplace Database Providers") → choisis **Redis** (Upstash).
+3. Suis l'assistant (région proche de toi, plan gratuit), **Create**.
+4. Une fois créée, connecte-la à ton projet — Vercel va **injecter automatiquement** les variables d'environnement (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, ou parfois `KV_REST_API_URL` / `KV_REST_API_TOKEN` selon la version — le code gère les deux noms).
+
+Aucune configuration supplémentaire nécessaire, `lib/kv.ts` s'en sert automatiquement.
+
+## Étape 3 — Variables d'environnement
+
+Dans **Settings → Environment Variables** sur Vercel (en plus de celles injectées par Redis) :
+
+| Nom | Valeur |
+|---|---|
+| `BRAWL_STARS_API_KEY` | ta clé Brawl Stars |
+| `CLUB_TAGS` | `#80CLJG9LQ,#2QJ0Q29CL` (tags de Purple Line et Indigo Line, virgule sans espace) |
+| `CRON_SECRET` | une phrase secrète de ton choix (ex : un mot de passe généré aléatoirement) |
+
+`CRON_SECRET` sert à empêcher que n'importe qui déclenche une capture en visitant l'URL — Vercel ajoute automatiquement l'en-tête d'autorisation correspondant quand le cron se déclenche.
+
+## Étape 4 — La capture automatique quotidienne
+
+Le fichier `vercel.json` déclare un Cron Job qui appelle `/api/cron/snapshot` chaque jour à 6h (heure UTC). Vercel l'active automatiquement au déploiement, rien à faire de plus.
+
+**Pour tester tout de suite sans attendre le lendemain**, tu peux déclencher une capture manuelle en visitant, une fois déployé :
+```
+https://TON-SITE.vercel.app/api/cron/snapshot
+```
+(si tu as mis un `CRON_SECRET`, cette requête directe sans le bon header sera refusée — dans ce cas, retire temporairement `CRON_SECRET` de Vercel, teste, puis remets-le).
+
+Fais-le **deux fois avec au moins un jour d'écart** (ou en modifiant temporairement des données pour tester) pour voir apparaître des écarts sur `/pusheurs` — avec une seule photo, la page t'indique qu'il faut attendre la suivante.
+
+## Déploiement
+
+Identique à avant :
 ```bash
 npm install
-cp .env.example .env.local
+git add .
+git commit -m "Purple Corp : nav, classement, pusheurs"
+git push
 ```
+Vercel redéploie automatiquement à chaque push.
 
-Puis dans `.env.local` :
-```
-BRAWL_STARS_API_KEY=colle_ta_clé_ici
-CLUB_TAG=#TONTAGDECLUB
-```
+## Limites connues
 
-```bash
-npm run dev
-```
-
-→ http://localhost:3000
-
-## Étape 3 — Déployer sur Vercel
-
-1. Crée un repo GitHub avec ce projet (`git init`, `git add .`, `git commit`, push).
-2. Sur https://vercel.com → "Add New Project" → importe le repo.
-3. Dans **Settings → Environment Variables**, ajoute :
-   - `BRAWL_STARS_API_KEY` → ta clé
-   - `CLUB_TAG` → le tag de ton club
-4. Deploy. C'est tout — Vercel redéploie automatiquement à chaque push.
-
-## Ajouter tes potes / plusieurs clubs
-
-- Un joueur : la fonction `getPlayer(tag)` dans `lib/brawlstars.ts` est prête, il ne reste qu'à créer une page `app/joueurs/[tag]/page.tsx` sur le modèle de `app/clubs/[tag]/page.tsx`.
-- Un autre club : va directement sur `/clubs/AUTRE_TAG`, aucune config nécessaire.
-
-## Limites à connaître
-
-- L'API Brawl Stars n'expose pas d'historique : tu ne peux afficher que l'état actuel (trophées, membres, rang ranked), pas de graphique d'évolution sans stocker toi-même les données dans le temps (ex. via une petite base + un cron Vercel qui interroge l'API chaque jour).
-- Le cache est réglé à 2 minutes (`revalidate: 120` dans `lib/brawlstars.ts`) pour ne pas spammer l'API à chaque visite.
+- L'historique démarre à zéro à l'installation : les tout premiers jours, `/pusheurs` n'aura pas encore assez de photos.
+- 60 photos maximum sont gardées (~2 mois), au-delà les plus anciennes sont supprimées automatiquement pour rester dans le plan gratuit.

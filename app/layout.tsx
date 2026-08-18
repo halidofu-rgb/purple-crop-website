@@ -11,8 +11,8 @@ const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Notre club — Brawl Stars",
-  description: "Le classement et les stats de notre club Brawl Stars, en direct.",
+  title: "Purple Corp — Brawl Stars",
+  description: "Le classement et les stats de Purple Corp, en direct.",
 };
 
 export default function RootLayout({
