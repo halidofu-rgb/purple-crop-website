@@ -1,24 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
-import { pushSnapshot, SnapshotPlayer } from "@/lib/kv";
+import { getSeasonBaseline, setSeasonBaseline, BaselinePlayer } from "@/lib/kv";
+import { getCurrentSeason } from "@/lib/season";
 
-// Cette route est appelée automatiquement une fois par jour par Vercel Cron
-// (voir vercel.json). Elle prend une "photo" des trophées de tout le monde
-// et l'ajoute à l'historique dans Redis. C'est cette photo, comparée à celle
-// d'hier, qui permet de calculer qui a "pushé" sur la page /pusheurs.
+// Appelée automatiquement chaque jour par Vercel Cron (voir vercel.json).
+// Elle ne fait qu'une chose : si aucune photo n'existe encore pour la
+// saison en cours, elle en prend une — c'est cette photo qui sert de
+// point de départ ("0") pour calculer le push de chacun sur /pusheurs.
 export async function GET(request: NextRequest) {
-  // Vercel ajoute automatiquement ce header quand CRON_SECRET est configuré
-  // en variable d'environnement : ça évite que n'importe qui déclenche la
-  // capture en visitant simplement l'URL.
   const auth = request.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
   if (secret && auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
+  const season = getCurrentSeason();
+  const existing = await getSeasonBaseline(season.key);
+  if (existing) {
+    return NextResponse.json({ ok: true, skipped: true, season: season.key });
+  }
+
   const tags = clubTags();
-  const players: SnapshotPlayer[] = [];
+  const players: BaselinePlayer[] = [];
 
   for (const tag of tags) {
     try {
@@ -36,7 +40,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  await pushSnapshot({ date: new Date().toISOString(), players });
+  await setSeasonBaseline({
+    seasonKey: season.key,
+    capturedAt: new Date().toISOString(),
+    players,
+  });
 
-  return NextResponse.json({ ok: true, players: players.length });
+  return NextResponse.json({ ok: true, season: season.key, players: players.length });
 }

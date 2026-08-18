@@ -1,34 +1,43 @@
-import { getSnapshots } from "@/lib/kv";
+import { getClub } from "@/lib/brawlstars";
+import { clubTags } from "@/lib/clubs";
+import { getSeasonBaseline } from "@/lib/kv";
+import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+// Couleurs d'avatar cycliques, dérivées du nom (même joueur = même couleur
+// à chaque visite, sans avoir besoin de la stocker).
+const AVATAR_COLORS = [
+  "#B565E8", "#F4D93E", "#5FE0C0", "#FF6E8F", "#7C8CF5", "#6EE7B7",
+];
+function avatarColor(name: string): string {
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 interface PushRow {
   tag: string;
   name: string;
   clubName: string;
-  before: number;
-  after: number;
   delta: number;
 }
 
 export default async function PusheursPage() {
-  let snapshots: Awaited<ReturnType<typeof getSnapshots>> = [];
-  let error: string | null = null;
+  const season = getCurrentSeason();
 
+  let baseline;
+  let baselineError: string | null = null;
   try {
-    snapshots = await getSnapshots(2);
+    baseline = await getSeasonBaseline(season.key);
   } catch (err) {
-    error = (err as Error).message;
+    baselineError = (err as Error).message;
   }
 
-  if (error) {
+  if (baselineError) {
     return (
       <>
         <Navbar />
@@ -37,26 +46,26 @@ export default async function PusheursPage() {
             <h1 className="font-display text-2xl font-bold text-blush">
               Historique pas encore configuré
             </h1>
-            <p className="mt-2 max-w-md text-sm text-ash">{error}</p>
+            <p className="mt-2 max-w-md text-sm text-ash">{baselineError}</p>
           </div>
         </main>
       </>
     );
   }
 
-  if (snapshots.length < 2) {
+  if (!baseline) {
     return (
       <>
         <Navbar />
         <main className="flex min-h-[70vh] items-center justify-center px-6 text-center">
           <div>
             <h1 className="font-display text-2xl font-bold text-white">
-              Pas encore assez d&apos;historique
+              Saison {season.label} — pas encore de photo de départ
             </h1>
             <p className="mt-2 max-w-md text-sm text-ash">
-              {snapshots.length === 0
-                ? "Aucune photo n'a encore été prise. La première capture automatique arrivera avec le prochain passage du cron (voir README pour forcer une capture manuelle)."
-                : "Une seule photo existe pour l'instant — reviens demain, ou force une deuxième capture manuelle pour voir apparaître les écarts."}
+              La capture automatique se déclenche chaque jour ; la première photo de cette
+              saison n&apos;a pas encore été prise. Reviens dans les prochaines heures, ou force
+              une capture manuelle (voir le README).
             </p>
           </div>
         </main>
@@ -64,67 +73,117 @@ export default async function PusheursPage() {
     );
   }
 
-  const [latest, previous] = snapshots;
-  const previousByTag = new Map(previous.players.map((p) => [p.tag, p]));
-
-  const rows: PushRow[] = latest.players
-    .map((p) => {
-      const before = previousByTag.get(p.tag);
-      if (!before) return null;
-      return {
-        tag: p.tag,
-        name: p.name,
-        clubName: p.clubName,
-        before: before.trophies,
-        after: p.trophies,
-        delta: p.trophies - before.trophies,
-      };
+  const tags = clubTags();
+  const currentClubs = await Promise.all(
+    tags.map(async (tag) => {
+      try {
+        return await getClub(tag);
+      } catch {
+        return null;
+      }
     })
-    .filter((r): r is PushRow => r !== null)
+  );
+
+  const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
+
+  const rows: PushRow[] = currentClubs
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+    .flatMap((club) =>
+      club.members.map((m) => {
+        const before = baselineByTag.get(m.tag);
+        const delta = before ? m.trophies - before.trophies : 0;
+        return { tag: m.tag, name: m.name, clubName: club.name, delta };
+      })
+    )
     .sort((a, b) => b.delta - a.delta);
+
+  const totalPush = rows.reduce((sum, r) => sum + r.delta, 0);
+  const king = rows[0];
 
   return (
     <>
       <Navbar />
       <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
-        <section className="mx-auto max-w-3xl text-center">
-          <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
-            Purple Corp
+        <section className="mx-auto max-w-3xl">
+          <p className="text-sm text-ash">
+            Qui gagne le plus de trophées, saison après saison — le classement du push, pas des
+            totaux.
           </p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Pusheurs
-          </h1>
-          <p className="mt-3 text-sm text-ash">
-            Écart de trophées entre le {formatDate(previous.date)} et le {formatDate(latest.date)}.
+
+          <div className="mt-8 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="font-display text-xs uppercase tracking-[0.25em] text-signal">
+                Saison en cours
+              </p>
+              <h1 className="mt-1 font-display text-4xl font-extrabold uppercase tracking-tight text-white sm:text-5xl">
+                {season.label}
+              </h1>
+            </div>
+            <p className="mt-2 font-display text-sm text-ash">
+              ⏳ Encore {formatCountdown(season.end)}
+            </p>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-10">
+            <div>
+              <p className="flex items-center gap-2 text-xs text-ash">
+                📈 Trophées gagnés par la famille
+              </p>
+              <p className="stat-mono mt-1 text-2xl font-bold text-white">
+                {formatNumber(totalPush)}
+              </p>
+            </div>
+            {king && (
+              <div>
+                <p className="flex items-center gap-2 text-xs text-ash">👑 Roi du push</p>
+                <p className="mt-1 font-display text-lg font-bold text-white">
+                  {king.name}{" "}
+                  <span className="stat-mono text-signal">
+                    +{formatNumber(king.delta)}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
+          <p className="mt-8 text-xs leading-relaxed text-ash">
+            <span className="font-semibold text-white">C&apos;est quoi le &quot;roi du push&quot; ?</span>{" "}
+            Contrairement au classement des trophées cumulés, ici on ne regarde que la
+            progression pendant la saison en cours — celui qui gagne le plus de trophées entre le
+            début et maintenant. Repart à zéro à chaque nouvelle saison Brawl Stars (1er jeudi du
+            mois), donc tout le monde a sa chance à chaque fois, peu importe son total all time.
           </p>
         </section>
 
         <section className="mx-auto mt-10 max-w-3xl">
-          <ol className="space-y-2">
+          <h2 className="mb-4 font-display text-xs font-semibold uppercase tracking-[0.15em] text-white">
+            Push de la saison — {rows.length} joueurs
+          </h2>
+          <ol className="space-y-1">
             {rows.map((row, i) => (
               <li
                 key={row.tag}
-                className="relative flex items-center gap-4 overflow-hidden rounded-xl border border-line bg-panel py-3 pl-14 pr-4"
+                className="flex items-center gap-3 border-b border-line py-2.5 last:border-none"
               >
+                <span className="w-5 shrink-0 text-right text-xs text-ash">{i + 1}</span>
                 <span
-                  className="absolute left-0 top-0 flex h-full w-11 items-center justify-center bg-panel2 font-display text-sm font-bold text-zest"
-                  style={{ clipPath: "polygon(0 0, 100% 0, 78% 100%, 0 100%)" }}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-bold text-ink"
+                  style={{ backgroundColor: avatarColor(row.name) }}
                 >
-                  {i + 1}
+                  {row.name.trim().charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-display text-sm font-semibold text-white">
-                    {row.name}
+                    {row.name} <span className="font-normal text-ash">{row.clubName}</span>
                   </p>
-                  <p className="text-xs text-ash">{row.clubName}</p>
                 </div>
                 <span
-                  className={`stat-mono shrink-0 text-lg font-semibold ${
+                  className={`stat-mono shrink-0 text-sm font-semibold ${
                     row.delta >= 0 ? "text-signal" : "text-blush"
                   }`}
                 >
                   {row.delta >= 0 ? "+" : ""}
-                  {formatNumber(row.delta)}
+                  {formatNumber(row.delta)} {row.delta >= 0 ? "⬆️" : "⬇️"}
                 </span>
               </li>
             ))}

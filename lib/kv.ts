@@ -1,12 +1,7 @@
-// Petite couche au-dessus de Redis (Upstash) pour stocker un historique
-// quotidien des trophées de chaque membre. Sans ça, impossible de savoir
-// qui "pushe" : l'API Brawl Stars ne donne que l'instant présent.
-//
-// Les identifiants sont injectés automatiquement par Vercel quand tu
-// ajoutes l'intégration Redis (Marketplace). Selon la convention utilisée
-// au moment où tu l'installes, les variables peuvent s'appeler
-// UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN ou
-// KV_REST_API_URL / KV_REST_API_TOKEN — on gère les deux.
+// Stocke UNE photo des trophées de chaque membre au début de chaque saison
+// Brawl Stars (1er jeudi du mois). La page /pusheurs compare les trophées
+// actuels à cette photo pour savoir qui a le plus progressé "depuis le
+// début de la saison" — exactement comme le classement "Roi du push".
 import { Redis } from "@upstash/redis";
 
 function getRedis(): Redis {
@@ -22,30 +17,33 @@ function getRedis(): Redis {
   return new Redis({ url, token });
 }
 
-const SNAPSHOTS_KEY = "purplecorp:snapshots";
-const MAX_SNAPSHOTS = 60; // ~2 mois d'historique à raison d'une photo/jour
-
-export interface SnapshotPlayer {
+export interface BaselinePlayer {
   tag: string;
   name: string;
   trophies: number;
   clubName: string;
 }
 
-export interface Snapshot {
-  date: string; // ISO
-  players: SnapshotPlayer[];
+export interface SeasonBaseline {
+  seasonKey: string; // ex: "2026-08"
+  capturedAt: string; // ISO — utile pour savoir si la photo date bien du début de saison
+  players: BaselinePlayer[];
 }
 
-export async function pushSnapshot(snapshot: Snapshot): Promise<void> {
-  const redis = getRedis();
-  await redis.lpush(SNAPSHOTS_KEY, JSON.stringify(snapshot));
-  await redis.ltrim(SNAPSHOTS_KEY, 0, MAX_SNAPSHOTS - 1);
+function baselineKey(seasonKey: string): string {
+  return `purplecorp:season-baseline:${seasonKey}`;
 }
 
-// Renvoie les snapshots du plus récent au plus ancien.
-export async function getSnapshots(count: number): Promise<Snapshot[]> {
+export async function getSeasonBaseline(seasonKey: string): Promise<SeasonBaseline | null> {
   const redis = getRedis();
-  const raw = await redis.lrange(SNAPSHOTS_KEY, 0, count - 1);
-  return raw.map((r) => (typeof r === "string" ? JSON.parse(r) : r)) as Snapshot[];
+  const raw = await redis.get(baselineKey(seasonKey));
+  if (!raw) return null;
+  return (typeof raw === "string" ? JSON.parse(raw) : raw) as SeasonBaseline;
+}
+
+export async function setSeasonBaseline(baseline: SeasonBaseline): Promise<void> {
+  const redis = getRedis();
+  // Pas de TTL : on garde les baselines passées, ça ne coûte presque rien
+  // en stockage et ça permet de consulter d'anciennes saisons plus tard.
+  await redis.set(baselineKey(baseline.seasonKey), JSON.stringify(baseline));
 }

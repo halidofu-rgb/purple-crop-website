@@ -93,6 +93,33 @@ export async function getPlayer(tag: string): Promise<Player> {
   return bsFetch<Player>(`/players/${normalizeTag(tag)}`);
 }
 
+export interface BattleLogItem {
+  battleTime: string; // format brut Supercell : "20260818T060224.000Z"
+  battle: {
+    type: string;
+    result?: "victory" | "defeat" | "draw";
+    trophyChange?: number; // absent sur Power League / Ranked classiques
+  };
+}
+
+// Supercell ne garde que les 25 derniers combats par joueur, pas plus —
+// c'est une limite de LEUR API, pas de notre code.
+export async function getBattleLog(tag: string): Promise<BattleLogItem[]> {
+  const data = await bsFetch<{ items: BattleLogItem[] }>(
+    `/players/${normalizeTag(tag)}/battlelog`
+  );
+  return data.items;
+}
+
+// Convertit le format de date brut de l'API ("20260818T060224.000Z") en Date JS.
+export function parseBattleTime(raw: string): Date {
+  const iso = raw.replace(
+    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,
+    "$1-$2-$3T$4:$5:$6"
+  );
+  return new Date(iso);
+}
+
 // Petit utilitaire de tri partagé par les pages "classement".
 export function sortByTrophies(members: ClubMember[]): ClubMember[] {
   return [...members].sort((a, b) => b.trophies - a.trophies);
