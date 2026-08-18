@@ -1,12 +1,17 @@
+import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
-import ClubView from "@/components/ClubView";
 
-// Le tag du club affiché sur la page d'accueil se configure via la
-// variable d'environnement CLUB_TAG (voir .env.example et le README).
+function formatNumber(n: number): string {
+  return n.toLocaleString("fr-FR");
+}
+
+// La page d'accueil lit CLUB_TAGS (tags séparés par une virgule) et affiche
+// une carte résumé par club, chacune renvoyant vers /clubs/[tag] pour le
+// détail complet (roster, classement).
 export default async function HomePage() {
-  const defaultTag = process.env.CLUB_TAG;
+  const raw = process.env.CLUB_TAGS ?? process.env.CLUB_TAG;
 
-  if (!defaultTag) {
+  if (!raw) {
     return (
       <main className="flex min-h-screen items-center justify-center px-6 text-center">
         <div>
@@ -14,30 +19,73 @@ export default async function HomePage() {
             Aucun club configuré
           </h1>
           <p className="mt-2 max-w-md text-sm text-ash">
-            Ajoute la variable d&apos;environnement <code className="text-zest">CLUB_TAG</code> (ex :
-            <code className="text-zest"> #822CL00PG</code>) dans les paramètres Vercel, ou va
-            directement sur <code className="text-zest">/clubs/TON_TAG</code>.
+            Ajoute la variable d&apos;environnement <code className="text-zest">CLUB_TAGS</code> dans
+            Vercel, avec un ou plusieurs tags séparés par une virgule
+            (ex : <code className="text-zest">#822CL00PG,#AUTRETAG</code>).
           </p>
         </div>
       </main>
     );
   }
 
-  try {
-    const club = await getClub(defaultTag);
-    return <ClubView club={club} />;
-  } catch (err) {
-    return (
-      <main className="flex min-h-screen items-center justify-center px-6 text-center">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-blush">
-            Impossible de charger le club
-          </h1>
-          <p className="mt-2 max-w-md text-sm text-ash">
-            {(err as Error).message}
-          </p>
-        </div>
-      </main>
-    );
-  }
+  const tags = raw.split(",").map((t) => t.trim()).filter(Boolean);
+
+  const results = await Promise.all(
+    tags.map(async (tag) => {
+      try {
+        const club = await getClub(tag);
+        return { tag, club, error: null as string | null };
+      } catch (err) {
+        return { tag, club: null, error: (err as Error).message };
+      }
+    })
+  );
+
+  return (
+    <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
+      <section className="mx-auto max-w-3xl text-center">
+        <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
+          Nos clubs
+        </p>
+        <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          Clique sur un club pour voir le classement
+        </h1>
+      </section>
+
+      <section className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-2">
+        {results.map(({ tag, club, error }) => {
+          if (error || !club) {
+            return (
+              <div
+                key={tag}
+                className="rounded-2xl border border-line bg-panel p-6 text-left"
+              >
+                <p className="font-display text-sm font-semibold text-blush">
+                  Erreur pour {tag}
+                </p>
+                <p className="mt-1 text-xs text-ash">{error}</p>
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={tag}
+              href={`/clubs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
+              className="rounded-2xl border border-line bg-panel p-6 text-left shadow-chip transition hover:border-zest"
+            >
+              <p className="font-display text-lg font-bold text-white">{club.name}</p>
+              <p className="mt-1 text-xs text-ash">{club.members.length} membres</p>
+              <p className="stat-mono mt-4 text-3xl font-bold text-zest">
+                {formatNumber(club.trophies)}
+              </p>
+              <p className="font-display text-[11px] uppercase tracking-[0.2em] text-ash">
+                trophées cumulés
+              </p>
+            </Link>
+          );
+        })}
+      </section>
+    </main>
+  );
 }
