@@ -2,19 +2,26 @@
 // Brawl Stars (1er jeudi du mois). La page /pusheurs compare les trophées
 // actuels à cette photo pour savoir qui a le plus progressé "depuis le
 // début de la saison" — exactement comme le classement "Roi du push".
-import { Redis } from "@upstash/redis";
+//
+// On utilise ioredis avec REDIS_URL (chaîne de connexion classique) : c'est
+// le format injecté par l'intégration Redis du Vercel Marketplace. On garde
+// la connexion en mémoire entre les appels pour éviter de se reconnecter à
+// chaque requête sur une même instance serverless "chaude".
+import Redis from "ioredis";
+
+let client: Redis | null = null;
 
 function getRedis(): Redis {
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
+  const url = process.env.REDIS_URL;
+  if (!url) {
     throw new Error(
-      "Aucune base Redis configurée. Installe l'intégration Redis depuis l'onglet Storage de ton projet Vercel (voir README)."
+      "Aucune base Redis configurée (REDIS_URL manquante). Connecte l'intégration Redis depuis l'onglet Storage de ton projet Vercel (voir README)."
     );
   }
-
-  return new Redis({ url, token });
+  if (!client) {
+    client = new Redis(url);
+  }
+  return client;
 }
 
 export interface BaselinePlayer {
@@ -38,7 +45,7 @@ export async function getSeasonBaseline(seasonKey: string): Promise<SeasonBaseli
   const redis = getRedis();
   const raw = await redis.get(baselineKey(seasonKey));
   if (!raw) return null;
-  return (typeof raw === "string" ? JSON.parse(raw) : raw) as SeasonBaseline;
+  return JSON.parse(raw) as SeasonBaseline;
 }
 
 export async function setSeasonBaseline(baseline: SeasonBaseline): Promise<void> {

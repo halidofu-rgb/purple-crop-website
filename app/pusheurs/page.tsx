@@ -4,6 +4,10 @@ import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 
+// La donnée Redis n'est pas mise en cache via fetch(), donc on force un
+// calcul à chaque requête plutôt qu'une capture figée au moment du build.
+export const dynamic = "force-dynamic";
+
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
