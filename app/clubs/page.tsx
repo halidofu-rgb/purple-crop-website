@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
+import { getSeasonBaseline } from "@/lib/kv";
+import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import ClubBadge from "@/components/ClubBadge";
+import Badge from "@/components/Badge";
+
+export const dynamic = "force-dynamic";
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
@@ -9,21 +15,43 @@ function formatNumber(n: number): string {
 
 export default async function ClubsListPage() {
   const tags = clubTags();
-  const results = await Promise.all(
-    tags.map(async (tag) => {
-      try {
-        const club = await getClub(tag);
-        return { tag, club, error: null as string | null };
-      } catch (err) {
-        return { tag, club: null, error: (err as Error).message };
-      }
-    })
-  );
+  const season = getCurrentSeason();
+
+  const [results, baseline] = await Promise.all([
+    Promise.all(
+      tags.map(async (tag) => {
+        try {
+          const club = await getClub(tag);
+          return { tag, club, error: null as string | null };
+        } catch (err) {
+          return { tag, club: null, error: (err as Error).message };
+        }
+      })
+    ),
+    getSeasonBaseline(season.key).catch(() => null),
+  ]);
+
+  const loadedClubs = results.filter((r) => r.club).map((r) => r.club!);
+  const ranked = [...loadedClubs].sort((a, b) => b.trophies - a.trophies);
+
+  // Progression du club = somme des push individuels de ses membres,
+  // seulement si une photo de départ de saison existe.
+  const clubPush = new Map<string, number>();
+  if (baseline) {
+    const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
+    for (const club of loadedClubs) {
+      const total = club.members.reduce((sum, m) => {
+        const before = baselineByTag.get(m.tag);
+        return sum + (before ? m.trophies - before.trophies : 0);
+      }, 0);
+      clubPush.set(club.tag, total);
+    }
+  }
 
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
+      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="mx-auto max-w-3xl text-center">
           <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
             La communauté
@@ -46,14 +74,37 @@ export default async function ClubsListPage() {
                 </div>
               );
             }
+            const push = clubPush.get(club.tag);
+            const position = ranked.findIndex((c) => c.tag === club.tag) + 1;
+
             return (
               <Link
                 key={tag}
                 href={`/clubs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
-                className="rounded-2xl border border-line bg-panel p-6 text-left shadow-chip transition hover:border-zest"
+                className="card-lift rounded-2xl border border-line bg-panel p-6 text-left shadow-card"
               >
-                <p className="font-display text-lg font-bold text-white">{club.name}</p>
-                <p className="mt-1 text-xs text-ash">{club.members.length} membres</p>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <ClubBadge tag={club.tag} size={36} />
+                    <div>
+                      <p className="font-display text-lg font-bold text-white">{club.name}</p>
+                      <p className="font-mono text-[11px] text-ash">{club.tag}</p>
+                    </div>
+                  </div>
+                  <Badge tone="primary">#{position}</Badge>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Badge tone="neutral">{club.members.length} membres</Badge>
+                  <Badge tone="neutral">{formatNumber(club.requiredTrophies)} req.</Badge>
+                  {push !== undefined && (
+                    <Badge tone={push >= 0 ? "success" : "danger"}>
+                      {push >= 0 ? "+" : ""}
+                      {formatNumber(push)} push
+                    </Badge>
+                  )}
+                </div>
+
                 <p className="stat-mono mt-4 text-3xl font-bold text-zest">
                   {formatNumber(club.trophies)}
                 </p>

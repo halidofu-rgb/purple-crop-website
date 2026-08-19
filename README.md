@@ -64,3 +64,22 @@ Vercel redéploie automatiquement à chaque push.
 
 - L'historique démarre à zéro à l'installation : les tout premiers jours, `/pusheurs` n'aura pas encore assez de photos.
 - 60 photos maximum sont gardées (~2 mois), au-delà les plus anciennes sont supprimées automatiquement pour rester dans le plan gratuit.
+
+## Architecture (résumé technique)
+
+- **API de données** : API officielle Brawl Stars (`developer.brawlstars.com`), via le proxy IP fixe RoyaleAPI (voir Étape 1). Tout passe par `lib/brawlstars.ts` — c'est le seul fichier qui parle à l'API.
+- **Cache** : chaque appel HTTP vers l'API est mis en cache 2 minutes (`next: { revalidate: 120 }` dans `bsFetch`). Next.js déduplique aussi automatiquement les appels identiques faits dans une même requête.
+- **Stockage persistant** : Redis (intégration Vercel Marketplace), une seule clé par saison (`purplecorp:season-baseline:2026-08`, etc.) — jamais écrasée, l'historique des saisons passées reste consultable.
+- **Ce qui est calculé en direct vs stocké** :
+  - Trophées, classement, roster → toujours en direct depuis l'API (jamais stocké).
+  - Push de saison → calculé en direct = trophées actuels − photo de départ stockée dans Redis.
+  - Ranked → calculé en direct à partir des 25 derniers combats de chaque joueur (`/battlelog`), jamais stocké (l'API ne garde que cette fenêtre glissante).
+- **Design system** : tokens centralisés dans `tailwind.config.ts` (classes utilitaires) et `app/globals.css` (variables CSS `--color-*`) — les deux doivent rester synchronisés si une couleur change. Composants partagés : `Button.tsx`, `Badge.tsx`, `Tabs.tsx`, `ClubBadge.tsx` (emblème généré, pas un asset du jeu), `Podium.tsx`, `RankGlyph.tsx`.
+
+## Ce qui n'est PAS disponible (limite de l'API officielle, pas de notre code)
+
+- Rang Ranked actuel d'un joueur (Masters, Légendaire, etc.) — Supercell ne l'expose pas.
+- Score Ranked total, saison ou all-time — idem, aucun champ de ce type dans l'API.
+- Classements "1v1" ou "Casino" — aucune donnée correspondante.
+- Logo/badge réel du club — l'API ne renvoie qu'un `badgeId` numérique, pas d'image ; `ClubBadge.tsx` génère un emblème original à la place.
+- Lien Discord d'un club — aucune donnée de ce type dans l'API (à ajouter manuellement si besoin, en dur dans `lib/clubs.ts`).

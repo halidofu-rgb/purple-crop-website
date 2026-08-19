@@ -198,7 +198,7 @@ export default async function PusheursPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
+      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="hud-frame mx-auto max-w-3xl bg-panel px-6 py-8 sm:px-8">
           <p className="text-sm text-ash">
             Qui gagne le plus de trophées, saison après saison — le classement du push, pas des

@@ -1,6 +1,16 @@
-import { getPlayer } from "@/lib/brawlstars";
+import Link from "next/link";
+import { getPlayer, getClub, getRankedSummary, sortByTrophies } from "@/lib/brawlstars";
+import { clubTags } from "@/lib/clubs";
+import { getSeasonBaseline } from "@/lib/kv";
+import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import RankGlyph from "@/components/RankGlyph";
 import { notFound } from "next/navigation";
+
+// Le rang dans le club / global et le push dépendent de données croisées
+// (tous les clubs, Redis) — on calcule à chaque requête plutôt que de figer
+// au build.
+export const dynamic = "force-dynamic";
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
@@ -19,6 +29,46 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     notFound();
   }
 
+  const season = getCurrentSeason();
+  const allTags = clubTags();
+
+  const [allClubs, baseline, rankedSummary] = await Promise.all([
+    Promise.all(
+      allTags.map(async (tag) => {
+        try {
+          return await getClub(tag);
+        } catch {
+          return null;
+        }
+      })
+    ),
+    getSeasonBaseline(season.key).catch(() => null),
+    getRankedSummary(params.tag).catch(() => null),
+  ]);
+
+  const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
+  const homeClub = loadedClubs.find((c) => c.tag === player.club?.tag);
+
+  // Rang du joueur au sein de son propre club.
+  let clubRank: number | undefined;
+  if (homeClub) {
+    const roster = sortByTrophies(homeClub.members);
+    const idx = roster.findIndex((m) => m.tag === player.tag);
+    if (idx >= 0) clubRank = idx + 1;
+  }
+
+  // Rang du joueur toutes familles confondues (classement général).
+  const allMembers = loadedClubs.flatMap((c) => c.members).sort((a, b) => b.trophies - a.trophies);
+  const globalIdx = allMembers.findIndex((m) => m.tag === player.tag);
+  const globalRank = globalIdx >= 0 ? globalIdx + 1 : undefined;
+
+  // Push de la saison, si une photo de départ existe.
+  let seasonPush: number | undefined;
+  if (baseline) {
+    const before = baseline.players.find((p) => p.tag === player.tag);
+    if (before) seasonPush = player.trophies - before.trophies;
+  }
+
   const brawlers = [...player.brawlers].sort((a, b) => b.trophies - a.trophies);
   const totalVictories =
     player.soloVictories + player.duoVictories + player["3vs3Victories"];
@@ -26,12 +76,15 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
+      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="hud-frame mx-auto max-w-3xl bg-panel px-6 py-8 text-center sm:px-10 sm:py-10">
           {player.club && (
-            <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
+            <Link
+              href={`/clubs/${encodeURIComponent(player.club.tag.replace(/^#/, ""))}`}
+              className="font-display text-xs uppercase tracking-[0.3em] text-signal hover:underline"
+            >
               {player.club.name}
-            </p>
+            </Link>
           )}
           <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             {player.name}
@@ -62,9 +115,70 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
               <p className="mt-1 text-[11px] uppercase tracking-wide text-ash">Brawlers</p>
             </div>
           </div>
+
+          {/* Contexte compétitif : où il se situe dans son club, dans
+              Purple Corp, et sa progression cette saison. */}
+          <div className="mt-6 grid grid-cols-3 gap-3 border-t border-line pt-6">
+            <div>
+              <p className="stat-mono text-lg font-semibold text-white">
+                {clubRank ? `#${clubRank}` : "—"}
+              </p>
+              <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Dans son club</p>
+            </div>
+            <div>
+              <p className="stat-mono text-lg font-semibold text-white">
+                {globalRank ? `#${globalRank}` : "—"}
+                {allMembers.length ? <span className="text-ash"> / {allMembers.length}</span> : null}
+              </p>
+              <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
+                Classement Purple Corp
+              </p>
+            </div>
+            <div>
+              <p
+                className={`stat-mono text-lg font-semibold ${
+                  seasonPush !== undefined
+                    ? seasonPush >= 0
+                      ? "text-signal"
+                      : "text-blush"
+                    : "text-white"
+                }`}
+              >
+                {seasonPush !== undefined
+                  ? `${seasonPush >= 0 ? "+" : ""}${formatNumber(seasonPush)}`
+                  : "—"}
+              </p>
+              <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
+                Push {season.label}
+              </p>
+            </div>
+          </div>
         </section>
 
-        <section className="mx-auto mt-10 max-w-3xl">
+        {/* Activité Ranked récente — 25 derniers combats, limite de l'API. */}
+        {rankedSummary && rankedSummary.games > 0 && (
+          <section className="mx-auto mt-6 max-w-3xl rounded-2xl border border-line bg-panel px-6 py-5">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
+                <RankGlyph className="h-3.5 w-3.5" /> Ranked — 25 derniers combats
+              </h2>
+              <span
+                className={`stat-mono text-lg font-semibold ${
+                  rankedSummary.delta >= 0 ? "text-signal" : "text-blush"
+                }`}
+              >
+                {rankedSummary.delta >= 0 ? "+" : ""}
+                {formatNumber(rankedSummary.delta)}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-ash">
+              {rankedSummary.wins} victoires · {rankedSummary.losses} défaites sur{" "}
+              {rankedSummary.games} combats Ranked
+            </p>
+          </section>
+        )}
+
+        <section className="mx-auto mt-8 max-w-3xl">
           <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
             Ses meilleurs brawlers
           </h2>

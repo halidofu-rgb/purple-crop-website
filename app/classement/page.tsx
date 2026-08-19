@@ -124,7 +124,7 @@ export default async function ClassementPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
+      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="mx-auto max-w-3xl text-center">
           <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
             Purple Corp

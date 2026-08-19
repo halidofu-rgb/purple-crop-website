@@ -6,6 +6,22 @@
   --font-display: "Chakra Petch", "Segoe UI", sans-serif;
   --font-body: "Inter", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Courier New", monospace;
+
+  /* === DESIGN TOKENS — Purple Corp ===================================
+     Source de vérité centralisée. tailwind.config.ts reprend ces mêmes
+     valeurs pour les classes utilitaires (bg-ink, text-zest, etc.) — les
+     deux doivent rester synchronisés si une couleur change. */
+  --color-bg: #0d0916;           /* background principal */
+  --color-bg-secondary: #16101f; /* background secondaire / surface */
+  --color-surface: #1e1730;      /* surface élevée */
+  --color-border: #2d2340;       /* bordures */
+  --color-primary: #9f7aea;      /* couleur principale */
+  --color-primary-light: #c4b5fd;/* couleur principale, variante claire */
+  --color-success: #45e0d0;      /* succès / progression / en direct */
+  --color-warning: #f5b963;      /* avertissement */
+  --color-error: #ff6e8f;        /* erreur / perte */
+  --color-text: #ffffff;         /* texte principal */
+  --color-text-secondary: #948aa8; /* texte secondaire */
 }
 
 html {
@@ -61,6 +77,17 @@ body {
 .rank-index {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+/* Carte "premium" : légère élévation + halo violet au survol plutôt qu'un
+   simple changement de couleur de bordure. Utilisée par les composants
+   Card-like (clubs, joueurs, pushers). */
+.card-lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: theme("boxShadow.cardHover");
 }
 
 :focus-visible {

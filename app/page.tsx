@@ -7,6 +7,7 @@ import { getRankedRows } from "@/lib/ranked";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import RankGlyph from "@/components/RankGlyph";
+import Button from "@/components/Button";
 
 // La partie "meilleur pusher" dépend de Redis, pas du cache fetch() —
 // on garde la page toujours calculée à la demande.
@@ -63,7 +64,7 @@ export default async function HomePage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
+      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         {/* HERO : présentation + accès direct aux deux vues principales,
             plus un aperçu chiffré de la famille pour donner envie de creuser. */}
         <section className="hud-frame mx-auto max-w-5xl bg-panel px-6 py-8 sm:px-10 sm:py-10">
@@ -84,18 +85,12 @@ export default async function HomePage() {
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href="/clubs"
-                  className="rounded-full bg-zest px-6 py-2.5 font-display text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:opacity-90"
-                >
+                <Button href="/clubs" variant="primary">
                   Voir les clubs
-                </Link>
-                <Link
-                  href="/classement"
-                  className="rounded-full border border-line px-6 py-2.5 font-display text-xs uppercase tracking-[0.1em] text-white transition hover:border-signal hover:text-signal"
-                >
+                </Button>
+                <Button href="/classement" variant="secondary">
                   Classement général
-                </Link>
+                </Button>
               </div>
             </div>
 

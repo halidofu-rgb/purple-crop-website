@@ -1,18 +1,28 @@
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
+import { getSeasonBaseline } from "@/lib/kv";
+import { getRankedRows } from "@/lib/ranked";
+import { getCurrentSeason } from "@/lib/season";
 import ClubView from "@/components/ClubView";
 import Navbar from "@/components/Navbar";
 import { notFound } from "next/navigation";
 
-export default async function ClubPage({ params }: { params: { tag: string } }) {
-  try {
-    const club = await getClub(params.tag);
+export const dynamic = "force-dynamic";
 
-    // Pour situer ce club parmi tous ceux de Purple Corp (son rang par
-    // trophées cumulés), on charge aussi les autres — en tolérant l'échec
-    // silencieux de l'un d'eux plutôt que de casser toute la page.
-    const allTags = clubTags();
-    const allClubs = await Promise.all(
+export default async function ClubPage({ params }: { params: { tag: string } }) {
+  let club;
+  try {
+    club = await getClub(params.tag);
+  } catch (err) {
+    console.error(err);
+    notFound();
+  }
+
+  const allTags = clubTags();
+  const season = getCurrentSeason();
+
+  const [allClubs, baseline, rankedRows] = await Promise.all([
+    Promise.all(
       allTags.map(async (tag) => {
         try {
           return await getClub(tag);
@@ -20,20 +30,36 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
           return null;
         }
       })
-    );
-    const ranked = allClubs
-      .filter((c): c is NonNullable<typeof c> => c !== null)
-      .sort((a, b) => b.trophies - a.trophies);
-    const clubRank = ranked.findIndex((c) => c.tag === club.tag) + 1;
+    ),
+    getSeasonBaseline(season.key).catch(() => null),
+    getRankedRows([club.tag]).catch(() => []),
+  ]);
 
-    return (
-      <>
-        <Navbar />
-        <ClubView club={club} clubRank={clubRank || undefined} totalClubs={ranked.length} />
-      </>
-    );
-  } catch (err) {
-    console.error(err);
-    notFound();
+  const ranked = allClubs
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+    .sort((a, b) => b.trophies - a.trophies);
+  const clubRank = ranked.findIndex((c) => c.tag === club.tag) + 1;
+
+  const pushByTag = new Map<string, number>();
+  if (baseline) {
+    const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
+    for (const m of club.members) {
+      const before = baselineByTag.get(m.tag);
+      if (before) pushByTag.set(m.tag, m.trophies - before.trophies);
+    }
   }
+
+  return (
+    <>
+      <Navbar />
+      <ClubView
+        club={club}
+        clubRank={clubRank || undefined}
+        totalClubs={ranked.length}
+        pushByTag={pushByTag}
+        rankedRows={rankedRows}
+        seasonLabel={season.label}
+      />
+    </>
+  );
 }
