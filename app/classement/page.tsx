@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import Navbar from "@/components/Navbar";
@@ -46,25 +47,27 @@ export default async function ClassementPage() {
         <section className="mx-auto mt-10 max-w-3xl">
           <ol className="space-y-2">
             {rows.map((member, i) => (
-              <li
-                key={member.tag}
-                className="relative flex items-center gap-4 overflow-hidden rounded-xl border border-line bg-panel py-3 pl-14 pr-4"
-              >
-                <span
-                  className="absolute left-0 top-0 flex h-full w-11 items-center justify-center bg-panel2 font-display text-sm font-bold text-zest"
-                  style={{ clipPath: "polygon(0 0, 100% 0, 78% 100%, 0 100%)" }}
+              <li key={member.tag}>
+                <Link
+                  href={`/joueurs/${encodeURIComponent(member.tag.replace(/^#/, ""))}`}
+                  className="relative flex items-center gap-4 overflow-hidden rounded-xl border border-line bg-panel py-3 pl-14 pr-4 transition hover:border-zest"
                 >
-                  {i + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-semibold text-white">
-                    {member.name}
-                  </p>
-                  <p className="text-xs text-ash">{member.clubName}</p>
-                </div>
-                <span className="stat-mono shrink-0 text-lg font-semibold text-zest2">
-                  {formatNumber(member.trophies)}
-                </span>
+                  <span
+                    className="absolute left-0 top-0 flex h-full w-11 items-center justify-center bg-panel2 font-display text-sm font-bold text-zest"
+                    style={{ clipPath: "polygon(0 0, 100% 0, 78% 100%, 0 100%)" }}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-sm font-semibold text-white">
+                      {member.name}
+                    </p>
+                    <p className="text-xs text-ash">{member.clubName}</p>
+                  </div>
+                  <span className="stat-mono shrink-0 text-lg font-semibold text-zest2">
+                    {formatNumber(member.trophies)}
+                  </span>
+                </Link>
               </li>
             ))}
           </ol>

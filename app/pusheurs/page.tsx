@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
@@ -165,30 +166,32 @@ export default async function PusheursPage() {
           </h2>
           <ol className="space-y-1">
             {rows.map((row, i) => (
-              <li
-                key={row.tag}
-                className="flex items-center gap-3 border-b border-line py-2.5 last:border-none"
-              >
-                <span className="w-5 shrink-0 text-right text-xs text-ash">{i + 1}</span>
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-bold text-ink"
-                  style={{ backgroundColor: avatarColor(row.name) }}
+              <li key={row.tag}>
+                <Link
+                  href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+                  className="flex items-center gap-3 border-b border-line py-2.5 transition last:border-none hover:opacity-80"
                 >
-                  {row.name.trim().charAt(0).toUpperCase()}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-semibold text-white">
-                    {row.name} <span className="font-normal text-ash">{row.clubName}</span>
-                  </p>
-                </div>
-                <span
-                  className={`stat-mono shrink-0 text-sm font-semibold ${
-                    row.delta >= 0 ? "text-signal" : "text-blush"
-                  }`}
-                >
-                  {row.delta >= 0 ? "+" : ""}
-                  {formatNumber(row.delta)} {row.delta >= 0 ? "⬆️" : "⬇️"}
-                </span>
+                  <span className="w-5 shrink-0 text-right text-xs text-ash">{i + 1}</span>
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-bold text-ink"
+                    style={{ backgroundColor: avatarColor(row.name) }}
+                  >
+                    {row.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-sm font-semibold text-white">
+                      {row.name} <span className="font-normal text-ash">{row.clubName}</span>
+                    </p>
+                  </div>
+                  <span
+                    className={`stat-mono shrink-0 text-sm font-semibold ${
+                      row.delta >= 0 ? "text-signal" : "text-blush"
+                    }`}
+                  >
+                    {row.delta >= 0 ? "+" : ""}
+                    {formatNumber(row.delta)} {row.delta >= 0 ? "⬆️" : "⬇️"}
+                  </span>
+                </Link>
               </li>
             ))}
           </ol>
