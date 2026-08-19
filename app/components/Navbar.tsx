@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/clubs", label: "Clubs" },
   { href: "/classement", label: "Classement" },
   { href: "/pusheurs", label: "Pusheurs" },
+  { href: "/support", label: "Support" },
 ];
 
 export default function Navbar() {

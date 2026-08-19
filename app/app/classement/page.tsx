@@ -24,7 +24,11 @@ interface TrophyRow extends ClubMember {
   clubName: string;
 }
 
-export default async function ClassementPage() {
+export default async function ClassementPage({
+  searchParams,
+}: {
+  searchParams?: { tab?: string };
+}) {
   const tags = clubTags();
   const season = getCurrentSeason();
 
@@ -165,6 +169,7 @@ export default async function ClassementPage() {
 
         <section className="mx-auto mt-10 max-w-3xl">
           <Tabs
+            defaultTab={searchParams?.tab === "ranked" ? "ranked" : "trophies"}
             tabs={[
               { id: "trophies", label: "Trophées", panel: trophiesPanel },
               {
