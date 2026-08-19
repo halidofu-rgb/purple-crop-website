@@ -2,9 +2,12 @@ import Link from "next/link";
 import { getPlayer, getClub, getRankedSummary, sortByTrophies } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
+import { getMemberLinkByTag } from "@/lib/members";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import RankGlyph from "@/components/RankGlyph";
+import Badge from "@/components/Badge";
+import { Link2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 // Le rang dans le club / global et le push dépendent de données croisées
@@ -32,7 +35,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const season = getCurrentSeason();
   const allTags = clubTags();
 
-  const [allClubs, baseline, rankedSummary] = await Promise.all([
+  const [allClubs, baseline, rankedSummary, memberLink] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -44,6 +47,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     ),
     getSeasonBaseline(season.key).catch(() => null),
     getRankedSummary(params.tag).catch(() => null),
+    getMemberLinkByTag(params.tag).catch(() => null),
   ]);
 
   const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
@@ -73,6 +77,19 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const totalVictories =
     player.soloVictories + player.duoVictories + player["3vs3Victories"];
 
+  const mainStats = [
+    { value: formatNumber(player.trophies), label: "Trophées", color: "text-zest" },
+    { value: formatNumber(player.highestTrophies), label: "Record perso", color: "text-zest2" },
+    ...(memberLink?.rankedScore !== undefined
+      ? [{ value: formatNumber(memberLink.rankedScore), label: "Ranked", color: "text-signal" }]
+      : []),
+    ...(memberLink?.rankedBest !== undefined
+      ? [{ value: formatNumber(memberLink.rankedBest), label: "Ranked all-time", color: "text-signal" }]
+      : []),
+    { value: formatNumber(totalVictories), label: "Victoires totales", color: "text-white" },
+    { value: String(brawlers.length), label: "Brawlers", color: "text-white" },
+  ];
+
   return (
     <>
       <Navbar />
@@ -86,34 +103,29 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
               {player.club.name}
             </Link>
           )}
-          <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            {player.name}
-          </h1>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              {player.name}
+            </h1>
+            {memberLink && (
+              <Badge tone="success" icon={<Link2 className="h-3 w-3" />}>
+                Discord lié
+              </Badge>
+            )}
+          </div>
           <p className="mt-1 font-mono text-xs text-ash">Niveau d&apos;XP {player.expLevel}</p>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 border-t border-line pt-8 sm:grid-cols-4">
-            <div>
-              <p className="stat-mono text-2xl font-semibold text-zest">
-                {formatNumber(player.trophies)}
-              </p>
-              <p className="mt-1 text-[11px] uppercase tracking-wide text-ash">Trophées</p>
-            </div>
-            <div>
-              <p className="stat-mono text-2xl font-semibold text-zest2">
-                {formatNumber(player.highestTrophies)}
-              </p>
-              <p className="mt-1 text-[11px] uppercase tracking-wide text-ash">Record perso</p>
-            </div>
-            <div>
-              <p className="stat-mono text-2xl font-semibold text-signal">
-                {formatNumber(totalVictories)}
-              </p>
-              <p className="mt-1 text-[11px] uppercase tracking-wide text-ash">Victoires totales</p>
-            </div>
-            <div>
-              <p className="stat-mono text-2xl font-semibold text-white">{brawlers.length}</p>
-              <p className="mt-1 text-[11px] uppercase tracking-wide text-ash">Brawlers</p>
-            </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 border-t border-line pt-8 sm:grid-cols-3 lg:grid-cols-6">
+            {mainStats.map((s, i) => (
+              <div key={i}>
+                <p className={`stat-mono text-xl font-semibold sm:text-2xl ${s.color}`}>
+                  {s.value}
+                </p>
+                <p className="mt-1 text-[10px] uppercase tracking-wide text-ash sm:text-[11px]">
+                  {s.label}
+                </p>
+              </div>
+            ))}
           </div>
 
           {/* Contexte compétitif : où il se situe dans son club, dans
@@ -160,7 +172,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
           <section className="mx-auto mt-6 max-w-3xl rounded-2xl border border-line bg-panel px-6 py-5">
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
-                <RankGlyph className="h-3.5 w-3.5" /> Ranked — 25 derniers combats
+                <RankGlyph className="h-3.5 w-3.5" /> Activité Ranked — 25 derniers combats
               </h2>
               <span
                 className={`stat-mono text-lg font-semibold ${

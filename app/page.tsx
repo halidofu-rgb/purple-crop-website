@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
-import { getRankedRows } from "@/lib/ranked";
+import { listAllMemberLinks } from "@/lib/members";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
@@ -32,7 +32,7 @@ export default async function HomePage() {
   const tags = clubTags();
   const season = getCurrentSeason();
 
-  const [clubResults, baseline, rankedRows] = await Promise.all([
+  const [clubResults, baseline, memberLinks] = await Promise.all([
     Promise.all(
       tags.map(async (tag) => {
         try {
@@ -44,7 +44,7 @@ export default async function HomePage() {
       })
     ),
     getSeasonBaseline(season.key).catch(() => null),
-    getRankedRows(tags).catch(() => []),
+    listAllMemberLinks().catch(() => []),
   ]);
 
   const loadedClubs = clubResults.filter((r) => r.club).map((r) => r.club!);
@@ -65,14 +65,16 @@ export default async function HomePage() {
       .sort((a, b) => b.delta - a.delta);
   }
   const king = pushRows[0];
-  const rankedKing = rankedRows[0];
+  const rankedBest = memberLinks
+    .filter((m) => m.rankedScore !== undefined)
+    .sort((a, b) => (b.rankedScore ?? 0) - (a.rankedScore ?? 0))[0];
 
   const stats = [
     { icon: Trophy, value: formatNumber(totalTrophies), label: "Trophées totaux" },
     { icon: Users, value: String(totalMembers), label: "Joueurs" },
     {
       icon: Swords,
-      value: rankedKing ? `+${formatNumber(rankedKing.delta)}` : "Bientôt",
+      value: rankedBest ? formatNumber(rankedBest.rankedScore!) : "Bientôt",
       label: "Meilleur Elo Ranked",
     },
     { icon: Crown, value: king ? king.name : "—", label: "Meilleur pusheur" },

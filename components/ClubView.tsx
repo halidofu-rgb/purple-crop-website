@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
-import { RankedRow } from "@/lib/ranked";
 import { discordUrlForTag } from "@/lib/clubs";
 import ClubBadge from "@/components/ClubBadge";
 import RankGlyph from "@/components/RankGlyph";
+import Badge from "@/components/Badge";
 import Tabs from "@/components/Tabs";
 import Button from "@/components/Button";
+
+interface ClubRankedRow {
+  tag: string;
+  name: string;
+  rankedScore: number;
+  rankedBest?: number;
+}
 
 const ROLE_LABEL: Record<string, string> = {
   president: "Président",
@@ -40,7 +47,7 @@ export default function ClubView({
   clubRank?: number;
   totalClubs?: number;
   pushByTag?: Map<string, number>;
-  rankedRows?: RankedRow[];
+  rankedRows?: ClubRankedRow[];
   seasonLabel?: string;
 }) {
   const roster = sortByTrophies(club.members);
@@ -109,35 +116,41 @@ export default function ClubView({
   );
 
   const rankedPanel = rankedRows.length > 0 ? (
-    <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
-      {rankedRows.map((row, i) => (
-        <li key={row.tag}>
-          <Link
-            href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-            className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
-          >
-            <span className="rank-index w-10 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-medium text-white">{row.name}</p>
-              <p className="text-[11px] text-ash">
-                {row.wins}V / {row.losses}D
-              </p>
-            </div>
-            <span
-              className={`stat-mono shrink-0 text-base font-semibold ${
-                row.delta >= 0 ? "text-signal" : "text-blush"
-              }`}
+    <>
+      <div className="mb-3 flex items-start gap-2">
+        <Badge tone="warning">auto-déclaré</Badge>
+        <p className="text-xs text-ash">
+          Score indiqué par chaque membre depuis son compte lié (/compte).
+        </p>
+      </div>
+      <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+        {rankedRows.map((row, i) => (
+          <li key={row.tag}>
+            <Link
+              href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+              className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
             >
-              {row.delta >= 0 ? "+" : ""}
-              {formatNumber(row.delta)}
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ol>
+              <span className="rank-index w-10 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-sm font-medium text-white">{row.name}</p>
+              </div>
+              {row.rankedBest !== undefined && (
+                <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>
+              )}
+              <span className="stat-mono shrink-0 text-base font-semibold text-signal">
+                {formatNumber(row.rankedScore)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </>
   ) : (
     <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
-      Personne n&apos;a joué de combat Ranked récemment.
+      Personne n&apos;a encore lié son compte et indiqué son Ranked.{" "}
+      <Link href="/compte" className="text-signal hover:underline">
+        Sois le premier →
+      </Link>
     </p>
   );
 

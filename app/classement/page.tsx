@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
-import { getRankedRows } from "@/lib/ranked";
+import { listAllMemberLinks } from "@/lib/members";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
@@ -32,7 +32,7 @@ export default async function ClassementPage({
   const tags = clubTags();
   const season = getCurrentSeason();
 
-  const [clubs, rankedRows, baseline] = await Promise.all([
+  const [clubs, memberLinks, baseline] = await Promise.all([
     Promise.all(
       tags.map(async (tag) => {
         try {
@@ -42,7 +42,7 @@ export default async function ClassementPage({
         }
       })
     ),
-    getRankedRows(tags).catch(() => []),
+    listAllMemberLinks().catch(() => []),
     getSeasonBaseline(season.key).catch(() => null),
   ]);
 
@@ -103,50 +103,75 @@ export default async function ClassementPage({
     </>
   );
 
+  // Nom du club + pseudo en jeu affichés pour un membre lié, retrouvés via
+  // le classement trophées déjà calculé — pas besoin d'un second appel.
+  const clubNameByTag = new Map(trophyRows.map((m) => [m.tag.toUpperCase(), m.clubName]));
+  const nameByTag = new Map(trophyRows.map((m) => [m.tag.toUpperCase(), m.name]));
+
+  const rankedRows = memberLinks
+    .filter((m) => m.rankedScore !== undefined)
+    .map((m) => ({
+      tag: m.tag,
+      name: nameByTag.get(m.tag.toUpperCase()) ?? m.discordName,
+      clubName: clubNameByTag.get(m.tag.toUpperCase()) ?? "",
+      rankedScore: m.rankedScore!,
+      rankedBest: m.rankedBest,
+    }))
+    .sort((a, b) => b.rankedScore - a.rankedScore);
+
   const rankedPanel = (
     <div>
       <div className="mb-4 flex items-start gap-2">
-        <Badge tone="warning">limite api</Badge>
+        <Badge tone="warning">auto-déclaré</Badge>
         <p className="text-xs text-ash">
-          Basé sur les 25 derniers combats Ranked de chaque joueur — pas de score de saison ou
-          all-time disponible.
+          Score indiqué par chaque membre depuis son compte lié (/compte) — l&apos;API Brawl
+          Stars ne fournit aucun score Ranked, impossible de le récupérer automatiquement.
         </p>
       </div>
       {rankedRows.length === 0 ? (
         <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
-          Personne n&apos;a joué de combat Ranked récemment.
+          Personne n&apos;a encore lié son compte et indiqué son Ranked.{" "}
+          <Link href="/compte" className="text-signal hover:underline">
+            Sois le premier →
+          </Link>
         </p>
       ) : (
-        <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
-          {rankedRows.map((row, i) => (
-            <li key={row.tag}>
-              <Link
-                href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-                className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
-              >
-                <span className="rank-index w-10 shrink-0 text-xs text-signal">
-                  {rankIndex(i)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-medium text-white">
-                    {row.name}
-                  </p>
-                  <p className="text-xs text-ash">
-                    {row.clubName} · {row.wins}V / {row.losses}D sur {row.games} combats
-                  </p>
-                </div>
-                <span
-                  className={`stat-mono shrink-0 text-base font-semibold ${
-                    row.delta >= 0 ? "text-signal" : "text-blush"
-                  }`}
+        <>
+          <Podium
+            entries={rankedRows.slice(0, 3).map((r) => ({
+              tag: r.tag,
+              name: r.name,
+              clubName: r.clubName,
+              value: r.rankedScore,
+            }))}
+          />
+          <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+            {rankedRows.map((row, i) => (
+              <li key={row.tag}>
+                <Link
+                  href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+                  className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
                 >
-                  {row.delta >= 0 ? "+" : ""}
-                  {formatNumber(row.delta)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
+                  <span className="rank-index w-10 shrink-0 text-xs text-signal">
+                    {rankIndex(i)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-sm font-medium text-white">
+                      {row.name}
+                    </p>
+                    <p className="text-xs text-ash">{row.clubName}</p>
+                  </div>
+                  {row.rankedBest !== undefined && (
+                    <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>
+                  )}
+                  <span className="stat-mono shrink-0 text-base font-semibold text-signal">
+                    {formatNumber(row.rankedScore)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </div>
   );

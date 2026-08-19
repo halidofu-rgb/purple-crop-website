@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMemberLink } from "@/lib/members";
-import { getPlayer, getBattleLog, parseBattleTime } from "@/lib/brawlstars";
+import { getPlayer } from "@/lib/brawlstars";
 import Navbar from "@/components/Navbar";
 import AccountLinkForm from "@/components/AccountLinkForm";
 import Button from "@/components/Button";
@@ -12,6 +12,10 @@ export const dynamic = "force-dynamic";
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default async function ComptePage() {
@@ -28,8 +32,8 @@ export default async function ComptePage() {
               Connecte-toi pour continuer
             </h1>
             <p className="mt-2 max-w-sm text-sm text-ash">
-              Lie ton compte Discord à ton tag Brawl Stars pour débloquer une estimation Ranked
-              précise et personnalisée.
+              Lie ton compte Discord à ton tag Brawl Stars pour afficher ton Ranked actuel et ton
+              record all-time sur le site.
             </p>
             <div className="mt-5 flex justify-center">
               <Button href="/api/auth/signin/discord" icon={<LogIn className="h-4 w-4" />}>
@@ -44,27 +48,12 @@ export default async function ComptePage() {
 
   const link = await getMemberLink(discordId).catch(() => null);
 
-  let rankedEstimate: number | null = null;
   let player = null;
   if (link) {
     try {
       player = await getPlayer(link.tag);
     } catch {
       player = null;
-    }
-
-    if (link.rankedScore !== undefined && link.rankedUpdatedAt) {
-      try {
-        const battles = await getBattleLog(link.tag);
-        const since = new Date(link.rankedUpdatedAt);
-        const delta = battles
-          .filter((b) => b.battle.type?.toLowerCase().includes("ranked"))
-          .filter((b) => parseBattleTime(b.battleTime) > since)
-          .reduce((sum, b) => sum + (b.battle.trophyChange ?? 0), 0);
-        rankedEstimate = link.rankedScore + delta;
-      } catch {
-        rankedEstimate = link.rankedScore;
-      }
     }
   }
 
@@ -85,27 +74,33 @@ export default async function ComptePage() {
           <section className="hud-frame mx-auto mt-8 max-w-lg bg-panel px-6 py-6 text-center">
             <p className="font-display text-sm font-semibold text-white">{player.name}</p>
             <p className="mt-1 font-mono text-xs text-ash">#{link.tag}</p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-3 gap-3">
               <div>
-                <p className="stat-mono text-xl font-semibold text-zest">
+                <p className="stat-mono text-lg font-semibold text-zest">
                   {formatNumber(player.trophies)}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Trophées</p>
               </div>
               <div>
-                <p className="flex items-center justify-center gap-1 stat-mono text-xl font-semibold text-signal">
-                  <RankGlyph className="h-4 w-4" />
-                  {rankedEstimate !== null ? formatNumber(rankedEstimate) : "—"}
+                <p className="flex items-center justify-center gap-1 stat-mono text-lg font-semibold text-signal">
+                  <RankGlyph className="h-3.5 w-3.5" />
+                  {link.rankedScore !== undefined ? formatNumber(link.rankedScore) : "—"}
+                </p>
+                <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Ranked</p>
+              </div>
+              <div>
+                <p className="stat-mono text-lg font-semibold text-zest2">
+                  {link.rankedBest !== undefined ? formatNumber(link.rankedBest) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
-                  Ranked (estimé)
+                  Ranked all-time
                 </p>
               </div>
             </div>
-            {rankedEstimate !== null && (
+            {link.rankedUpdatedAt && (
               <p className="mt-4 text-[11px] text-ash">
-                Basé sur ta dernière saisie + les combats Ranked joués depuis. Ressaisis ton score
-                de temps en temps pour rester précis.
+                Ranked mis à jour le {formatDate(link.rankedUpdatedAt)} — pense à revenir le
+                mettre à jour de temps en temps.
               </p>
             )}
           </section>
@@ -115,7 +110,11 @@ export default async function ComptePage() {
           <h2 className="mb-4 font-display text-sm font-semibold text-white">
             {link ? "Modifier ma liaison" : "Lier mon compte Brawl Stars"}
           </h2>
-          <AccountLinkForm existingTag={link?.tag} existingRankedScore={link?.rankedScore} />
+          <AccountLinkForm
+            existingTag={link?.tag}
+            existingRankedScore={link?.rankedScore}
+            existingRankedBest={link?.rankedBest}
+          />
         </section>
       </main>
     </>

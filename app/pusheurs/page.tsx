@@ -2,11 +2,8 @@ import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
-import { getRankedRows } from "@/lib/ranked";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
-import Tabs from "@/components/Tabs";
-import RankGlyph from "@/components/RankGlyph";
 
 export const dynamic = "force-dynamic";
 
@@ -81,18 +78,15 @@ export default async function PusheursPage() {
     );
   }
 
-  const [currentClubs, rankedRows] = await Promise.all([
-    Promise.all(
-      tags.map(async (tag) => {
-        try {
-          return await getClub(tag);
-        } catch {
-          return null;
-        }
-      })
-    ),
-    getRankedRows(tags).catch(() => []),
-  ]);
+  const currentClubs = await Promise.all(
+    tags.map(async (tag) => {
+      try {
+        return await getClub(tag);
+      } catch {
+        return null;
+      }
+    })
+  );
 
   const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
 
@@ -109,7 +103,6 @@ export default async function PusheursPage() {
 
   const totalPush = rows.reduce((sum, r) => sum + r.delta, 0);
   const king = rows[0];
-  const rankedKing = rankedRows[0];
 
   const trophyPanel = (
     <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
@@ -146,57 +139,6 @@ export default async function PusheursPage() {
         </li>
       ))}
     </ol>
-  );
-
-  const rankedPanel = (
-    <div>
-      <p className="mb-4 text-xs text-ash">
-        Basé sur les 25 derniers combats Ranked de chaque joueur — pas un vrai push de saison,
-        l&apos;API ne garde pas plus d&apos;historique.
-      </p>
-      {rankedRows.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
-          Personne n&apos;a joué de combat Ranked récemment.
-        </p>
-      ) : (
-        <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
-          {rankedRows.map((row, i) => (
-            <li key={row.tag}>
-              <Link
-                href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-                className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-panel2"
-              >
-                <span className="rank-index w-9 shrink-0 text-xs text-signal">
-                  {rankIndex(i)}
-                </span>
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-semibold text-ink"
-                  style={{ backgroundColor: avatarColor(row.name) }}
-                >
-                  {row.name.trim().charAt(0).toUpperCase()}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-medium text-white">
-                    {row.name} <span className="font-normal text-ash">{row.clubName}</span>
-                  </p>
-                  <p className="text-[11px] text-ash">
-                    {row.wins}V / {row.losses}D
-                  </p>
-                </div>
-                <span
-                  className={`stat-mono shrink-0 text-sm font-semibold ${
-                    row.delta >= 0 ? "text-signal" : "text-blush"
-                  }`}
-                >
-                  {row.delta >= 0 ? "+" : ""}
-                  {formatNumber(row.delta)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
   );
 
   return (
@@ -239,17 +181,6 @@ export default async function PusheursPage() {
                 </p>
               </div>
             )}
-            {rankedKing && (
-              <div>
-                <p className="flex items-center gap-1 text-xs text-ash">
-                  <RankGlyph className="h-3 w-3" /> Meilleur en Ranked
-                </p>
-                <p className="mt-1 font-display text-lg font-semibold text-white">
-                  {rankedKing.name}{" "}
-                  <span className="stat-mono text-signal">+{formatNumber(rankedKing.delta)}</span>
-                </p>
-              </div>
-            )}
           </div>
 
           <p className="mt-8 text-xs leading-relaxed text-ash">
@@ -268,21 +199,10 @@ export default async function PusheursPage() {
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl">
-          <Tabs
-            tabs={[
-              {
-                id: "trophies",
-                label: `Push · ${rows.length} joueurs`,
-                panel: trophyPanel,
-              },
-              {
-                id: "ranked",
-                label: "Push Ranked",
-                icon: <RankGlyph className="h-3.5 w-3.5" />,
-                panel: rankedPanel,
-              },
-            ]}
-          />
+          <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
+            Push · {rows.length} joueurs
+          </h2>
+          {trophyPanel}
         </section>
       </main>
     </>

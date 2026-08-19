@@ -1,19 +1,18 @@
 // Liaison entre un compte Discord connecté et un joueur Brawl Stars.
 //
-// Le score Ranked que le joueur indique lui-même sert de "point zéro" :
-// impossible de connaître un score Ranked absolu autrement (l'API ne le
-// fournit pas — voir /support). Ensuite, on ajoute les gains/pertes réels
-// des combats Ranked joués depuis cette saisie (via le battlelog) pour
-// obtenir une estimation à jour, qui se corrige à chaque re-synchronisation
-// manuelle.
+// rankedScore et rankedBest sont AUTO-DÉCLARÉS par le joueur lui-même —
+// impossible de les récupérer via l'API Brawl Stars, qui ne fournit aucun
+// score Ranked absolu (voir /support). On les affiche tels quels, sans
+// tenter de deviner ou recalculer quoi que ce soit.
 import { getRedis } from "@/lib/redis";
 
 export interface MemberLink {
   discordId: string;
   discordName: string;
   tag: string; // tag Brawl Stars, sans #
-  rankedScore?: number; // dernière valeur indiquée par le joueur
-  rankedUpdatedAt?: string; // ISO — pour ne compter que les combats après cette saisie
+  rankedScore?: number; // score Ranked actuel, déclaré par le joueur
+  rankedBest?: number; // meilleur score Ranked all-time, déclaré par le joueur
+  rankedUpdatedAt?: string; // ISO — date de la dernière saisie
 }
 
 function linkKey(discordId: string): string {
@@ -31,7 +30,7 @@ export async function getMemberLink(discordId: string): Promise<MemberLink | nul
 
 export async function getMemberLinkByTag(tag: string): Promise<MemberLink | null> {
   const redis = getRedis();
-  const discordId = await redis.get(reverseKey(tag));
+  const discordId = await redis.get(reverseKey(tag.toUpperCase().replace(/^#/, "")));
   if (!discordId) return null;
   return getMemberLink(discordId);
 }
@@ -40,4 +39,13 @@ export async function saveMemberLink(link: MemberLink): Promise<void> {
   const redis = getRedis();
   await redis.set(linkKey(link.discordId), JSON.stringify(link));
   await redis.set(reverseKey(link.tag), link.discordId);
+}
+
+// Liste tous les membres liés — sert au classement Ranked (auto-déclaré).
+export async function listAllMemberLinks(): Promise<MemberLink[]> {
+  const redis = getRedis();
+  const keys = await redis.keys("purplecorp:member:*");
+  if (keys.length === 0) return [];
+  const raw = await redis.mget(...keys);
+  return raw.filter((r): r is string => r !== null).map((r) => JSON.parse(r) as MemberLink);
 }

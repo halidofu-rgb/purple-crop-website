@@ -4,6 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { getPlayer } from "@/lib/brawlstars";
 import { saveMemberLink } from "@/lib/members";
 
+function parseOptionalInt(v: unknown): number | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n) : undefined;
+}
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const discordId = (session?.user as { id?: string } | undefined)?.id;
@@ -13,7 +19,6 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const tag = String(body.tag ?? "").trim().toUpperCase().replace(/^#/, "");
-  const rankedScoreRaw = body.rankedScore;
 
   if (!tag) {
     return NextResponse.json({ error: "Tag manquant" }, { status: 400 });
@@ -30,17 +35,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const rankedScore =
-    rankedScoreRaw !== undefined && rankedScoreRaw !== "" && !Number.isNaN(Number(rankedScoreRaw))
-      ? Number(rankedScoreRaw)
-      : undefined;
-
   await saveMemberLink({
     discordId,
     discordName: session.user?.name ?? "Membre",
     tag,
-    rankedScore,
-    rankedUpdatedAt: rankedScore !== undefined ? new Date().toISOString() : undefined,
+    rankedScore: parseOptionalInt(body.rankedScore),
+    rankedBest: parseOptionalInt(body.rankedBest),
+    rankedUpdatedAt: new Date().toISOString(),
   });
 
   return NextResponse.json({ ok: true });
