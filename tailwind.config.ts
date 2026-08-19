@@ -5,21 +5,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // === DESIGN TOKENS — Purple Corp =====================================
-        // Palette "télémétrie" ancrée dans l'emblème du club. Un seul ton
-        // violet pour le fond/surfaces, des accents dédiés à un rôle précis
-        // (jamais utilisés en dehors de ce rôle) — voir globals.css pour le
-        // même jeu de tokens en variables CSS brutes.
-        ink: "#0D0916",     // fond principal
-        panel: "#16101F",   // surface / carte
-        panel2: "#1E1730",  // surface élevée (hover, lignes actives)
-        line: "#2D2340",    // bordures
-        zest: "#9F7AEA",    // couleur principale — identité, trophées
-        zest2: "#C4B5FD",   // couleur principale claire — valeurs secondaires
-        signal: "#45E0D0",  // succès / progression / en direct
-        warn: "#F5B963",    // avertissement
-        blush: "#FF6E8F",   // erreur / perte / défaite
-        ash: "#948AA8",     // texte secondaire
+        // === CHARTE GRAPHIQUE — Purple Corp ===================================
+        // Mapping exact des rôles demandés. Certains rôles partagent une même
+        // couleur quand ça a du sens (succès ≈ progression = "signal") —
+        // c'est documenté ici plutôt que dupliqué en tokens redondants.
+        ink: "#0D0916",      // fond principal
+        void2: "#120D1C",    // fond secondaire (sections alternées)
+        panel: "#16101F",    // surfaces
+        panel2: "#1E1730",   // cartes / éléments élevés
+        line: "#2D2340",     // bordures
+        zest: "#9F7AEA",     // violet principal — identité, trophées
+        iris: "#7C5CD1",     // violet secondaire — dégradés, accents profonds
+        zest2: "#C4B5FD",    // violet clair — valeurs secondaires, contraste doux
+        signal: "#45E0D0",   // accent lumineux — succès / progression / en direct
+        warn: "#F5B963",     // alerte (avertissement)
+        blush: "#FF6E8F",    // alerte (erreur / perte)
+        ash: "#948AA8",      // texte secondaire
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],

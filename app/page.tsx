@@ -8,17 +8,8 @@ import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
 import Button from "@/components/Button";
-import {
-  Trophy,
-  Users,
-  Crown,
-  Calendar,
-  Shield,
-  TrendingUp,
-  MessageCircle,
-  ArrowRight,
-  Swords,
-} from "lucide-react";
+import { Users, Calendar, TrendingUp, MessageCircle, ArrowRight } from "lucide-react";
+import { TrophyGlyph, CrownGlyph, SwordsGlyph, ShieldGlyph } from "@/components/icons";
 
 // La partie "meilleur pusher" dépend de Redis, pas du cache fetch() —
 // on garde la page toujours calculée à la demande.
@@ -70,14 +61,14 @@ export default async function HomePage() {
     .sort((a, b) => (b.rankedScore ?? 0) - (a.rankedScore ?? 0))[0];
 
   const stats = [
-    { icon: Trophy, value: formatNumber(totalTrophies), label: "Trophées totaux" },
+    { icon: TrophyGlyph, value: formatNumber(totalTrophies), label: "Trophées totaux" },
     { icon: Users, value: String(totalMembers), label: "Joueurs" },
     {
-      icon: Swords,
+      icon: SwordsGlyph,
       value: rankedBest ? formatNumber(rankedBest.rankedScore!) : "Bientôt",
       label: "Meilleur Elo Ranked",
     },
-    { icon: Crown, value: king ? king.name : "—", label: "Meilleur pusheur" },
+    { icon: CrownGlyph, value: king ? king.name : "—", label: "Meilleur pusheur" },
     { icon: Calendar, value: season.label, label: `⏳ ${formatCountdown(season.end)}` },
   ];
 
@@ -107,7 +98,7 @@ export default async function HomePage() {
                   href={`/clubs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
                   variant="secondary"
                   size="lg"
-                  icon={<Shield className="h-4 w-4" />}
+                  icon={<ShieldGlyph className="h-4 w-4" />}
                 >
                   {club.name}
                 </Button>
@@ -192,7 +183,7 @@ export default async function HomePage() {
             className="card-lift group flex flex-col items-center rounded-2xl border border-line bg-panel p-6 text-center shadow-card"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zest/15 text-zest">
-              <Shield className="h-5 w-5" />
+              <ShieldGlyph className="h-5 w-5" />
             </span>
             <p className="mt-3 font-display text-sm font-semibold text-white">Nos clubs</p>
             <p className="mt-1 text-xs text-ash">Purple Line, Indigo Line et les prochains</p>
@@ -218,7 +209,7 @@ export default async function HomePage() {
             className="card-lift group flex flex-col items-center rounded-2xl border border-line bg-panel p-6 text-center shadow-card"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blush/15 text-blush">
-              <Swords className="h-5 w-5" />
+              <SwordsGlyph className="h-5 w-5" />
             </span>
             <p className="mt-3 font-display text-sm font-semibold text-white">Meilleurs Elos</p>
             <p className="mt-1 text-xs text-ash">Activité Ranked récente de chacun</p>

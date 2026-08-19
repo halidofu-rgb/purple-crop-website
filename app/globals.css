@@ -11,17 +11,21 @@
      Source de vérité centralisée. tailwind.config.ts reprend ces mêmes
      valeurs pour les classes utilitaires (bg-ink, text-zest, etc.) — les
      deux doivent rester synchronisés si une couleur change. */
-  --color-bg: #0d0916;           /* background principal */
-  --color-bg-secondary: #16101f; /* background secondaire / surface */
-  --color-surface: #1e1730;      /* surface élevée */
-  --color-border: #2d2340;       /* bordures */
-  --color-primary: #9f7aea;      /* couleur principale */
-  --color-primary-light: #c4b5fd;/* couleur principale, variante claire */
-  --color-success: #45e0d0;      /* succès / progression / en direct */
-  --color-warning: #f5b963;      /* avertissement */
-  --color-error: #ff6e8f;        /* erreur / perte */
-  --color-text: #ffffff;         /* texte principal */
-  --color-text-secondary: #948aa8; /* texte secondaire */
+  --color-bg: #0d0916;              /* fond principal */
+  --color-bg-secondary: #120d1c;    /* fond secondaire */
+  --color-surface: #16101f;         /* surfaces */
+  --color-card: #1e1730;            /* cartes */
+  --color-border: #2d2340;          /* bordures */
+  --color-primary: #9f7aea;         /* violet principal */
+  --color-secondary: #7c5cd1;       /* violet secondaire */
+  --color-primary-light: #c4b5fd;   /* violet clair (contraste doux) */
+  --color-accent: #45e0d0;          /* accent lumineux */
+  --color-success: #45e0d0;         /* succès (= accent lumineux) */
+  --color-progress: #45e0d0;        /* progression (= accent lumineux) */
+  --color-warning: #f5b963;         /* alerte — avertissement */
+  --color-error: #ff6e8f;           /* alerte — erreur / perte */
+  --color-text: #ffffff;            /* texte principal */
+  --color-text-secondary: #948aa8;  /* texte secondaire */
 }
 
 html {

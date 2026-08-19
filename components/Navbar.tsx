@@ -64,7 +64,7 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={() => signIn("discord")}
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-zest to-[#7C5CD1] px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:brightness-105 sm:px-4"
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-zest to-iris px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:brightness-105 sm:px-4"
               >
                 <LogIn className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Connexion</span>

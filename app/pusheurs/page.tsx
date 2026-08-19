@@ -4,6 +4,7 @@ import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import { CrownGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -174,7 +175,9 @@ export default async function PusheursPage() {
             </div>
             {king && (
               <div>
-                <p className="text-xs text-ash">👑 Roi du push</p>
+                <p className="flex items-center gap-1 text-xs text-ash">
+                  <CrownGlyph className="h-3.5 w-3.5" /> Roi du push
+                </p>
                 <p className="mt-1 font-display text-lg font-semibold text-white">
                   {king.name}{" "}
                   <span className="stat-mono text-signal">+{formatNumber(king.delta)}</span>

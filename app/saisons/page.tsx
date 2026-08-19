@@ -4,6 +4,7 @@ import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, listSeasonKeys, SeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import { CrownGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -117,8 +118,9 @@ export default async function SaisonsPage() {
                       </Link>
                     ) : (
                       s.king && (
-                        <p className="text-xs text-ash">
-                          👑 {s.king.name} · +{formatNumber(s.king.delta)}
+                        <p className="flex items-center gap-1 text-xs text-ash">
+                          <CrownGlyph className="h-3 w-3" /> {s.king.name} · +
+                          {formatNumber(s.king.delta)}
                         </p>
                       )
                     )}
