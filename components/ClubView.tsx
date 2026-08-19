@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
 import { RankedRow } from "@/lib/ranked";
+import { discordUrlForTag } from "@/lib/clubs";
 import ClubBadge from "@/components/ClubBadge";
 import RankGlyph from "@/components/RankGlyph";
 import Tabs from "@/components/Tabs";
+import Button from "@/components/Button";
 
 const ROLE_LABEL: Record<string, string> = {
   president: "Président",
@@ -154,6 +156,13 @@ export default function ClubView({
         <p className="mx-auto mt-3 max-w-xl text-sm text-ash">
           {club.description || "Pas de description."}
         </p>
+        {discordUrlForTag(club.tag) && (
+          <div className="mt-4">
+            <Button href={discordUrlForTag(club.tag)!} variant="secondary">
+              Rejoindre le Discord
+            </Button>
+          </div>
+        )}
 
         <div className="mt-8 border-t border-line pt-8">
           <p className="stat-mono text-5xl font-semibold text-zest sm:text-6xl">

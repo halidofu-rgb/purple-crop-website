@@ -54,3 +54,16 @@ export async function setSeasonBaseline(baseline: SeasonBaseline): Promise<void>
   // en stockage et ça permet de consulter d'anciennes saisons plus tard.
   await redis.set(baselineKey(baseline.seasonKey), JSON.stringify(baseline));
 }
+
+// Liste toutes les saisons pour lesquelles une photo de départ existe,
+// triées de la plus récente à la plus ancienne. Sert à la page "Saisons
+// passées" — les données sont déjà là depuis le début, on ne fait que
+// les retrouver.
+export async function listSeasonKeys(): Promise<string[]> {
+  const redis = getRedis();
+  const keys = await redis.keys("purplecorp:season-baseline:*");
+  return keys
+    .map((k) => k.replace("purplecorp:season-baseline:", ""))
+    .sort()
+    .reverse();
+}

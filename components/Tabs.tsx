@@ -9,8 +9,8 @@ export interface TabDef {
   panel: ReactNode;
 }
 
-export default function Tabs({ tabs }: { tabs: TabDef[] }) {
-  const [active, setActive] = useState(tabs[0]?.id);
+export default function Tabs({ tabs, defaultTab }: { tabs: TabDef[]; defaultTab?: string }) {
+  const [active, setActive] = useState(defaultTab ?? tabs[0]?.id);
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
 
   return (
