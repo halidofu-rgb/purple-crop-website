@@ -13,10 +13,14 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
+function rankIndex(i: number): string {
+  return `[${String(i + 1).padStart(2, "0")}]`;
+}
+
 // Couleurs d'avatar cycliques, dérivées du nom (même joueur = même couleur
 // à chaque visite, sans avoir besoin de la stocker).
 const AVATAR_COLORS = [
-  "#B565E8", "#F4D93E", "#5FE0C0", "#FF6E8F", "#7C8CF5", "#6EE7B7",
+  "#9F7AEA", "#45E0D0", "#FF6E8F", "#7C8CF5", "#C4B5FD", "#5FE0C0",
 ];
 function avatarColor(name: string): string {
   let hash = 0;
@@ -109,39 +113,37 @@ export default async function PusheursPage() {
     <>
       <Navbar />
       <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
-        <section className="mx-auto max-w-3xl">
+        <section className="hud-frame mx-auto max-w-3xl bg-panel px-6 py-8 sm:px-8">
           <p className="text-sm text-ash">
             Qui gagne le plus de trophées, saison après saison — le classement du push, pas des
             totaux.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-start justify-between gap-4">
+          <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="font-display text-xs uppercase tracking-[0.25em] text-signal">
                 Saison en cours
               </p>
-              <h1 className="mt-1 font-display text-4xl font-extrabold uppercase tracking-tight text-white sm:text-5xl">
+              <h1 className="mt-1 font-display text-4xl font-semibold uppercase tracking-tight text-white sm:text-5xl">
                 {season.label}
               </h1>
             </div>
-            <p className="mt-2 font-display text-sm text-ash">
-              ⏳ Encore {formatCountdown(season.end)}
+            <p className="mt-2 font-mono text-xs text-ash">
+              ⏳ encore {formatCountdown(season.end)}
             </p>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-10">
+          <div className="mt-8 flex flex-wrap gap-10 border-t border-line pt-6">
             <div>
-              <p className="flex items-center gap-2 text-xs text-ash">
-                📈 Trophées gagnés par la famille
-              </p>
-              <p className="stat-mono mt-1 text-2xl font-bold text-white">
+              <p className="text-xs text-ash">Trophées gagnés par la famille</p>
+              <p className="stat-mono mt-1 text-2xl font-semibold text-white">
                 {formatNumber(totalPush)}
               </p>
             </div>
             {king && (
               <div>
-                <p className="flex items-center gap-2 text-xs text-ash">👑 Roi du push</p>
-                <p className="mt-1 font-display text-lg font-bold text-white">
+                <p className="text-xs text-ash">👑 Roi du push</p>
+                <p className="mt-1 font-display text-lg font-semibold text-white">
                   {king.name}{" "}
                   <span className="stat-mono text-signal">
                     +{formatNumber(king.delta)}
@@ -160,26 +162,28 @@ export default async function PusheursPage() {
           </p>
         </section>
 
-        <section className="mx-auto mt-10 max-w-3xl">
-          <h2 className="mb-4 font-display text-xs font-semibold uppercase tracking-[0.15em] text-white">
+        <section className="mx-auto mt-8 max-w-3xl">
+          <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
             Push de la saison — {rows.length} joueurs
           </h2>
-          <ol className="space-y-1">
+          <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
             {rows.map((row, i) => (
               <li key={row.tag}>
                 <Link
                   href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-                  className="flex items-center gap-3 border-b border-line py-2.5 transition last:border-none hover:opacity-80"
+                  className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-panel2"
                 >
-                  <span className="w-5 shrink-0 text-right text-xs text-ash">{i + 1}</span>
+                  <span className="rank-index w-9 shrink-0 text-xs text-zest">
+                    {rankIndex(i)}
+                  </span>
                   <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-bold text-ink"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-semibold text-ink"
                     style={{ backgroundColor: avatarColor(row.name) }}
                   >
                     {row.name.trim().charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-semibold text-white">
+                    <p className="truncate font-display text-sm font-medium text-white">
                       {row.name} <span className="font-normal text-ash">{row.clubName}</span>
                     </p>
                   </div>
@@ -189,7 +193,7 @@ export default async function PusheursPage() {
                     }`}
                   >
                     {row.delta >= 0 ? "+" : ""}
-                    {formatNumber(row.delta)} {row.delta >= 0 ? "⬆️" : "⬇️"}
+                    {formatNumber(row.delta)}
                   </span>
                 </Link>
               </li>

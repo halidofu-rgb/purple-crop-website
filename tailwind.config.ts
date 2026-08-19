@@ -5,15 +5,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#181022",       // fond principal, violet quasi-noir
-        panel: "#241733",     // cartes / surfaces
-        panel2: "#2E1D42",    // surfaces surélevées
-        line: "#3A2753",      // bordures
-        zest: "#F4D93E",      // jaune "trophée" - accent principal
-        zest2: "#FFE97A",
-        signal: "#5FE0C0",    // vert-eau, données positives / rang
-        blush: "#FF6E8F",     // rose, alertes / défaite
-        ash: "#B9AEC9",       // texte secondaire
+        // Palette "télémétrie" ancrée dans l'emblème Purple Corp : un seul
+        // ton violet pour le fond/surfaces, deux accents vifs pour les
+        // données (violet = identité, cyan = signal positif/en direct).
+        ink: "#0D0916",
+        panel: "#16101F",
+        panel2: "#1E1730",
+        line: "#2D2340",
+        zest: "#9F7AEA",   // violet — accent principal, trophées
+        zest2: "#C4B5FD",  // violet clair
+        signal: "#45E0D0", // cyan — données positives / en direct
+        blush: "#FF6E8F",  // rose — pertes / alertes
+        ash: "#948AA8",    // texte secondaire
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],
@@ -21,7 +24,7 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       boxShadow: {
-        chip: "0 0 0 1px rgba(244,217,62,0.35), 0 8px 24px -8px rgba(244,217,62,0.25)",
+        chip: "0 0 0 1px rgba(159,122,234,0.35), 0 8px 28px -10px rgba(159,122,234,0.35)",
       },
     },
   },

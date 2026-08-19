@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Rubik, Inter, JetBrains_Mono } from "next/font/google";
+import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const display = Rubik({
+const display = Chakra_Petch({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["500", "600", "700"],
   variable: "--font-display",
 });
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });

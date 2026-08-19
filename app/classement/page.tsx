@@ -7,6 +7,10 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
+function rankIndex(i: number): string {
+  return `[${String(i + 1).padStart(2, "0")}]`;
+}
+
 interface Row extends ClubMember {
   clubName: string;
 }
@@ -36,7 +40,7 @@ export default async function ClassementPage() {
           <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
             Purple Corp
           </p>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             Classement général
           </h1>
           <p className="mt-3 text-sm text-ash">
@@ -45,26 +49,23 @@ export default async function ClassementPage() {
         </section>
 
         <section className="mx-auto mt-10 max-w-3xl">
-          <ol className="space-y-2">
+          <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
             {rows.map((member, i) => (
               <li key={member.tag}>
                 <Link
                   href={`/joueurs/${encodeURIComponent(member.tag.replace(/^#/, ""))}`}
-                  className="relative flex items-center gap-4 overflow-hidden rounded-xl border border-line bg-panel py-3 pl-14 pr-4 transition hover:border-zest"
+                  className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
                 >
-                  <span
-                    className="absolute left-0 top-0 flex h-full w-11 items-center justify-center bg-panel2 font-display text-sm font-bold text-zest"
-                    style={{ clipPath: "polygon(0 0, 100% 0, 78% 100%, 0 100%)" }}
-                  >
-                    {i + 1}
+                  <span className="rank-index w-10 shrink-0 text-xs text-zest">
+                    {rankIndex(i)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-semibold text-white">
+                    <p className="truncate font-display text-sm font-medium text-white">
                       {member.name}
                     </p>
                     <p className="text-xs text-ash">{member.clubName}</p>
                   </div>
-                  <span className="stat-mono shrink-0 text-lg font-semibold text-zest2">
+                  <span className="stat-mono shrink-0 text-base font-semibold text-zest2">
                     {formatNumber(member.trophies)}
                   </span>
                 </Link>
