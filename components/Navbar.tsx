@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Shield, Trophy, TrendingUp, LifeBuoy } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { Home, Shield, Trophy, TrendingUp, LifeBuoy, LogIn, User } from "lucide-react";
 
 const LINKS = [
   { href: "/", label: "Accueil", icon: Home },
@@ -15,6 +16,7 @@ const LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-ink/85 backdrop-blur">
@@ -25,7 +27,8 @@ export default function Navbar() {
             Purple Corp
           </span>
         </Link>
-        <nav className="flex gap-1 sm:gap-2">
+
+        <nav className="flex items-center gap-1 sm:gap-2">
           {LINKS.map((link) => {
             const active = pathname === link.href;
             const Icon = link.icon;
@@ -44,6 +47,30 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          <div className="ml-1 border-l border-line pl-2 sm:ml-2 sm:pl-3">
+            {status === "authenticated" ? (
+              <Link
+                href="/compte"
+                className="flex items-center gap-1.5 rounded-full bg-panel2 px-3 py-2 font-display text-xs uppercase tracking-[0.1em] text-white transition hover:bg-panel"
+              >
+                {session.user?.image ? (
+                  <img src={session.user.image} alt="" className="h-4 w-4 rounded-full" />
+                ) : (
+                  <User className="h-3.5 w-3.5" />
+                )}
+                <span className="hidden sm:inline">{session.user?.name ?? "Mon compte"}</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => signIn("discord")}
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-zest to-[#7C5CD1] px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.1em] text-ink transition hover:brightness-105 sm:px-4"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Connexion</span>
+              </button>
+            )}
+          </div>
         </nav>
       </div>
     </header>

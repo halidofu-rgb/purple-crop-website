@@ -1,6 +1,31 @@
 import type { Metadata } from "next";
+import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-export const metadata: Metadata = { title: "Purple Corp", description: "x" };
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (<html lang="fr"><body>{children}</body></html>);
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+
+const display = Chakra_Petch({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+});
+const body = Inter({ subsets: ["latin"], variable: "--font-body" });
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+
+export const metadata: Metadata = {
+  title: "Purple Corp — Brawl Stars",
+  description: "Le classement et les stats de Purple Corp, en direct.",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="fr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <body>
+        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+      </body>
+    </html>
+  );
 }

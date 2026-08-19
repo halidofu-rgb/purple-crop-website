@@ -2,27 +2,7 @@
 // Brawl Stars (1er jeudi du mois). La page /pusheurs compare les trophées
 // actuels à cette photo pour savoir qui a le plus progressé "depuis le
 // début de la saison" — exactement comme le classement "Roi du push".
-//
-// On utilise ioredis avec REDIS_URL (chaîne de connexion classique) : c'est
-// le format injecté par l'intégration Redis du Vercel Marketplace. On garde
-// la connexion en mémoire entre les appels pour éviter de se reconnecter à
-// chaque requête sur une même instance serverless "chaude".
-import Redis from "ioredis";
-
-let client: Redis | null = null;
-
-function getRedis(): Redis {
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    throw new Error(
-      "Aucune base Redis configurée (REDIS_URL manquante). Connecte l'intégration Redis depuis l'onglet Storage de ton projet Vercel (voir README)."
-    );
-  }
-  if (!client) {
-    client = new Redis(url);
-  }
-  return client;
-}
+import { getRedis } from "@/lib/redis";
 
 export interface BaselinePlayer {
   tag: string;

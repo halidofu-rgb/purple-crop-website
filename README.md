@@ -83,3 +83,26 @@ Vercel redéploie automatiquement à chaque push.
 - Classements "1v1" ou "Casino" — aucune donnée correspondante.
 - Logo/badge réel du club — l'API ne renvoie qu'un `badgeId` numérique, pas d'image ; `ClubBadge.tsx` génère un emblème original à la place.
 - Lien Discord d'un club — aucune donnée de ce type dans l'API (à ajouter manuellement si besoin, en dur dans `lib/clubs.ts`).
+
+## Étape 5 — Connexion Discord (hub de connexion membres)
+
+Permet à chaque membre de lier son compte Discord à son tag Brawl Stars, et
+d'indiquer son score Ranked actuel (seule façon de l'obtenir, l'API ne le
+fournit pas — voir /support).
+
+1. Sur https://discord.com/developers/applications, crée une application.
+2. Onglet **OAuth2 → General** : copie le **Client ID** et le **Client Secret**.
+3. Toujours dans OAuth2, section **Redirects**, ajoute :
+   `https://TON-SITE.vercel.app/api/auth/callback/discord`
+4. Génère un secret aléatoire pour signer les sessions :
+   ```
+   openssl rand -base64 32
+   ```
+5. Dans Vercel → Environment Variables, ajoute :
+   - `DISCORD_CLIENT_ID`
+   - `DISCORD_CLIENT_SECRET`
+   - `NEXTAUTH_SECRET` (le secret généré à l'étape 4)
+   - `NEXTAUTH_URL` = l'URL exacte de ton site (`https://TON-SITE.vercel.app`)
+6. Redéploie — le bouton "Connexion" apparaît dans la nav, et `/compte` permet à chaque membre de lier son compte.
+
+**Important** : aucun bot Discord permanent n'est nécessaire pour cette fonctionnalité — c'est uniquement une connexion "Se connecter avec Discord" (OAuth), qui reste 100% hébergée sur Vercel. Un vrai bot avec des commandes Discord (`/profile`, etc.) est un projet séparé qui nécessiterait un hébergement dédié (Railway, Render...).
