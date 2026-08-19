@@ -30,6 +30,7 @@ interface PushRow {
   name: string;
   clubName: string;
   delta: number;
+  trophies: number;
 }
 
 export default async function PusheursPage() {
@@ -101,7 +102,7 @@ export default async function PusheursPage() {
       club.members.map((m) => {
         const before = baselineByTag.get(m.tag);
         const delta = before ? m.trophies - before.trophies : 0;
-        return { tag: m.tag, name: m.name, clubName: club.name, delta };
+        return { tag: m.tag, name: m.name, clubName: club.name, delta, trophies: m.trophies };
       })
     )
     .sort((a, b) => b.delta - a.delta);
@@ -128,6 +129,9 @@ export default async function PusheursPage() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-display text-sm font-medium text-white">
                 {row.name} <span className="font-normal text-ash">{row.clubName}</span>
+              </p>
+              <p className="stat-mono text-[11px] text-ash">
+                {formatNumber(row.trophies)} trophées
               </p>
             </div>
             <span
@@ -255,6 +259,12 @@ export default async function PusheursPage() {
             début et maintenant. Repart à zéro à chaque nouvelle saison Brawl Stars (1er jeudi du
             mois), donc tout le monde a sa chance à chaque fois, peu importe son total all time.
           </p>
+          <Link
+            href="/saisons"
+            className="mt-4 inline-block font-mono text-[11px] uppercase tracking-widest text-ash transition hover:text-signal"
+          >
+            voir les saisons passées →
+          </Link>
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl">

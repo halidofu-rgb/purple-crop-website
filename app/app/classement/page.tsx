@@ -2,10 +2,13 @@ import Link from "next/link";
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getRankedRows } from "@/lib/ranked";
+import { getSeasonBaseline } from "@/lib/kv";
+import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Tabs from "@/components/Tabs";
 import RankGlyph from "@/components/RankGlyph";
 import Podium from "@/components/Podium";
+import Badge from "@/components/Badge";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +26,9 @@ interface TrophyRow extends ClubMember {
 
 export default async function ClassementPage() {
   const tags = clubTags();
+  const season = getCurrentSeason();
 
-  const [clubs, rankedRows] = await Promise.all([
+  const [clubs, rankedRows, baseline] = await Promise.all([
     Promise.all(
       tags.map(async (tag) => {
         try {
@@ -35,12 +39,22 @@ export default async function ClassementPage() {
       })
     ),
     getRankedRows(tags).catch(() => []),
+    getSeasonBaseline(season.key).catch(() => null),
   ]);
 
   const trophyRows: TrophyRow[] = clubs
     .filter((c): c is NonNullable<typeof c> => c !== null)
     .flatMap((club) => club.members.map((m) => ({ ...m, clubName: club.name })))
     .sort((a, b) => b.trophies - a.trophies);
+
+  const pushByTag = new Map<string, number>();
+  if (baseline) {
+    const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
+    for (const m of trophyRows) {
+      const before = baselineByTag.get(m.tag);
+      if (before) pushByTag.set(m.tag, m.trophies - before.trophies);
+    }
+  }
 
   const trophiesPanel = (
     <>
@@ -53,7 +67,9 @@ export default async function ClassementPage() {
         }))}
       />
       <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
-      {trophyRows.map((member, i) => (
+      {trophyRows.map((member, i) => {
+        const push = pushByTag.get(member.tag);
+        return (
         <li key={member.tag}>
           <Link
             href={`/joueurs/${encodeURIComponent(member.tag.replace(/^#/, ""))}`}
@@ -66,22 +82,32 @@ export default async function ClassementPage() {
               </p>
               <p className="text-xs text-ash">{member.clubName}</p>
             </div>
+            {push !== undefined && (
+              <Badge tone={push >= 0 ? "success" : "danger"}>
+                {push >= 0 ? "+" : ""}
+                {formatNumber(push)}
+              </Badge>
+            )}
             <span className="stat-mono shrink-0 text-base font-semibold text-zest2">
               {formatNumber(member.trophies)}
             </span>
           </Link>
         </li>
-      ))}
+        );
+      })}
     </ol>
     </>
   );
 
   const rankedPanel = (
     <div>
-      <p className="mb-4 text-xs text-ash">
-        Basé sur les 25 derniers combats Ranked de chaque joueur (limite de l&apos;API officielle
-        — pas de score de saison ou all-time disponible).
-      </p>
+      <div className="mb-4 flex items-start gap-2">
+        <Badge tone="warning">limite api</Badge>
+        <p className="text-xs text-ash">
+          Basé sur les 25 derniers combats Ranked de chaque joueur — pas de score de saison ou
+          all-time disponible.
+        </p>
+      </div>
       {rankedRows.length === 0 ? (
         <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
           Personne n&apos;a joué de combat Ranked récemment.

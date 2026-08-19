@@ -44,6 +44,10 @@ export default async function HomePage() {
   const totalTrophies = loadedClubs.reduce((sum, c) => sum + c.trophies, 0);
   const totalMembers = loadedClubs.reduce((sum, c) => sum + c.members.length, 0);
   const topClub = [...loadedClubs].sort((a, b) => b.trophies - a.trophies)[0];
+  const allMembersFlat = loadedClubs.flatMap((c) =>
+    c.members.map((m) => ({ ...m, clubName: c.name }))
+  );
+  const bestPlayer = [...allMembersFlat].sort((a, b) => b.trophies - a.trophies)[0];
 
   let pushRows: { tag: string; name: string; clubName: string; delta: number }[] = [];
   if (baseline) {
@@ -110,6 +114,22 @@ export default async function HomePage() {
                   </div>
                   <span className="stat-mono text-sm font-semibold text-zest">
                     {formatNumber(topClub.trophies)}
+                  </span>
+                </Link>
+              )}
+              {bestPlayer && (
+                <Link
+                  href={`/joueurs/${encodeURIComponent(bestPlayer.tag.replace(/^#/, ""))}`}
+                  className="flex items-center justify-between rounded-xl border border-line px-4 py-3 transition hover:border-zest"
+                >
+                  <div>
+                    <p className="font-display text-sm font-medium text-white">
+                      {bestPlayer.name}
+                    </p>
+                    <p className="text-[11px] text-ash">Meilleur joueur · {bestPlayer.clubName}</p>
+                  </div>
+                  <span className="stat-mono text-sm font-semibold text-zest">
+                    {formatNumber(bestPlayer.trophies)}
                   </span>
                 </Link>
               )}
