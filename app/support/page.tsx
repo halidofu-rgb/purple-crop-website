@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Button from "@/components/Button";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
+import { MessageCircle, HelpCircle } from "lucide-react";
 
 export default function SupportPage() {
   return (
@@ -19,31 +20,37 @@ export default function SupportPage() {
             c&apos;est de passer sur le Discord.
           </p>
           <div className="mt-6">
-            <Button href={PURPLE_CORP_DISCORD_URL} variant="primary">
+            <Button href={PURPLE_CORP_DISCORD_URL} variant="primary" size="lg" icon={<MessageCircle className="h-4 w-4" />}>
               Rejoindre le Discord
             </Button>
           </div>
         </section>
 
         <section className="mx-auto mt-12 max-w-2xl space-y-4">
-          <div className="rounded-2xl border border-line bg-panel p-5">
-            <p className="font-display text-sm font-semibold text-white">
-              Pourquoi certaines données Ranked manquent ?
-            </p>
-            <p className="mt-1 text-sm text-ash">
-              L&apos;API officielle de Brawl Stars ne donne pas de rang Ranked absolu (Masters,
-              Légendaire...). On affiche uniquement l&apos;évolution sur les 25 derniers combats,
-              seule donnée réellement disponible.
-            </p>
+          <div className="card-lift flex items-start gap-3 rounded-2xl border border-line bg-panel p-5">
+            <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-zest" />
+            <div>
+              <p className="font-display text-sm font-semibold text-white">
+                Pourquoi certaines données Ranked manquent ?
+              </p>
+              <p className="mt-1 text-sm text-ash">
+                L&apos;API officielle de Brawl Stars ne donne pas de rang Ranked absolu (Masters,
+                Légendaire...). On affiche uniquement l&apos;évolution sur les 25 derniers combats,
+                seule donnée réellement disponible.
+              </p>
+            </div>
           </div>
-          <div className="rounded-2xl border border-line bg-panel p-5">
-            <p className="font-display text-sm font-semibold text-white">
-              Le push d&apos;un joueur affiche 0, pourquoi ?
-            </p>
-            <p className="mt-1 text-sm text-ash">
-              Le push se calcule depuis le début de la saison. S&apos;il vient d&apos;être suivi
-              pour la première fois, le compteur redémarre logiquement à zéro.
-            </p>
+          <div className="card-lift flex items-start gap-3 rounded-2xl border border-line bg-panel p-5">
+            <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-zest" />
+            <div>
+              <p className="font-display text-sm font-semibold text-white">
+                Le push d&apos;un joueur affiche 0, pourquoi ?
+              </p>
+              <p className="mt-1 text-sm text-ash">
+                Le push se calcule depuis le début de la saison. S&apos;il vient d&apos;être suivi
+                pour la première fois, le compteur redémarre logiquement à zéro.
+              </p>
+            </div>
           </div>
         </section>
       </main>
