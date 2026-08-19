@@ -3,8 +3,10 @@ import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
+import { getRankedRows } from "@/lib/ranked";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import RankGlyph from "@/components/RankGlyph";
 
 // La partie "meilleur pusher" dépend de Redis, pas du cache fetch() —
 // on garde la page toujours calculée à la demande.
@@ -22,7 +24,7 @@ export default async function HomePage() {
   const tags = clubTags();
   const season = getCurrentSeason();
 
-  const [clubResults, baseline] = await Promise.all([
+  const [clubResults, baseline, rankedRows] = await Promise.all([
     Promise.all(
       tags.map(async (tag) => {
         try {
@@ -34,6 +36,7 @@ export default async function HomePage() {
       })
     ),
     getSeasonBaseline(season.key).catch(() => null),
+    getRankedRows(tags).catch(() => []),
   ]);
 
   const loadedClubs = clubResults.filter((r) => r.club).map((r) => r.club!);
@@ -55,6 +58,7 @@ export default async function HomePage() {
       .sort((a, b) => b.delta - a.delta);
   }
   const king = pushRows[0];
+  const rankedKing = rankedRows[0];
 
   return (
     <>
@@ -128,6 +132,22 @@ export default async function HomePage() {
                   </span>
                 </Link>
               )}
+              {rankedKing && (
+                <Link
+                  href="/classement"
+                  className="flex items-center justify-between rounded-xl border border-line px-4 py-3 transition hover:border-signal"
+                >
+                  <div>
+                    <p className="font-display text-sm font-medium text-white">{rankedKing.name}</p>
+                    <p className="flex items-center gap-1 text-[11px] text-ash">
+                      <RankGlyph className="h-3 w-3" /> Meilleur en Ranked
+                    </p>
+                  </div>
+                  <span className="stat-mono text-sm font-semibold text-signal">
+                    +{formatNumber(rankedKing.delta)}
+                  </span>
+                </Link>
+              )}
               <Link
                 href="/pusheurs"
                 className="flex items-center justify-between rounded-xl border border-line px-4 py-3 transition hover:border-zest2"
@@ -169,7 +189,7 @@ export default async function HomePage() {
 
         {/* Deux aperçus rapides côte à côte, chacun avec un accès direct
             à sa page complète. */}
-        <section className="mx-auto mt-8 grid max-w-5xl gap-4 lg:grid-cols-2">
+        <section className="mx-auto mt-8 grid max-w-5xl gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-line bg-panel">
             <div className="flex items-center justify-between px-5 py-4">
               <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">
@@ -249,6 +269,51 @@ export default async function HomePage() {
             ) : (
               <p className="px-5 py-4 text-xs text-ash">
                 Pas encore de photo de départ pour cette saison — reviens un peu plus tard.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-line bg-panel">
+            <div className="flex items-center justify-between px-5 py-4">
+              <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
+                <RankGlyph className="h-3.5 w-3.5" /> Meilleurs en Ranked
+              </h2>
+              <Link
+                href="/classement"
+                className="font-mono text-[10px] uppercase tracking-widest text-ash transition hover:text-signal"
+              >
+                voir tout →
+              </Link>
+            </div>
+            {rankedRows.length > 0 ? (
+              <ol className="divide-y divide-line">
+                {rankedRows.slice(0, 5).map((row, i) => (
+                  <li key={row.tag}>
+                    <Link
+                      href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+                      className="flex items-center gap-3 px-5 py-3 transition hover:bg-panel2"
+                    >
+                      <span className="rank-index w-9 shrink-0 text-xs text-signal">
+                        {rankIndex(i)}
+                      </span>
+                      <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                        {row.name}
+                      </span>
+                      <span
+                        className={`stat-mono shrink-0 text-sm font-semibold ${
+                          row.delta >= 0 ? "text-signal" : "text-blush"
+                        }`}
+                      >
+                        {row.delta >= 0 ? "+" : ""}
+                        {formatNumber(row.delta)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="px-5 py-4 text-xs text-ash">
+                Personne n&apos;a joué de combat Ranked récemment.
               </p>
             )}
           </div>

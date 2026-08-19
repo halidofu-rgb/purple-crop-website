@@ -22,8 +22,18 @@ function rankIndex(i: number): string {
   return `[${String(i + 1).padStart(2, "0")}]`;
 }
 
-export default function ClubView({ club }: { club: Club }) {
+export default function ClubView({
+  club,
+  clubRank,
+  totalClubs,
+}: {
+  club: Club;
+  clubRank?: number;
+  totalClubs?: number;
+}) {
   const roster = sortByTrophies(club.members);
+  const best = roster[0];
+  const average = roster.length > 0 ? Math.round(club.trophies / roster.length) : 0;
 
   return (
     <main className="min-h-screen px-4 py-10 sm:px-8 lg:px-16">
@@ -45,6 +55,32 @@ export default function ClubView({ club }: { club: Club }) {
           <p className="mt-1 font-display text-xs uppercase tracking-[0.25em] text-ash">
             Trophées cumulés · {club.members.length} membres
           </p>
+        </div>
+
+        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-line pt-6">
+          <div>
+            <p className="stat-mono text-xl font-semibold text-white">
+              {formatNumber(average)}
+            </p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
+              Moyenne / membre
+            </p>
+          </div>
+          <div>
+            <p className="truncate font-display text-sm font-semibold text-white">
+              {best ? best.name : "—"}
+            </p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Meilleur joueur</p>
+          </div>
+          <div>
+            <p className="stat-mono text-xl font-semibold text-white">
+              {clubRank ? `#${clubRank}` : "—"}
+              {totalClubs ? <span className="text-ash"> / {totalClubs}</span> : null}
+            </p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
+              Rang dans Purple Corp
+            </p>
+          </div>
         </div>
       </section>
 
