@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
+import { TrophyGlyph, PushGlyph } from "@/components/icons";
 import { Link2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -188,12 +189,19 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                 </div>
 
                 <div className="pb-1 text-left lg:text-right">
-                  <p className="text-[11px] tracking-[0.16em] uppercase text-steel-500">Trophées</p>
+                  <p className="flex items-center gap-1.5 text-[11px] tracking-[0.16em] uppercase text-steel-500 lg:justify-end">
+                    <TrophyGlyph className="h-3.5 w-3.5" /> Trophées
+                  </p>
                   <p className="stat-mono text-[44px] leading-none tracking-[-0.03em] text-zest2 [text-shadow:0_0_40px_rgba(181,171,252,0.4)] sm:text-[52px]">
                     {formatNumber(player.trophies)}
                   </p>
                   {seasonPush !== undefined && (
-                    <p className={`mt-1 text-xs ${seasonPush >= 0 ? "text-zest2" : "text-blush"}`}>
+                    <p
+                      className={`mt-1 flex items-center gap-1 text-xs lg:justify-end ${
+                        seasonPush >= 0 ? "text-zest2" : "text-blush"
+                      }`}
+                    >
+                      <PushGlyph className="h-3 w-3" />
                       {seasonPush >= 0 ? "+" : ""}
                       {formatNumber(seasonPush)} cette saison
                     </p>
