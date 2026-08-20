@@ -85,7 +85,7 @@ export default async function ClubsListPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <ClubBadge tag={club.tag} size={36} />
+                    <ClubBadge tag={club.tag} badgeId={club.badgeId} size={36} />
                     <div>
                       <p className="font-display text-lg font-bold text-white">{club.name}</p>
                       <p className="font-mono text-[11px] text-ash">{club.tag}</p>

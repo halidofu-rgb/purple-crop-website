@@ -79,6 +79,7 @@ export interface Player {
   highestTrophies: number;
   expLevel: number;
   club?: { tag: string; name: string };
+  icon: { id: number };
   soloVictories: number;
   duoVictories: number;
   "3vs3Victories": number;

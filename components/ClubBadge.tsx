@@ -1,3 +1,5 @@
+import { getClubBadgeUrl } from "@/lib/assets";
+
 const PALETTE = ["#9F7AEA", "#45E0D0", "#FF6E8F", "#F5B963", "#C4B5FD"];
 
 function hashTag(tag: string): number {
@@ -6,11 +8,7 @@ function hashTag(tag: string): number {
   return h;
 }
 
-// Emblème généré à partir du tag du club — PAS le vrai badge Supercell
-// (l'API ne renvoie qu'un badgeId numérique, et on n'a pas le droit de
-// réutiliser les icônes du jeu). Un même club garde toujours le même
-// emblème, dérivé de manière stable de son tag.
-export default function ClubBadge({ tag, size = 40 }: { tag: string; size?: number }) {
+function GeneratedBadge({ tag, size }: { tag: string; size: number }) {
   const h = hashTag(tag);
   const colorA = PALETTE[h % PALETTE.length];
   const colorB = PALETTE[(h >> 3) % PALETTE.length];
@@ -36,4 +34,34 @@ export default function ClubBadge({ tag, size = 40 }: { tag: string; size?: numb
       />
     </svg>
   );
+}
+
+// Vrai badge du club (BrawlAPI/Brawlify) quand badgeId est fourni et connu
+// de leur CDN. Sinon, repli sur un emblème généré à partir du tag — jamais
+// de case vide.
+export default async function ClubBadge({
+  tag,
+  badgeId,
+  size = 40,
+}: {
+  tag: string;
+  badgeId?: number;
+  size?: number;
+}) {
+  const realUrl = badgeId !== undefined ? await getClubBadgeUrl(badgeId).catch(() => null) : null;
+
+  if (realUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={realUrl}
+        alt=""
+        width={size}
+        height={size}
+        style={{ width: size, height: size, objectFit: "contain" }}
+      />
+    );
+  }
+
+  return <GeneratedBadge tag={tag} size={size} />;
 }

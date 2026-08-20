@@ -3,6 +3,7 @@ import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { listAllMemberLinks } from "@/lib/members";
 import { getSeasonBaseline } from "@/lib/kv";
+import { rankedTierLabel } from "@/lib/rankedTier";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Tabs from "@/components/Tabs";
@@ -159,7 +160,9 @@ export default async function ClassementPage({
                     <p className="truncate font-display text-sm font-medium text-white">
                       {row.name}
                     </p>
-                    <p className="text-xs text-ash">{row.clubName}</p>
+                    <p className="text-xs text-ash">
+                      {row.clubName} · {rankedTierLabel(row.rankedScore)}
+                    </p>
                   </div>
                   {row.rankedBest !== undefined && (
                     <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>

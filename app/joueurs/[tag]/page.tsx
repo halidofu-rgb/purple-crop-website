@@ -5,6 +5,8 @@ import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberLinkByTag } from "@/lib/members";
 import { getCurrentSeason } from "@/lib/season";
 import { avatarColor } from "@/lib/avatarColor";
+import { getPlayerIconUrl } from "@/lib/assets";
+import { rankedTierLabel } from "@/lib/rankedTier";
 import Navbar from "@/components/Navbar";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
@@ -44,7 +46,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const season = getCurrentSeason();
   const allTags = clubTags();
 
-  const [allClubs, baseline, memberLink] = await Promise.all([
+  const [allClubs, baseline, memberLink, avatarUrl] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -56,6 +58,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     ),
     getSeasonBaseline(season.key).catch(() => null),
     getMemberLinkByTag(params.tag).catch(() => null),
+    getPlayerIconUrl(player.icon?.id).catch(() => null),
   ]);
 
   const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
@@ -87,10 +90,22 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const mainStats = [
     { icon: TrophyGlyph, value: formatNumber(player.trophies), label: "Total", title: "Trophées", colorClass: "" },
     ...(memberLink?.rankedScore !== undefined
-      ? [{ icon: RankGlyph, value: formatNumber(memberLink.rankedScore), label: undefined, title: "Ranked", colorClass: "text-signal" }]
+      ? [{
+          icon: RankGlyph,
+          value: formatNumber(memberLink.rankedScore),
+          label: rankedTierLabel(memberLink.rankedScore),
+          title: "Ranked",
+          colorClass: "text-signal",
+        }]
       : []),
     ...(memberLink?.rankedBest !== undefined
-      ? [{ icon: RankGlyph, value: formatNumber(memberLink.rankedBest), label: undefined, title: "Ranked all-time", colorClass: "text-zest2" }]
+      ? [{
+          icon: RankGlyph,
+          value: formatNumber(memberLink.rankedBest),
+          label: rankedTierLabel(memberLink.rankedBest),
+          title: "Ranked all-time",
+          colorClass: "text-zest2",
+        }]
       : []),
     ...(seasonPush !== undefined
       ? [{
@@ -117,12 +132,21 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
         {/* En-tête profil */}
         <section className="mt-6 rounded-3xl border border-line bg-panel px-6 py-6 sm:px-8">
           <div className="flex flex-wrap items-center gap-4">
-            <span
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl font-display text-xl font-bold text-ink"
-              style={{ backgroundColor: avatarColor(player.name) }}
-            >
-              {player.name.trim().charAt(0).toUpperCase()}
-            </span>
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-2xl border border-line bg-panel2 object-contain p-1"
+              />
+            ) : (
+              <span
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl font-display text-xl font-bold text-ink"
+                style={{ backgroundColor: avatarColor(player.name) }}
+              >
+                {player.name.trim().charAt(0).toUpperCase()}
+              </span>
+            )}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-display text-lg font-semibold text-white">{player.name}</p>

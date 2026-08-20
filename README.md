@@ -106,3 +106,28 @@ fournit pas — voir /support).
 6. Redéploie — le bouton "Connexion" apparaît dans la nav, et `/compte` permet à chaque membre de lier son compte.
 
 **Important** : aucun bot Discord permanent n'est nécessaire pour cette fonctionnalité — c'est uniquement une connexion "Se connecter avec Discord" (OAuth), qui reste 100% hébergée sur Vercel. Un vrai bot avec des commandes Discord (`/profile`, etc.) est un projet séparé qui nécessiterait un hébergement dédié (Railway, Render...).
+
+## Recherche approfondie — score Ranked automatique (résultat)
+
+Vérification exhaustive menée : API officielle Brawl Stars, BrawlAPI (api.brawlapi.com),
+Brawl Time Ninja (et ses 4 sources déclarées dans leur propre page /about : API officielle,
+BrawlAPI, une autre lib tierce, le wiki Fandom), plusieurs libs tierces indépendantes
+(brawlstats, bstats, BrawlPlex...).
+
+**Conclusion : aucune ne fournit le score Ranked actuel ou all-time d'un joueur.** Même
+Brawl Time Ninja, qui l'affiche sur son site, ne le tire d'aucune de ses 4 sources déclarées
+— ils font forcément leur propre suivi maison en continu depuis des années, comme nous avec
+Redis, juste à bien plus grande échelle. La saisie manuelle (`/compte`) reste donc la seule
+façon honnête d'avoir cette donnée sur Purple Corp.
+
+**Ce qui EST récupéré automatiquement depuis cette recherche :**
+- Vraie icône de profil (`player.icon.id`) et vrai badge de club (`club.badgeId`), via
+  BrawlAPI (`lib/assets.ts`) — CDN public explicitement conçu pour un usage tiers.
+- Libellé de rang (Bronze I → Pro) calculé à partir du score Elo saisi, avec les vrais
+  seuils du jeu confirmés par les notes de mise à jour Supercell (`lib/rankedTier.ts`).
+  Ce n'est pas la donnée Ranked elle-même (toujours saisie à la main), juste sa traduction
+  en nom de rang lisible.
+
+**Pas de vraies icônes de rang (Bronze/Mythique/etc.)** : aucune source publique identifiée.
+Brawl Time Ninja utilise ses propres images maison (hébergées sur son propre site, pas une
+API ouverte) — rien de légitimement réutilisable trouvé pour l'instant.

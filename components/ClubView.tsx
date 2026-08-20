@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
 import { discordUrlForTag } from "@/lib/clubs";
+import { rankedTierLabel } from "@/lib/rankedTier";
 import ClubBadge from "@/components/ClubBadge";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
@@ -133,6 +134,7 @@ export default function ClubView({
               <span className="rank-index w-10 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-sm font-medium text-white">{row.name}</p>
+                <p className="text-[11px] text-ash">{rankedTierLabel(row.rankedScore)}</p>
               </div>
               {row.rankedBest !== undefined && (
                 <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>
@@ -158,7 +160,7 @@ export default function ClubView({
     <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
       <section className="hud-frame mx-auto max-w-4xl bg-panel px-6 py-8 text-center sm:px-10 sm:py-10">
         <div className="flex justify-center">
-          <ClubBadge tag={club.tag} size={52} />
+          <ClubBadge tag={club.tag} badgeId={club.badgeId} size={52} />
         </div>
         <p className="mt-3 font-display text-xs uppercase tracking-[0.3em] text-signal">
           {TYPE_LABEL[club.type] ?? club.type} · {formatNumber(club.requiredTrophies)} trophées requis
