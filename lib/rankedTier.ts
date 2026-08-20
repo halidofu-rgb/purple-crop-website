@@ -37,6 +37,26 @@ export function rankedTierLabel(elo: number): string {
   return TIERS[Math.min(idx, TIERS.length - 1)];
 }
 
+export interface RankedTierProgress {
+  label: string;
+  floor: number; // point d'entrée du palier actuel
+  next: number | null; // point d'entrée du palier suivant (null si Pro)
+  fraction: number; // 0 à 1, réel — calculé sur les vrais seuils du jeu
+}
+
+// Progression réelle vers le palier suivant, calculée sur les mêmes
+// seuils que rankedTierLabel — pas une estimation, un vrai calcul.
+export function rankedTierProgress(elo: number): RankedTierProgress {
+  const label = rankedTierLabel(elo);
+  if (label === "Pro") return { label, floor: 11250, next: null, fraction: 1 };
+
+  const idx = TIERS.indexOf(label);
+  const floor = THRESHOLDS[idx];
+  const next = idx + 1 < THRESHOLDS.length ? THRESHOLDS[idx + 1] : 11250;
+  const fraction = next > floor ? Math.min(1, Math.max(0, (elo - floor) / (next - floor))) : 1;
+  return { label, floor, next, fraction };
+}
+
 const SLUG_BY_LABEL: Record<string, string> = {
   "Bronze I": "bronze-1", "Bronze II": "bronze-2", "Bronze III": "bronze-3",
   "Argent I": "argent-1", "Argent II": "argent-2", "Argent III": "argent-3",

@@ -96,8 +96,10 @@ export async function getPlayer(tag: string): Promise<Player> {
 
 export interface BattleLogItem {
   battleTime: string; // format brut Supercell : "20260818T060224.000Z"
+  event?: { mode?: string; map?: string };
   battle: {
     type: string;
+    mode?: string;
     result?: "victory" | "defeat" | "draw";
     trophyChange?: number; // absent sur Power League / Ranked classiques
   };
