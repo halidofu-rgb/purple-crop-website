@@ -9,10 +9,12 @@ export default function AccountLinkForm({
   existingTag,
   existingRankedScore,
   existingRankedBest,
+  existingBio,
 }: {
   existingTag?: string;
   existingRankedScore?: number;
   existingRankedBest?: number;
+  existingBio?: string;
 }) {
   const router = useRouter();
   const [tag, setTag] = useState(existingTag ?? "");
@@ -22,6 +24,7 @@ export default function AccountLinkForm({
   const [rankedBest, setRankedBest] = useState(
     existingRankedBest !== undefined ? String(existingRankedBest) : ""
   );
+  const [bio, setBio] = useState(existingBio ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -36,7 +39,7 @@ export default function AccountLinkForm({
       const res = await fetch("/api/compte/link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tag, rankedScore, rankedBest }),
+        body: JSON.stringify({ tag, rankedScore, rankedBest, bio }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -97,6 +100,20 @@ export default function AccountLinkForm({
         Les deux sont visibles dans ton profil en jeu. L&apos;API Brawl Stars ne les fournit pas,
         donc c&apos;est à toi de les indiquer — reviens les mettre à jour de temps en temps.
       </p>
+
+      <div>
+        <label className="mb-1.5 block font-display text-xs uppercase tracking-wide text-ash">
+          Présentation (optionnel)
+        </label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="Une phrase sur toi, ton style de jeu, tes objectifs..."
+          maxLength={200}
+          rows={3}
+          className="w-full resize-none rounded-xl border border-line bg-panel2 px-4 py-2.5 text-sm text-white placeholder:text-ash focus:border-zest focus:outline-none"
+        />
+      </div>
 
       {error && <p className="text-xs text-blush">{error}</p>}
       {success && <p className="text-xs text-signal">Compte lié avec succès.</p>}

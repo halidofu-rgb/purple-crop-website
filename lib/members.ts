@@ -13,6 +13,7 @@ export interface MemberLink {
   rankedScore?: number; // score Ranked actuel, déclaré par le joueur
   rankedBest?: number; // meilleur score Ranked all-time, déclaré par le joueur
   rankedUpdatedAt?: string; // ISO — date de la dernière saisie
+  bio?: string; // petite présentation libre, écrite par le joueur lui-même
 }
 
 function linkKey(discordId: string): string {

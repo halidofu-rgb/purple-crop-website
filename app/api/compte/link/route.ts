@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
     rankedScore: parseOptionalInt(body.rankedScore),
     rankedBest: parseOptionalInt(body.rankedBest),
     rankedUpdatedAt: new Date().toISOString(),
+    bio: typeof body.bio === "string" && body.bio.trim() ? body.bio.trim().slice(0, 200) : undefined,
   });
 
   return NextResponse.json({ ok: true });

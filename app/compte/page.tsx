@@ -114,6 +114,7 @@ export default async function ComptePage() {
             existingTag={link?.tag}
             existingRankedScore={link?.rankedScore}
             existingRankedBest={link?.rankedBest}
+            existingBio={link?.bio}
           />
         </section>
       </main>

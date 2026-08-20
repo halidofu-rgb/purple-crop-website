@@ -5,6 +5,7 @@ import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import { CrownGlyph } from "@/components/icons";
+import { avatarColor } from "@/lib/avatarColor";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +15,6 @@ function formatNumber(n: number): string {
 
 function rankIndex(i: number): string {
   return `[${String(i + 1).padStart(2, "0")}]`;
-}
-
-const AVATAR_COLORS = ["#9F7AEA", "#45E0D0", "#FF6E8F", "#7C8CF5", "#C4B5FD", "#5FE0C0"];
-function avatarColor(name: string): string {
-  let hash = 0;
-  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 interface PushRow {

@@ -1,19 +1,28 @@
 import Link from "next/link";
-import { getPlayer, getClub, getRankedSummary, sortByTrophies } from "@/lib/brawlstars";
+import { getPlayer, getClub, sortByTrophies } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberLinkByTag } from "@/lib/members";
 import { getCurrentSeason } from "@/lib/season";
+import { avatarColor } from "@/lib/avatarColor";
 import Navbar from "@/components/Navbar";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
-import { Link2 } from "lucide-react";
+import { TrophyGlyph, PushGlyph } from "@/components/icons";
+import { Link2, Users2, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
 // Le rang dans le club / global et le push dépendent de données croisées
 // (tous les clubs, Redis) — on calcule à chaque requête plutôt que de figer
 // au build.
 export const dynamic = "force-dynamic";
+
+const ROLE_LABEL: Record<string, string> = {
+  president: "Président",
+  vicePresident: "Vice-président",
+  senior: "Ancien",
+  member: "Membre",
+};
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
@@ -35,7 +44,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const season = getCurrentSeason();
   const allTags = clubTags();
 
-  const [allClubs, baseline, rankedSummary, memberLink] = await Promise.all([
+  const [allClubs, baseline, memberLink] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -46,12 +55,12 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
       })
     ),
     getSeasonBaseline(season.key).catch(() => null),
-    getRankedSummary(params.tag).catch(() => null),
     getMemberLinkByTag(params.tag).catch(() => null),
   ]);
 
   const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
   const homeClub = loadedClubs.find((c) => c.tag === player.club?.tag);
+  const clubMember = homeClub?.members.find((m) => m.tag === player.tag);
 
   // Rang du joueur au sein de son propre club.
   let clubRank: number | undefined;
@@ -74,123 +83,137 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   }
 
   const brawlers = [...player.brawlers].sort((a, b) => b.trophies - a.trophies);
-  const totalVictories =
-    player.soloVictories + player.duoVictories + player["3vs3Victories"];
 
   const mainStats = [
-    { value: formatNumber(player.trophies), label: "Trophées", color: "text-zest" },
-    { value: formatNumber(player.highestTrophies), label: "Record perso", color: "text-zest2" },
+    { icon: TrophyGlyph, value: formatNumber(player.trophies), label: "Total", title: "Trophées", colorClass: "" },
     ...(memberLink?.rankedScore !== undefined
-      ? [{ value: formatNumber(memberLink.rankedScore), label: "Ranked", color: "text-signal" }]
+      ? [{ icon: RankGlyph, value: formatNumber(memberLink.rankedScore), label: undefined, title: "Ranked", colorClass: "text-signal" }]
       : []),
     ...(memberLink?.rankedBest !== undefined
-      ? [{ value: formatNumber(memberLink.rankedBest), label: "Ranked all-time", color: "text-signal" }]
+      ? [{ icon: RankGlyph, value: formatNumber(memberLink.rankedBest), label: undefined, title: "Ranked all-time", colorClass: "text-zest2" }]
       : []),
-    { value: formatNumber(totalVictories), label: "Victoires totales", color: "text-white" },
-    { value: String(brawlers.length), label: "Brawlers", color: "text-white" },
+    ...(seasonPush !== undefined
+      ? [{
+          icon: PushGlyph,
+          value: `${seasonPush >= 0 ? "+" : ""}${formatNumber(seasonPush)}`,
+          label: clubRank ? `#${clubRank} club` : undefined,
+          title: `Push ${season.label}`,
+          colorClass: "",
+        }]
+      : []),
+    { icon: Sparkles, value: String(player.expLevel), label: undefined, title: "Niveau d'XP", colorClass: "text-zest" },
   ];
 
   return (
     <>
       <Navbar />
-      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-        <section className="hud-frame mx-auto max-w-3xl bg-panel px-6 py-8 text-center sm:px-10 sm:py-10">
-          {player.club && (
-            <Link
-              href={`/clubs/${encodeURIComponent(player.club.tag.replace(/^#/, ""))}`}
-              className="font-display text-xs uppercase tracking-[0.3em] text-signal hover:underline"
+      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:max-w-4xl lg:mx-auto lg:px-0">
+        <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">Joueur</p>
+        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          {player.name}
+        </h1>
+        <p className="mt-1 font-mono text-xs text-ash">#{player.tag.replace(/^#/, "")}</p>
+
+        {/* En-tête profil */}
+        <section className="mt-6 rounded-3xl border border-line bg-panel px-6 py-6 sm:px-8">
+          <div className="flex flex-wrap items-center gap-4">
+            <span
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl font-display text-xl font-bold text-ink"
+              style={{ backgroundColor: avatarColor(player.name) }}
             >
-              {player.club.name}
-            </Link>
-          )}
-          <div className="mt-3 flex items-center justify-center gap-2">
-            <h1 className="font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              {player.name}
-            </h1>
-            {memberLink && (
-              <Badge tone="success" icon={<Link2 className="h-3 w-3" />}>
-                Discord lié
-              </Badge>
-            )}
-          </div>
-          <p className="mt-1 font-mono text-xs text-ash">Niveau d&apos;XP {player.expLevel}</p>
-
-          <div className="mt-8 grid grid-cols-2 gap-3 border-t border-line pt-8 sm:grid-cols-3 lg:grid-cols-6">
-            {mainStats.map((s, i) => (
-              <div key={i}>
-                <p className={`stat-mono text-xl font-semibold sm:text-2xl ${s.color}`}>
-                  {s.value}
-                </p>
-                <p className="mt-1 text-[10px] uppercase tracking-wide text-ash sm:text-[11px]">
-                  {s.label}
-                </p>
+              {player.name.trim().charAt(0).toUpperCase()}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-display text-lg font-semibold text-white">{player.name}</p>
+                {clubMember && (
+                  <Badge tone="primary">{ROLE_LABEL[clubMember.role] ?? clubMember.role}</Badge>
+                )}
+                {memberLink && (
+                  <Badge tone="success" icon={<Link2 className="h-3 w-3" />}>
+                    Discord lié
+                  </Badge>
+                )}
               </div>
-            ))}
-          </div>
-
-          {/* Contexte compétitif : où il se situe dans son club, dans
-              Purple Corp, et sa progression cette saison. */}
-          <div className="mt-6 grid grid-cols-3 gap-3 border-t border-line pt-6">
-            <div>
-              <p className="stat-mono text-lg font-semibold text-white">
-                {clubRank ? `#${clubRank}` : "—"}
-              </p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Dans son club</p>
+              {player.club && (
+                <Link
+                  href={`/clubs/${encodeURIComponent(player.club.tag.replace(/^#/, ""))}`}
+                  className="text-xs text-signal hover:underline"
+                >
+                  {player.club.name} ›
+                </Link>
+              )}
             </div>
-            <div>
-              <p className="stat-mono text-lg font-semibold text-white">
-                {globalRank ? `#${globalRank}` : "—"}
-                {allMembers.length ? <span className="text-ash"> / {allMembers.length}</span> : null}
-              </p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
-                Classement Purple Corp
-              </p>
-            </div>
-            <div>
-              <p
-                className={`stat-mono text-lg font-semibold ${
-                  seasonPush !== undefined
-                    ? seasonPush >= 0
-                      ? "text-signal"
-                      : "text-blush"
-                    : "text-white"
-                }`}
-              >
-                {seasonPush !== undefined
-                  ? `${seasonPush >= 0 ? "+" : ""}${formatNumber(seasonPush)}`
-                  : "—"}
-              </p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
-                Push {season.label}
-              </p>
-            </div>
+            {globalRank && (
+              <div className="text-right">
+                <p className="stat-mono text-lg font-semibold text-white">
+                  #{globalRank}
+                  <span className="text-ash"> / {allMembers.length}</span>
+                </p>
+                <p className="text-[10px] uppercase tracking-wide text-ash">Purple Corp</p>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Activité Ranked récente — 25 derniers combats, limite de l'API. */}
-        {rankedSummary && rankedSummary.games > 0 && (
-          <section className="mx-auto mt-6 max-w-3xl rounded-2xl border border-line bg-panel px-6 py-5">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
-                <RankGlyph className="h-3.5 w-3.5" /> Activité Ranked — 25 derniers combats
-              </h2>
-              <span
-                className={`stat-mono text-lg font-semibold ${
-                  rankedSummary.delta >= 0 ? "text-signal" : "text-blush"
-                }`}
-              >
-                {rankedSummary.delta >= 0 ? "+" : ""}
-                {formatNumber(rankedSummary.delta)}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-ash">
-              {rankedSummary.wins} victoires · {rankedSummary.losses} défaites sur{" "}
-              {rankedSummary.games} combats Ranked
-            </p>
-          </section>
-        )}
+        {/* Présentation */}
+        <section className="mt-4 rounded-3xl border border-line bg-panel px-6 py-6 text-center sm:px-8">
+          <p className="mb-2 font-display text-xs uppercase tracking-[0.2em] text-ash">
+            Présentation
+          </p>
+          <p className="text-sm text-ash">
+            {memberLink?.bio || `${player.name} n'a pas encore écrit de présentation.`}
+          </p>
+        </section>
 
-        <section className="mx-auto mt-8 max-w-3xl">
+        {/* 5 stats principales */}
+        <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {mainStats.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={i} className="rounded-2xl border border-line bg-panel p-4">
+                <Icon className={`h-6 w-6 ${s.colorClass}`} />
+                <p className="mt-2 text-[10px] uppercase tracking-wide text-ash">{s.title}</p>
+                <p className="stat-mono text-lg font-semibold text-white">{s.value}</p>
+                {s.label && <p className="text-[10px] text-ash">{s.label}</p>}
+              </div>
+            );
+          })}
+        </section>
+
+        {/* Victoires en jeu */}
+        <section className="mt-4 rounded-3xl border border-line bg-panel px-6 py-6 sm:px-8">
+          <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
+            Victoires en jeu
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: player["3vs3Victories"], label: "3v3" },
+              { value: player.soloVictories, label: "Solo" },
+              { value: player.duoVictories, label: "Duo" },
+            ].map((v) => (
+              <div key={v.label} className="rounded-xl border border-line bg-panel2 p-4 text-center">
+                <Users2 className="mx-auto h-4 w-4 text-zest" />
+                <p className="stat-mono mt-2 text-lg font-semibold text-white">
+                  {formatNumber(v.value)}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide text-ash">{v.label} victoires</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Ranked 1v1 — pas de Casino : feature Discord custom qu'on n'a pas
+            construite (voir /support). On l'annonce honnêtement, pas de
+            fausse donnée "0 combat". */}
+        <section className="mt-4 rounded-3xl border border-line bg-panel px-6 py-6 text-center sm:px-8">
+          <h2 className="mb-3 flex items-center justify-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
+            <RankGlyph className="h-3.5 w-3.5" /> Ranked 1v1
+          </h2>
+          <p className="text-sm text-ash">Bientôt disponible.</p>
+        </section>
+
+        <section className="mt-8">
           <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
             Ses meilleurs brawlers
           </h2>
