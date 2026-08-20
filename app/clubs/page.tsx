@@ -54,13 +54,13 @@ export default async function ClubsListPage() {
       <Navbar />
       <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="mx-auto max-w-3xl text-center">
-          <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
+          <p className="text-xs uppercase tracking-[0.3em] text-signal">
             La communauté
           </p>
-          <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
             Nos clubs
           </h1>
-          <p className="mt-3 text-sm text-ash">
+          <p className="mt-3 text-sm text-steel-400">
             Purple Corp regroupe plusieurs clubs Brawl Stars. Choisis-en un pour voir sa fiche complète.
           </p>
         </section>
@@ -69,9 +69,9 @@ export default async function ClubsListPage() {
           {results.map(({ tag, club, error }) => {
             if (error || !club) {
               return (
-                <div key={tag} className="rounded-2xl border border-line bg-panel p-6 text-left">
-                  <p className="font-display text-sm font-semibold text-blush">Erreur pour {tag}</p>
-                  <p className="mt-1 text-xs text-ash">{error}</p>
+                <div key={tag} className="rounded-2xl border border-paper/10 bg-panel p-6 text-left">
+                  <p className="text-sm font-semibold text-blush">Erreur pour {tag}</p>
+                  <p className="mt-1 text-xs text-steel-400">{error}</p>
                 </div>
               );
             }
@@ -82,14 +82,14 @@ export default async function ClubsListPage() {
               <Link
                 key={tag}
                 href={`/clubs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
-                className="card-lift rounded-2xl border border-line bg-panel p-6 text-left shadow-card"
+                className="card-lift rounded-2xl border border-paper/10 bg-panel p-6 text-left shadow-card"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <ClubBadge tag={club.tag} badgeId={club.badgeId} size={36} />
                     <div>
-                      <p className="font-display text-lg font-bold text-white">{club.name}</p>
-                      <p className="font-mono text-[11px] text-ash">{club.tag}</p>
+                      <p className="text-lg font-bold text-paper">{club.name}</p>
+                      <p className="font-mono text-[11px] text-steel-400">{club.tag}</p>
                     </div>
                   </div>
                   <Badge tone="primary">#{position}</Badge>
@@ -109,7 +109,7 @@ export default async function ClubsListPage() {
                 <p className="stat-mono mt-4 text-3xl font-bold text-zest">
                   {formatNumber(club.trophies)}
                 </p>
-                <p className="font-display text-[11px] uppercase tracking-[0.2em] text-ash">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-steel-400">
                   trophées cumulés
                 </p>
               </Link>

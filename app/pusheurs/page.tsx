@@ -44,10 +44,10 @@ export default async function PusheursPage() {
         <Navbar />
         <main className="flex min-h-[70vh] items-center justify-center px-6 text-center">
           <div>
-            <h1 className="font-display text-2xl font-bold text-blush">
+            <h1 className="text-2xl font-bold text-blush">
               Historique pas encore configuré
             </h1>
-            <p className="mt-2 max-w-md text-sm text-ash">{baselineError}</p>
+            <p className="mt-2 max-w-md text-sm text-steel-400">{baselineError}</p>
           </div>
         </main>
       </>
@@ -60,10 +60,10 @@ export default async function PusheursPage() {
         <Navbar />
         <main className="flex min-h-[70vh] items-center justify-center px-6 text-center">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-paper">
               Saison {season.label} — pas encore de photo de départ
             </h1>
-            <p className="mt-2 max-w-md text-sm text-ash">
+            <p className="mt-2 max-w-md text-sm text-steel-400">
               La capture automatique se déclenche chaque jour ; la première photo de cette
               saison n&apos;a pas encore été prise. Reviens dans les prochaines heures, ou force
               une capture manuelle (voir le README).
@@ -101,7 +101,7 @@ export default async function PusheursPage() {
   const king = rows[0];
 
   const trophyPanel = (
-    <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+    <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
       {rows.map((row, i) => (
         <li key={row.tag}>
           <Link
@@ -110,16 +110,16 @@ export default async function PusheursPage() {
           >
             <span className="rank-index w-9 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
             <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-semibold text-ink"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-ink"
               style={{ backgroundColor: avatarColor(row.name) }}
             >
               {row.name.trim().charAt(0).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-medium text-white">
-                {row.name} <span className="font-normal text-ash">{row.clubName}</span>
+              <p className="truncate text-sm font-medium text-paper">
+                {row.name} <span className="font-normal text-steel-400">{row.clubName}</span>
               </p>
-              <p className="stat-mono text-[11px] text-ash">
+              <p className="stat-mono text-[11px] text-steel-400">
                 {formatNumber(row.trophies)} trophées
               </p>
             </div>
@@ -141,39 +141,40 @@ export default async function PusheursPage() {
     <>
       <Navbar />
       <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-        <section className="hud-frame mx-auto max-w-3xl bg-panel px-6 py-8 sm:px-8">
-          <p className="text-sm text-ash">
+        <section className="relative overflow-hidden rounded-2xl border border-zest2/25 mx-auto max-w-3xl bg-panel px-6 py-8 sm:px-8">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.18),transparent_65%)]" />
+          <p className="relative text-sm text-steel-400">
             Qui gagne le plus de trophées, saison après saison — le classement du push, pas des
             totaux.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+          <div className="relative mt-6 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="font-display text-xs uppercase tracking-[0.25em] text-signal">
+              <p className="text-xs uppercase tracking-[0.25em] text-signal">
                 Saison en cours
               </p>
-              <h1 className="mt-1 font-display text-4xl font-semibold uppercase tracking-tight text-white sm:text-5xl">
+              <h1 className="mt-1 text-4xl font-semibold uppercase tracking-tight text-paper sm:text-5xl">
                 {season.label}
               </h1>
             </div>
-            <p className="mt-2 font-mono text-xs text-ash">
+            <p className="mt-2 font-mono text-xs text-steel-400">
               ⏳ encore {formatCountdown(season.end)}
             </p>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-10 border-t border-line pt-6">
+          <div className="mt-8 flex flex-wrap gap-10 border-t border-paper/10 pt-6">
             <div>
-              <p className="text-xs text-ash">Trophées gagnés par la famille</p>
-              <p className="stat-mono mt-1 text-2xl font-semibold text-white">
+              <p className="text-xs text-steel-400">Trophées gagnés par la famille</p>
+              <p className="stat-mono mt-1 text-2xl font-semibold text-paper">
                 {formatNumber(totalPush)}
               </p>
             </div>
             {king && (
               <div>
-                <p className="flex items-center gap-1 text-xs text-ash">
+                <p className="flex items-center gap-1 text-xs text-steel-400">
                   <CrownGlyph className="h-3.5 w-3.5" /> Roi du push
                 </p>
-                <p className="mt-1 font-display text-lg font-semibold text-white">
+                <p className="mt-1 text-lg font-semibold text-paper">
                   {king.name}{" "}
                   <span className="stat-mono text-signal">+{formatNumber(king.delta)}</span>
                 </p>
@@ -181,8 +182,8 @@ export default async function PusheursPage() {
             )}
           </div>
 
-          <p className="mt-8 text-xs leading-relaxed text-ash">
-            <span className="font-semibold text-white">C&apos;est quoi le &quot;roi du push&quot; ?</span>{" "}
+          <p className="mt-8 text-xs leading-relaxed text-steel-400">
+            <span className="font-semibold text-paper">C&apos;est quoi le &quot;roi du push&quot; ?</span>{" "}
             Contrairement au classement des trophées cumulés, ici on ne regarde que la
             progression pendant la saison en cours — celui qui gagne le plus de trophées entre le
             début et maintenant. Repart à zéro à chaque nouvelle saison Brawl Stars (1er jeudi du
@@ -190,14 +191,14 @@ export default async function PusheursPage() {
           </p>
           <Link
             href="/saisons"
-            className="mt-4 inline-block font-mono text-[11px] uppercase tracking-widest text-ash transition hover:text-signal"
+            className="mt-4 inline-block font-mono text-[11px] uppercase tracking-widest text-steel-400 transition hover:text-signal"
           >
             voir les saisons passées →
           </Link>
         </section>
 
         <section className="mx-auto mt-8 max-w-3xl">
-          <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
+          <h2 className="mb-4 text-xs uppercase tracking-[0.2em] text-steel-400">
             Push · {rows.length} joueurs
           </h2>
           {trophyPanel}

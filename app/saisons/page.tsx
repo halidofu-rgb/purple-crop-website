@@ -87,13 +87,13 @@ export default async function SaisonsPage() {
       <Navbar />
       <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="mx-auto max-w-3xl text-center">
-          <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
+          <p className="text-xs uppercase tracking-[0.3em] text-signal">
             Purple Corp
           </p>
-          <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
             Saisons passées
           </h1>
-          <p className="mt-3 text-sm text-ash">
+          <p className="mt-3 text-sm text-steel-400">
             L&apos;historique du push, saison après saison. Se construit automatiquement au fil
             du temps.
           </p>
@@ -101,7 +101,7 @@ export default async function SaisonsPage() {
 
         <section className="mx-auto mt-10 max-w-3xl">
           {summaries.length === 0 ? (
-            <p className="rounded-2xl border border-line bg-panel px-6 py-8 text-center text-sm text-ash">
+            <p className="rounded-2xl border border-paper/10 bg-panel px-6 py-8 text-center text-sm text-steel-400">
               Pas encore d&apos;historique — reviens à la fin de la saison en cours.
             </p>
           ) : (
@@ -109,17 +109,17 @@ export default async function SaisonsPage() {
               {summaries.map((s) => (
                 <li
                   key={s.key}
-                  className="flex items-center justify-between rounded-2xl border border-line bg-panel px-5 py-4"
+                  className="flex items-center justify-between rounded-2xl border border-paper/10 bg-panel px-5 py-4"
                 >
                   <div>
-                    <p className="font-display text-sm font-semibold text-white">{s.label}</p>
+                    <p className="text-sm font-semibold text-paper">{s.label}</p>
                     {s.ongoing ? (
                       <Link href="/pusheurs" className="text-xs text-signal hover:underline">
                         En cours — voir le direct →
                       </Link>
                     ) : (
                       s.king && (
-                        <p className="flex items-center gap-1 text-xs text-ash">
+                        <p className="flex items-center gap-1 text-xs text-steel-400">
                           <CrownGlyph className="h-3 w-3" /> {s.king.name} · +
                           {formatNumber(s.king.delta)}
                         </p>

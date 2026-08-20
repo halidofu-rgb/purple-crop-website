@@ -12,7 +12,8 @@ const config: Config = {
         ink: "#161826",       // fond principal
         void2: "#1B1D33",     // fond secondaire
         panel: "#232532",     // surfaces
-        panel2: "#262a60",    // cartes "présence" (hero, bannières) — signature
+        panel2: "#2A2C42",    // survol / éléments légèrement élevés
+        section: "#262a60",   // fonds "présence" vifs — hero, bannières (pas les survols)
         line: "#2D2340",      // bordures (utiliser aussi border-paper/10 sur le nouveau travail)
         zest: "#9184d9",      // violet principal — LA couleur de marque
         iris: "#5d5294",      // violet secondaire — dégradés, profondeur

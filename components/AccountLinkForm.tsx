@@ -48,7 +48,7 @@ export default function AccountLinkForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="mb-1.5 block font-display text-xs uppercase tracking-wide text-ash">
+        <label className="mb-1.5 block text-xs uppercase tracking-wide text-steel-400">
           Tag Brawl Stars
         </label>
         <input
@@ -56,16 +56,16 @@ export default function AccountLinkForm({
           onChange={(e) => setTag(e.target.value)}
           placeholder="#TAG ou TAG"
           required
-          className="w-full rounded-xl border border-line bg-panel2 px-4 py-2.5 text-sm text-white placeholder:text-ash focus:border-zest focus:outline-none"
+          className="w-full rounded-xl border border-paper/10 bg-panel2 px-4 py-2.5 text-sm text-paper placeholder:text-steel-400 focus:border-zest focus:outline-none"
         />
-        <p className="mt-1.5 text-[11px] text-ash">
+        <p className="mt-1.5 text-[11px] text-steel-400">
           Ton Ranked actuel et all-time sont suivis automatiquement dès que ton club est
           synchronisé — rien d&apos;autre à saisir.
         </p>
       </div>
 
       <div>
-        <label className="mb-1.5 block font-display text-xs uppercase tracking-wide text-ash">
+        <label className="mb-1.5 block text-xs uppercase tracking-wide text-steel-400">
           Présentation (optionnel)
         </label>
         <textarea
@@ -74,7 +74,7 @@ export default function AccountLinkForm({
           placeholder="Une phrase sur toi, ton style de jeu, tes objectifs..."
           maxLength={200}
           rows={3}
-          className="w-full resize-none rounded-xl border border-line bg-panel2 px-4 py-2.5 text-sm text-white placeholder:text-ash focus:border-zest focus:outline-none"
+          className="w-full resize-none rounded-xl border border-paper/10 bg-panel2 px-4 py-2.5 text-sm text-paper placeholder:text-steel-400 focus:border-zest focus:outline-none"
         />
       </div>
 

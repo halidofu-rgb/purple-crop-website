@@ -7,13 +7,13 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-16 border-t border-line">
+    <footer className="mt-16 border-t border-paper/10">
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-8">
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
             <div className="flex items-center gap-2">
               <Image src="/logo.png" alt="" width={28} height={28} className="h-7 w-7 rounded-lg" />
-              <span className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-white">
+              <span className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-paper">
                 Purple Corp
               </span>
             </div>
@@ -26,11 +26,11 @@ export default function Footer() {
           <div>
             <p className="font-display text-xs uppercase tracking-[0.2em] text-ash">Navigation</p>
             <ul className="mt-3 space-y-2 text-xs text-ash">
-              <li><Link href="/clubs" className="hover:text-white">Clubs</Link></li>
-              <li><Link href="/classement" className="hover:text-white">Classement</Link></li>
-              <li><Link href="/pusheurs" className="hover:text-white">Pusheurs</Link></li>
-              <li><Link href="/saisons" className="hover:text-white">Saisons passées</Link></li>
-              <li><Link href="/support" className="hover:text-white">Support</Link></li>
+              <li><Link href="/clubs" className="hover:text-paper">Clubs</Link></li>
+              <li><Link href="/classement" className="hover:text-paper">Classement</Link></li>
+              <li><Link href="/pusheurs" className="hover:text-paper">Pusheurs</Link></li>
+              <li><Link href="/saisons" className="hover:text-paper">Saisons passées</Link></li>
+              <li><Link href="/support" className="hover:text-paper">Support</Link></li>
             </ul>
           </div>
 
@@ -48,7 +48,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-1 border-t border-line pt-6 text-center">
+        <div className="mt-10 flex flex-col items-center gap-1 border-t border-paper/10 pt-6 text-center">
           <p className="font-display text-[10px] uppercase tracking-[0.3em] text-ash">
             Performance · Communauté · Progression
           </p>

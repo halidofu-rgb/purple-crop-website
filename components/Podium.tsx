@@ -25,7 +25,7 @@ export default function Podium({ entries }: { entries: PodiumEntry[] }) {
       {order.map((entry, idx) => {
         if (!entry) return <div key={idx} className="w-24 sm:w-32" />;
         const place = entry === first ? 1 : entry === second ? 2 : 3;
-        const accent = place === 1 ? "text-zest" : place === 2 ? "text-zest2" : "text-ash";
+        const accent = place === 1 ? "text-zest2" : place === 2 ? "text-zest2/70" : "text-steel-500";
         return (
           <Link
             key={entry.tag}
@@ -33,16 +33,16 @@ export default function Podium({ entries }: { entries: PodiumEntry[] }) {
             className="group flex w-24 flex-col items-center sm:w-32"
           >
             <span
-              className={`flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel2 font-display text-sm font-bold ${accent} transition group-hover:border-zest sm:h-12 sm:w-12`}
+              className={`flex h-10 w-10 items-center justify-center rounded-full border border-paper/10 bg-panel2 text-sm font-medium ${accent} transition group-hover:border-zest2 sm:h-12 sm:w-12`}
             >
               {entry.name.trim().charAt(0).toUpperCase()}
             </span>
-            <p className="mt-2 max-w-full truncate font-display text-xs font-medium text-white sm:text-sm">
+            <p className="mt-2 max-w-full truncate text-xs font-medium text-paper sm:text-sm">
               {entry.name}
             </p>
-            <p className="stat-mono text-xs text-ash sm:text-sm">{formatNumber(entry.value)}</p>
+            <p className="stat-mono text-xs text-steel-500 sm:text-sm">{formatNumber(entry.value)}</p>
             <div
-              className={`mt-2 flex w-full items-center justify-center rounded-t-lg border border-b-0 border-line bg-panel font-display text-lg font-bold ${accent} ${heights[place]}`}
+              className={`mt-2 flex w-full items-center justify-center rounded-t-lg border border-b-0 border-paper/10 bg-panel text-lg font-medium ${accent} ${heights[place]}`}
             >
               {place}
             </div>

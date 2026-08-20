@@ -45,31 +45,31 @@ export default function SearchBox() {
   return (
     <div ref={containerRef} className="relative">
       {open ? (
-        <div className="flex items-center gap-2 rounded-full border border-line bg-panel2 px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-full border border-paper/10 bg-panel2 px-3 py-1.5">
           <Search className="h-3.5 w-3.5 text-ash" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Joueur ou club..."
-            className="w-32 bg-transparent text-xs text-white placeholder:text-ash focus:outline-none sm:w-44"
+            className="w-32 bg-transparent text-xs text-paper placeholder:text-ash focus:outline-none sm:w-44"
           />
           <button onClick={() => setOpen(false)} aria-label="Fermer">
-            <X className="h-3.5 w-3.5 text-ash hover:text-white" />
+            <X className="h-3.5 w-3.5 text-ash hover:text-paper" />
           </button>
         </div>
       ) : (
         <button
           onClick={() => setOpen(true)}
           aria-label="Rechercher"
-          className="flex items-center gap-1.5 rounded-full px-3 py-2 text-ash transition hover:bg-panel2/60 hover:text-white"
+          className="flex items-center gap-1.5 rounded-full px-3 py-2 text-ash transition hover:bg-panel2/60 hover:text-paper"
         >
           <Search className="h-3.5 w-3.5" />
         </button>
       )}
 
       {open && query.trim().length > 0 && (
-        <div className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-2xl border border-line bg-panel shadow-card">
+        <div className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-2xl border border-paper/10 bg-panel shadow-card">
           {entries === null ? (
             <p className="px-4 py-3 text-xs text-ash">Chargement...</p>
           ) : results.length === 0 ? (
@@ -82,7 +82,7 @@ export default function SearchBox() {
                     onClick={() => goTo(r)}
                     className="flex w-full items-center justify-between px-4 py-2.5 text-left transition hover:bg-panel2"
                   >
-                    <span className="truncate font-display text-xs font-medium text-white">
+                    <span className="truncate font-display text-xs font-medium text-paper">
                       {r.name}
                     </span>
                     <span className="ml-2 shrink-0 text-[10px] uppercase tracking-wide text-ash">

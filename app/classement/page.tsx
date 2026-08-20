@@ -72,7 +72,7 @@ export default async function ClassementPage({
           value: m.trophies,
         }))}
       />
-      <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+      <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
       {trophyRows.map((member, i) => {
         const push = pushByTag.get(member.tag);
         return (
@@ -83,10 +83,10 @@ export default async function ClassementPage({
           >
             <span className="rank-index w-10 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-medium text-white">
+              <p className="truncate text-sm font-medium text-paper">
                 {member.name}
               </p>
-              <p className="text-xs text-ash">{member.clubName}</p>
+              <p className="text-xs text-steel-400">{member.clubName}</p>
             </div>
             {push !== undefined && (
               <Badge tone={push >= 0 ? "success" : "danger"}>
@@ -113,13 +113,13 @@ export default async function ClassementPage({
     <div>
       <div className="mb-4 flex items-start gap-2">
         <Badge tone="warning">suivi automatique</Badge>
-        <p className="text-xs text-ash">
+        <p className="text-xs text-steel-400">
           Calculé en synchronisant régulièrement le journal de combats Ranked de chaque membre —
           l&apos;API Brawl Stars ne fournit aucun score Ranked directement.
         </p>
       </div>
       {rankedRows.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
+        <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
           Aucune donnée pour l&apos;instant — la première synchronisation n&apos;a pas encore eu
           lieu, ou personne n&apos;a encore joué de combat Ranked depuis.
         </p>
@@ -133,7 +133,7 @@ export default async function ClassementPage({
               value: r.current,
             }))}
           />
-          <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+          <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
             {rankedRows.map((row, i) => (
               <li key={row.tag}>
                 <Link
@@ -144,10 +144,10 @@ export default async function ClassementPage({
                     {rankIndex(i)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-medium text-white">
+                    <p className="truncate text-sm font-medium text-paper">
                       {row.name}
                     </p>
-                    <p className="text-xs text-ash">
+                    <p className="text-xs text-steel-400">
                       {row.clubName} · {rankedTierLabel(row.current)}
                     </p>
                   </div>
@@ -169,13 +169,13 @@ export default async function ClassementPage({
       <Navbar />
       <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
         <section className="mx-auto max-w-3xl text-center">
-          <p className="font-display text-xs uppercase tracking-[0.3em] text-signal">
+          <p className="text-xs uppercase tracking-[0.3em] text-signal">
             Purple Corp
           </p>
-          <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
             Classement général
           </h1>
-          <p className="mt-3 text-sm text-ash">
+          <p className="mt-3 text-sm text-steel-400">
             Tous les membres de tous les clubs, triés par trophées ou par activité Ranked.
           </p>
         </section>

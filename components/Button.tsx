@@ -7,8 +7,8 @@ type Size = "md" | "lg";
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
     "bg-gradient-to-r from-zest to-iris text-ink shadow-[0_8px_24px_-8px_rgba(159,122,234,0.6)] hover:shadow-[0_10px_30px_-8px_rgba(159,122,234,0.75)] hover:brightness-105",
-  secondary: "border border-line bg-panel2/60 text-white hover:border-zest hover:text-zest",
-  ghost: "text-ash hover:text-white hover:bg-panel2/60",
+  secondary: "border border-paper/10 bg-panel2/60 text-paper hover:border-zest hover:text-zest",
+  ghost: "text-ash hover:text-paper hover:bg-panel2/60",
   danger: "border border-blush text-blush hover:bg-blush hover:text-ink",
 };
 

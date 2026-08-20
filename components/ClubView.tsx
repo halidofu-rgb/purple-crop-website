@@ -56,7 +56,7 @@ export default function ClubView({
   const average = roster.length > 0 ? Math.round(club.trophies / roster.length) : 0;
 
   const trophiesPanel = (
-    <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+    <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
       {roster.map((member, i) => (
         <li key={member.tag}>
           <Link
@@ -65,10 +65,10 @@ export default function ClubView({
           >
             <span className="rank-index w-10 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-medium text-white">
+              <p className="truncate text-sm font-medium text-paper">
                 {member.name}
               </p>
-              <p className="text-xs text-ash">{ROLE_LABEL[member.role] ?? member.role}</p>
+              <p className="text-xs text-steel-400">{ROLE_LABEL[member.role] ?? member.role}</p>
             </div>
             <span className="stat-mono shrink-0 text-base font-semibold text-zest2">
               {formatNumber(member.trophies)}
@@ -83,7 +83,7 @@ export default function ClubView({
     ? [...roster].sort((a, b) => (pushByTag.get(b.tag) ?? -Infinity) - (pushByTag.get(a.tag) ?? -Infinity))
     : [];
   const pushPanel = pushByTag && pushByTag.size > 0 ? (
-    <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+    <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
       {pushRoster.map((member, i) => {
         const delta = pushByTag.get(member.tag);
         return (
@@ -94,13 +94,13 @@ export default function ClubView({
             >
               <span className="rank-index w-10 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-paper">
                   {member.name}
                 </p>
               </div>
               <span
                 className={`stat-mono shrink-0 text-base font-semibold ${
-                  delta === undefined ? "text-ash" : delta >= 0 ? "text-signal" : "text-blush"
+                  delta === undefined ? "text-steel-400" : delta >= 0 ? "text-signal" : "text-blush"
                 }`}
               >
                 {delta === undefined ? "—" : `${delta >= 0 ? "+" : ""}${formatNumber(delta)}`}
@@ -111,7 +111,7 @@ export default function ClubView({
       })}
     </ol>
   ) : (
-    <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
+    <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
       Pas encore de photo de départ pour {seasonLabel ?? "cette saison"}.
     </p>
   );
@@ -120,11 +120,11 @@ export default function ClubView({
     <>
       <div className="mb-3 flex items-start gap-2">
         <Badge tone="warning">auto-déclaré</Badge>
-        <p className="text-xs text-ash">
+        <p className="text-xs text-steel-400">
           Score indiqué par chaque membre depuis son compte lié (/compte).
         </p>
       </div>
-      <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
+      <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
         {rankedRows.map((row, i) => (
           <li key={row.tag}>
             <Link
@@ -133,8 +133,8 @@ export default function ClubView({
             >
               <span className="rank-index w-10 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-sm font-medium text-white">{row.name}</p>
-                <p className="text-[11px] text-ash">{rankedTierLabel(row.rankedScore)}</p>
+                <p className="truncate text-sm font-medium text-paper">{row.name}</p>
+                <p className="text-[11px] text-steel-400">{rankedTierLabel(row.rankedScore)}</p>
               </div>
               {row.rankedBest !== undefined && (
                 <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>
@@ -148,7 +148,7 @@ export default function ClubView({
       </ol>
     </>
   ) : (
-    <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
+    <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
       Personne n&apos;a encore lié son compte et indiqué son Ranked.{" "}
       <Link href="/compte" className="text-signal hover:underline">
         Sois le premier →
@@ -158,17 +158,18 @@ export default function ClubView({
 
   return (
     <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-      <section className="hud-frame mx-auto max-w-4xl bg-panel px-6 py-8 text-center sm:px-10 sm:py-10">
-        <div className="flex justify-center">
+      <section className="relative overflow-hidden rounded-2xl border border-zest2/25 mx-auto max-w-4xl bg-panel px-6 py-8 text-center sm:px-10 sm:py-10">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.18),transparent_65%)]" />
+        <div className="relative flex justify-center">
           <ClubBadge tag={club.tag} badgeId={club.badgeId} size={52} />
         </div>
-        <p className="mt-3 font-display text-xs uppercase tracking-[0.3em] text-signal">
+        <p className="mt-3 text-xs uppercase tracking-[0.3em] text-signal">
           {TYPE_LABEL[club.type] ?? club.type} · {formatNumber(club.requiredTrophies)} trophées requis
         </p>
-        <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
           {club.name}
         </h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-ash">
+        <p className="mx-auto mt-3 max-w-xl text-sm text-steel-400">
           {club.description || "Pas de description."}
         </p>
         {discordUrlForTag(club.tag) && (
@@ -179,36 +180,36 @@ export default function ClubView({
           </div>
         )}
 
-        <div className="mt-8 border-t border-line pt-8">
+        <div className="mt-8 border-t border-paper/10 pt-8">
           <p className="stat-mono text-5xl font-semibold text-zest sm:text-6xl">
             {formatNumber(club.trophies)}
           </p>
-          <p className="mt-1 font-display text-xs uppercase tracking-[0.25em] text-ash">
+          <p className="mt-1 text-xs uppercase tracking-[0.25em] text-steel-400">
             Trophées cumulés · {club.members.length} membres
           </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-line pt-6">
+        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-paper/10 pt-6">
           <div>
-            <p className="stat-mono text-xl font-semibold text-white">
+            <p className="stat-mono text-xl font-semibold text-paper">
               {formatNumber(average)}
             </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">
               Moyenne / membre
             </p>
           </div>
           <div>
-            <p className="truncate font-display text-sm font-semibold text-white">
+            <p className="truncate text-sm font-semibold text-paper">
               {best ? best.name : "—"}
             </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Meilleur joueur</p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">Meilleur joueur</p>
           </div>
           <div>
-            <p className="stat-mono text-xl font-semibold text-white">
+            <p className="stat-mono text-xl font-semibold text-paper">
               {clubRank ? `#${clubRank}` : "—"}
-              {totalClubs ? <span className="text-ash"> / {totalClubs}</span> : null}
+              {totalClubs ? <span className="text-steel-400"> / {totalClubs}</span> : null}
             </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">
               Rang dans Purple Corp
             </p>
           </div>
@@ -216,7 +217,7 @@ export default function ClubView({
       </section>
 
       <section className="mx-auto mt-10 max-w-3xl">
-        <h2 className="mb-4 font-display text-xs uppercase tracking-[0.2em] text-ash">
+        <h2 className="mb-4 text-xs uppercase tracking-[0.2em] text-steel-400">
           Effectif
         </h2>
         <Tabs

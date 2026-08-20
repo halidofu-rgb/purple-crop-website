@@ -3,8 +3,8 @@ import { ReactNode } from "react";
 type Tone = "neutral" | "primary" | "success" | "warning" | "danger";
 
 const TONE_CLASSES: Record<Tone, string> = {
-  neutral: "border-line text-ash",
-  primary: "border-zest/40 text-zest",
+  neutral: "border-paper/10 text-steel-400",
+  primary: "border-zest/40 text-zest2",
   success: "border-signal/40 text-signal",
   warning: "border-warn/40 text-warn",
   danger: "border-blush/40 text-blush",

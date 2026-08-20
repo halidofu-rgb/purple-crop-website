@@ -191,14 +191,14 @@ export default async function HomePage() {
         <div className="px-4 py-6 sm:px-8 lg:px-16">
 
         {/* DISCORD — bloc premium avec dégradé */}
-        <section className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-panel via-panel to-[#241335] px-6 py-8 text-center sm:px-10">
+        <section className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-paper/10 bg-gradient-to-br from-panel via-panel to-[#241335] px-6 py-8 text-center sm:px-10">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-zest/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-signal/10 blur-3xl" />
           <div className="relative">
-            <p className="font-display text-lg font-semibold text-white sm:text-xl">
+            <p className="font-display text-lg font-semibold text-paper sm:text-xl">
               Rejoins-nous sur le Discord Purple Corp
             </p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-ash">
+            <p className="mx-auto mt-2 max-w-md text-sm text-steel-400">
               Discussions, recrutement, annonces des deux clubs — tout se passe là-bas.
             </p>
             <div className="mt-5">
@@ -215,25 +215,25 @@ export default async function HomePage() {
         </section>
 
         {/* NOTRE HISTOIRE */}
-        <section className="mx-auto mt-10 max-w-3xl rounded-3xl border border-line bg-panel px-6 py-8 sm:px-10">
+        <section className="mx-auto mt-10 max-w-3xl rounded-3xl border border-paper/10 bg-panel px-6 py-8 sm:px-10">
           <p className="font-display text-xs uppercase tracking-[0.25em] text-signal">
             Purple Corp – Plus qu&apos;un club, une famille
           </p>
-          <div className="mt-4 space-y-4 text-sm leading-relaxed text-ash">
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-steel-400">
             <p>
               Bienvenue chez Purple Corp, le club Brawl Stars qui ne fait pas semblant. Fondé sur
               une ambition simple : rassembler les joueurs les plus motivés autour d&apos;une
               progression sérieuse et d&apos;un vrai esprit d&apos;équipe.
             </p>
             <p>
-              Sous la présidence de <span className="text-white">Rapso</span>, notre club s&apos;est
+              Sous la présidence de <span className="text-paper">Rapso</span>, notre club s&apos;est
               hissé parmi l&apos;élite française et mondiale : Top 14 monde et Top 9 France au
               record, aujourd&apos;hui stable en Top 70 France / Top 530 monde. Une performance qui
               reflète l&apos;exigence et la mentalité tryhard de notre ligne compétitive, la{" "}
-              <span className="text-white">Purple Line</span> (125K+ trophées minimum).
+              <span className="text-paper">Purple Line</span> (125K+ trophées minimum).
             </p>
             <p>
-              À côté de ça, notre <span className="text-white">Indigo Line</span> (100K+ trophées
+              À côté de ça, notre <span className="text-paper">Indigo Line</span> (100K+ trophées
               minimum) accueille les joueurs compétitifs qui veulent progresser dans une ambiance
               bienveillante, avec entraide, suivi et un Discord actif — actuellement Top 93 France.
             </p>
@@ -241,19 +241,19 @@ export default async function HomePage() {
               Ici, pas de place pour l&apos;individualisme : événements réguliers, communauté
               active, et un seul objectif — marquer les esprits.
             </p>
-            <p className="font-display font-semibold text-white">Rejoins-nous.</p>
+            <p className="font-display font-semibold text-paper">Rejoins-nous.</p>
           </div>
         </section>
 
         {/* NOS CLUBS — vrai aperçu, pas juste un lien */}
         <section className="mx-auto mt-10 max-w-4xl">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">Nos clubs</h2>
+            <h2 className="font-display text-xs uppercase tracking-[0.2em] text-steel-400">Nos clubs</h2>
             <Link href="/clubs" className="text-xs text-signal hover:underline">
               Voir la famille →
             </Link>
           </div>
-          <ol className="mt-3 divide-y divide-line rounded-2xl border border-line bg-panel">
+          <ol className="mt-3 divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
             {[...loadedClubs].sort((a, b) => b.trophies - a.trophies).map((club, i) => (
               <li key={club.tag}>
                 <Link
@@ -261,7 +261,7 @@ export default async function HomePage() {
                   className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
                 >
                   <span className="rank-index w-7 shrink-0 text-xs text-zest">{i + 1}</span>
-                  <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                  <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                     {club.name}
                   </span>
                   <TrophyGlyph className="h-4 w-4" />
@@ -277,7 +277,7 @@ export default async function HomePage() {
         {/* MEILLEURS PUSHEURS — top 5 en direct */}
         <section className="mx-auto mt-6 max-w-4xl">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">
+            <h2 className="font-display text-xs uppercase tracking-[0.2em] text-steel-400">
               Meilleurs pusheurs
             </h2>
             <Link href="/pusheurs" className="text-xs text-signal hover:underline">
@@ -285,7 +285,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {pushRows.length > 0 ? (
-            <ol className="mt-3 divide-y divide-line rounded-2xl border border-line bg-panel">
+            <ol className="mt-3 divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
               {pushRows.slice(0, 5).map((row, i) => (
                 <li key={row.tag}>
                   <Link
@@ -293,7 +293,7 @@ export default async function HomePage() {
                     className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
                   >
                     <span className="rank-index w-7 shrink-0 text-xs text-zest">{i + 1}</span>
-                    <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                    <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                       {row.name}
                     </span>
                     <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
@@ -304,7 +304,7 @@ export default async function HomePage() {
               ))}
             </ol>
           ) : (
-            <p className="mt-3 rounded-2xl border border-line bg-panel px-4 py-4 text-center text-xs text-ash">
+            <p className="mt-3 rounded-2xl border border-paper/10 bg-panel px-4 py-4 text-center text-xs text-steel-400">
               Pas encore de photo de départ pour cette saison.
             </p>
           )}
@@ -313,7 +313,7 @@ export default async function HomePage() {
         {/* MEILLEURS ELOS — top 5 en direct */}
         <section className="mx-auto mt-6 max-w-4xl">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
+            <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-steel-400">
               <SwordsGlyph className="h-3.5 w-3.5" /> Meilleurs Elos
             </h2>
             <Link href="/classement?tab=ranked" className="text-xs text-signal hover:underline">
@@ -321,7 +321,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {rankedTracking.filter((r) => r.current > 0).length > 0 ? (
-            <ol className="mt-3 divide-y divide-line rounded-2xl border border-line bg-panel">
+            <ol className="mt-3 divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
               {[...rankedTracking]
                 .filter((r) => r.current > 0)
                 .sort((a, b) => b.current - a.current)
@@ -333,7 +333,7 @@ export default async function HomePage() {
                       className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
                     >
                       <span className="rank-index w-7 shrink-0 text-xs text-signal">{i + 1}</span>
-                      <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                      <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                         {row.name}
                       </span>
                       <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
@@ -344,16 +344,16 @@ export default async function HomePage() {
                 ))}
             </ol>
           ) : (
-            <p className="mt-3 rounded-2xl border border-line bg-panel px-4 py-4 text-center text-xs text-ash">
+            <p className="mt-3 rounded-2xl border border-paper/10 bg-panel px-4 py-4 text-center text-xs text-steel-400">
               Suivi Ranked pas encore alimenté — revient après quelques combats joués.
             </p>
           )}
         </section>
 
         {/* À PROPOS */}
-        <section className="mx-auto mt-10 max-w-3xl rounded-2xl border border-line bg-panel px-6 py-6 text-center">
-          <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">À propos</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-ash">
+        <section className="mx-auto mt-10 max-w-3xl rounded-2xl border border-paper/10 bg-panel px-6 py-6 text-center">
+          <h2 className="font-display text-xs uppercase tracking-[0.2em] text-steel-400">À propos</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-steel-400">
             Purple Corp est une communauté Brawl Stars qui regroupe plusieurs clubs compétitifs,
             unis autour de la performance, l&apos;esprit d&apos;équipe et la progression continue.
           </p>
