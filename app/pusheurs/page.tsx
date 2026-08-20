@@ -4,6 +4,7 @@ import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { CrownGlyph } from "@/components/icons";
 import { avatarColor } from "@/lib/avatarColor";
 
@@ -202,6 +203,7 @@ export default async function PusheursPage() {
           {trophyPanel}
         </section>
       </main>
+      <Footer />
     </>
   );
 }

@@ -1,7 +1,11 @@
-// Icônes originales "façon pin émaillé" — dessinées pour Purple Corp, PAS
-// des icônes extraites de Brawl Stars (propriété de Supercell, on n'a pas
-// le droit de les réutiliser). Même esprit visuel (formes nettes, dégradé,
-// biseau lumineux) mais un dessin qui nous appartient.
+"use client";
+
+// Icônes originales "façon pin émaillé" — dessinées pour Purple Corp au
+// départ. Trophée/Couronne/Push essaient maintenant d'abord une vraie
+// image locale (public/icons/…, à héberger toi-même — voir README) et
+// retombent sur ce dessin original si le fichier n'existe pas encore.
+// Bouclier et Épées restent 100% originaux (rien d'équivalent côté jeu).
+import RealIcon from "@/components/RealIcon";
 
 function GlyphBase({
   className,
@@ -29,7 +33,7 @@ function GlyphBase({
   );
 }
 
-export function TrophyGlyph({ className = "h-5 w-5" }: { className?: string }) {
+function TrophyFallback({ className }: { className?: string }) {
   return (
     <GlyphBase className={className} gradId="trophy-grad" from="#F5D93E" to="#E0A93B">
       <path
@@ -47,7 +51,18 @@ export function TrophyGlyph({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-export function CrownGlyph({ className = "h-5 w-5" }: { className?: string }) {
+export function TrophyGlyph({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <RealIcon
+      src="/icons/trophy.png"
+      alt="Trophées"
+      className={className}
+      fallback={<TrophyFallback className={className} />}
+    />
+  );
+}
+
+function CrownFallback({ className }: { className?: string }) {
   return (
     <GlyphBase className={className} gradId="crown-grad" from="#C4B5FD" to="#9F7AEA">
       <path
@@ -64,7 +79,18 @@ export function CrownGlyph({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-export function PushGlyph({ className = "h-5 w-5" }: { className?: string }) {
+export function CrownGlyph({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <RealIcon
+      src="/icons/crown.png"
+      alt="Roi du push"
+      className={className}
+      fallback={<CrownFallback className={className} />}
+    />
+  );
+}
+
+function PushFallback({ className }: { className?: string }) {
   return (
     <GlyphBase className={className} gradId="push-grad" from="#5FE0C0" to="#45E0D0">
       <path
@@ -75,6 +101,17 @@ export function PushGlyph({ className = "h-5 w-5" }: { className?: string }) {
         strokeLinejoin="round"
       />
     </GlyphBase>
+  );
+}
+
+export function PushGlyph({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <RealIcon
+      src="/icons/push.png"
+      alt="Push"
+      className={className}
+      fallback={<PushFallback className={className} />}
+    />
   );
 }
 

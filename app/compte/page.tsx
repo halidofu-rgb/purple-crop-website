@@ -4,6 +4,7 @@ import { getMemberLink } from "@/lib/members";
 import { getPlayer } from "@/lib/brawlstars";
 import { getRankedTracking } from "@/lib/rankedTracking";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import AccountLinkForm from "@/components/AccountLinkForm";
 import Button from "@/components/Button";
 import RankGlyph from "@/components/RankGlyph";
@@ -112,6 +113,7 @@ export default async function ComptePage() {
           <AccountLinkForm existingTag={link?.tag} existingBio={link?.bio} />
         </section>
       </main>
+      <Footer />
     </>
   );
 }

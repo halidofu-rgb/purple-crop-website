@@ -4,6 +4,7 @@ import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import ClubBadge from "@/components/ClubBadge";
 import Badge from "@/components/Badge";
 
@@ -116,6 +117,7 @@ export default async function ClubsListPage() {
           })}
         </section>
       </main>
+      <Footer />
     </>
   );
 }

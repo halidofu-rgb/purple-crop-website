@@ -163,3 +163,30 @@ toutes les 15-30 minutes, avec l'en-tête `Authorization: Bearer TON_CRON_SECRET
 connaître le score réel au moment du démarrage (même limite qu'on a
 rencontrée partout dans cette recherche). Les chiffres deviennent fiables
 au fil des combats joués après la mise en place.
+
+## Étape 7 — Icônes de rang réelles (à héberger toi-même)
+
+Contrairement aux icônes de profil/club (BrawlAPI, déjà branchées automatiquement),
+il n'existe aucune source publique légitime pour les vraies icônes de rang Ranked
+(voir l'investigation complète plus haut). Pour les avoir quand même, il faut les
+récupérer toi-même et les héberger sur le site, exactement comme le fait Projet X.
+
+1. Va sur le wiki du jeu (brawlstars.fandom.com), section "Ranked" — chaque rang y a
+   son icône.
+2. Enregistre chaque image, renomme-la exactement comme dans `public/ranked-tiers/.gitkeep`
+   (21 fichiers : bronze-1.png à masters-3.png).
+3. Dépose-les dans `public/ranked-tiers/` (à côté de `logo.png`).
+4. Rien d'autre à faire — le code (`components/RankTierIcon.tsx`) les affiche
+   automatiquement dès qu'elles sont présentes, et retombe sur notre glyphe original
+   tant qu'un fichier manque (jamais d'image cassée).
+
+Ceci relève de la Fan Content Policy de Supercell (supercell.com/fan-content-policy),
+comme tous les trackers communautaires qu'on a croisés dans cette recherche.
+
+## Étape 8 — Trophée, couronne, push : mêmes principe
+
+`public/icons/` fonctionne exactement comme `public/ranked-tiers/` (voir
+Étape 7) : dépose `trophy.png`, `crown.png`, `push.png` et le site les
+utilise automatiquement à la place de nos glyphes originaux, partout où
+ils apparaissent (accueil, fiches club/joueur, classement, pusheurs).
+Aucun fichier de code à modifier.

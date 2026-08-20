@@ -6,6 +6,7 @@ import { listAllRankedTracking } from "@/lib/rankedTracking";
 import { rankedTierLabel } from "@/lib/rankedTier";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Tabs from "@/components/Tabs";
 import RankGlyph from "@/components/RankGlyph";
 import Podium from "@/components/Podium";
@@ -194,6 +195,7 @@ export default async function ClassementPage({
           />
         </section>
       </main>
+      <Footer />
     </>
   );
 }

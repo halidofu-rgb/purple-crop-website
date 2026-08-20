@@ -4,6 +4,7 @@ import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, listSeasonKeys, SeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { CrownGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
@@ -136,6 +137,7 @@ export default async function SaisonsPage() {
           )}
         </section>
       </main>
+      <Footer />
     </>
   );
 }

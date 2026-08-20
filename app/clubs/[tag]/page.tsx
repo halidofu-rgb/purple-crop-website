@@ -5,6 +5,7 @@ import { listAllRankedTracking } from "@/lib/rankedTracking";
 import { getCurrentSeason } from "@/lib/season";
 import ClubView from "@/components/ClubView";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +73,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
         rankedRows={rankedRows}
         seasonLabel={season.label}
       />
+      <Footer />
     </>
   );
 }

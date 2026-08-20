@@ -36,3 +36,22 @@ export function rankedTierLabel(elo: number): string {
   }
   return TIERS[Math.min(idx, TIERS.length - 1)];
 }
+
+const SLUG_BY_LABEL: Record<string, string> = {
+  "Bronze I": "bronze-1", "Bronze II": "bronze-2", "Bronze III": "bronze-3",
+  "Argent I": "argent-1", "Argent II": "argent-2", "Argent III": "argent-3",
+  "Or I": "or-1", "Or II": "or-2", "Or III": "or-3",
+  "Diamant I": "diamant-1", "Diamant II": "diamant-2", "Diamant III": "diamant-3",
+  "Mythique I": "mythique-1", "Mythique II": "mythique-2", "Mythique III": "mythique-3",
+  "Légendaire I": "legendaire-1", "Légendaire II": "legendaire-2", "Légendaire III": "legendaire-3",
+  "Masters I": "masters-1", "Masters II": "masters-2", "Masters III": "masters-3",
+  "Pro": "pro",
+};
+
+// Chemin de l'image locale correspondant à un libellé de rang — à héberger
+// soi-même dans public/ranked-tiers/ (voir README). Retourne null si le
+// libellé n'est pas reconnu, pour ne jamais générer un <img> cassé.
+export function rankedTierIconPath(label: string): string | null {
+  const slug = SLUG_BY_LABEL[label];
+  return slug ? `/ranked-tiers/${slug}.png` : null;
+}

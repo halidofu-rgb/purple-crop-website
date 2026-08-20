@@ -7,8 +7,9 @@ import { listAllRankedTracking } from "@/lib/rankedTracking";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Button from "@/components/Button";
-import { Users, Calendar, TrendingUp, MessageCircle, ArrowRight } from "lucide-react";
+import { Users, Calendar, MessageCircle } from "lucide-react";
 import { TrophyGlyph, CrownGlyph, SwordsGlyph, ShieldGlyph } from "@/components/icons";
 
 // La partie "meilleur pusher" dépend de Redis, pas du cache fetch() —
@@ -176,49 +177,127 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 3 BLOCS CLIQUABLES */}
-        <section className="mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-3">
+        {/* NOS CLUBS — vrai aperçu, pas juste un lien */}
+        <section className="mx-auto mt-10 max-w-4xl">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">Nos clubs</h2>
+            <Link href="/clubs" className="text-xs text-signal hover:underline">
+              Voir la famille →
+            </Link>
+          </div>
+          <ol className="mt-3 divide-y divide-line rounded-2xl border border-line bg-panel">
+            {[...loadedClubs].sort((a, b) => b.trophies - a.trophies).map((club, i) => (
+              <li key={club.tag}>
+                <Link
+                  href={`/clubs/${encodeURIComponent(club.tag.replace(/^#/, ""))}`}
+                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
+                >
+                  <span className="rank-index w-7 shrink-0 text-xs text-zest">{i + 1}</span>
+                  <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                    {club.name}
+                  </span>
+                  <TrophyGlyph className="h-4 w-4" />
+                  <span className="stat-mono shrink-0 text-sm font-semibold text-zest2">
+                    {formatNumber(club.trophies)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* MEILLEURS PUSHEURS — top 5 en direct */}
+        <section className="mx-auto mt-6 max-w-4xl">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">
+              Meilleurs pusheurs
+            </h2>
+            <Link href="/pusheurs" className="text-xs text-signal hover:underline">
+              Voir tout →
+            </Link>
+          </div>
+          {pushRows.length > 0 ? (
+            <ol className="mt-3 divide-y divide-line rounded-2xl border border-line bg-panel">
+              {pushRows.slice(0, 5).map((row, i) => (
+                <li key={row.tag}>
+                  <Link
+                    href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+                    className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
+                  >
+                    <span className="rank-index w-7 shrink-0 text-xs text-zest">{i + 1}</span>
+                    <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                      {row.name}
+                    </span>
+                    <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
+                      +{formatNumber(row.delta)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-3 rounded-2xl border border-line bg-panel px-4 py-4 text-center text-xs text-ash">
+              Pas encore de photo de départ pour cette saison.
+            </p>
+          )}
+        </section>
+
+        {/* MEILLEURS ELOS — top 5 en direct */}
+        <section className="mx-auto mt-6 max-w-4xl">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-ash">
+              <SwordsGlyph className="h-3.5 w-3.5" /> Meilleurs Elos
+            </h2>
+            <Link href="/classement?tab=ranked" className="text-xs text-signal hover:underline">
+              Voir tout →
+            </Link>
+          </div>
+          {rankedTracking.filter((r) => r.current > 0).length > 0 ? (
+            <ol className="mt-3 divide-y divide-line rounded-2xl border border-line bg-panel">
+              {[...rankedTracking]
+                .filter((r) => r.current > 0)
+                .sort((a, b) => b.current - a.current)
+                .slice(0, 5)
+                .map((row, i) => (
+                  <li key={row.tag}>
+                    <Link
+                      href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+                      className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
+                    >
+                      <span className="rank-index w-7 shrink-0 text-xs text-signal">{i + 1}</span>
+                      <span className="flex-1 truncate font-display text-sm font-medium text-white">
+                        {row.name}
+                      </span>
+                      <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
+                        {formatNumber(row.current)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+            </ol>
+          ) : (
+            <p className="mt-3 rounded-2xl border border-line bg-panel px-4 py-4 text-center text-xs text-ash">
+              Suivi Ranked pas encore alimenté — revient après quelques combats joués.
+            </p>
+          )}
+        </section>
+
+        {/* À PROPOS */}
+        <section className="mx-auto mt-10 max-w-3xl rounded-2xl border border-line bg-panel px-6 py-6 text-center">
+          <h2 className="font-display text-xs uppercase tracking-[0.2em] text-ash">À propos</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-ash">
+            Purple Corp est une communauté Brawl Stars qui regroupe plusieurs clubs compétitifs,
+            unis autour de la performance, l&apos;esprit d&apos;équipe et la progression continue.
+          </p>
           <Link
-            href="/clubs"
-            className="card-lift group flex flex-col items-center rounded-2xl border border-line bg-panel p-6 text-center shadow-card"
+            href={PURPLE_CORP_DISCORD_URL}
+            className="mt-3 inline-block text-xs text-signal hover:underline"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zest/15 text-zest">
-              <ShieldGlyph className="h-5 w-5" />
-            </span>
-            <p className="mt-3 font-display text-sm font-semibold text-white">Nos clubs</p>
-            <p className="mt-1 text-xs text-ash">Purple Line, Indigo Line et les prochains</p>
-            <span className="mt-3 flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-ash transition group-hover:text-zest">
-              Découvrir <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-          <Link
-            href="/pusheurs"
-            className="card-lift group flex flex-col items-center rounded-2xl border border-line bg-panel p-6 text-center shadow-card"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-signal/15 text-signal">
-              <TrendingUp className="h-5 w-5" />
-            </span>
-            <p className="mt-3 font-display text-sm font-semibold text-white">Meilleurs pusheurs</p>
-            <p className="mt-1 text-xs text-ash">Le classement du push, saison en cours</p>
-            <span className="mt-3 flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-ash transition group-hover:text-signal">
-              Découvrir <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
-          <Link
-            href="/classement?tab=ranked"
-            className="card-lift group flex flex-col items-center rounded-2xl border border-line bg-panel p-6 text-center shadow-card"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blush/15 text-blush">
-              <SwordsGlyph className="h-5 w-5" />
-            </span>
-            <p className="mt-3 font-display text-sm font-semibold text-white">Meilleurs Elos</p>
-            <p className="mt-1 text-xs text-ash">Activité Ranked récente de chacun</p>
-            <span className="mt-3 flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-ash transition group-hover:text-blush">
-              Découvrir <ArrowRight className="h-3 w-3" />
-            </span>
+            {PURPLE_CORP_DISCORD_URL}
           </Link>
         </section>
       </main>
+      <Footer />
     </>
   );
 }

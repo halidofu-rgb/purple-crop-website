@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Button from "@/components/Button";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import { MessageCircle, HelpCircle } from "lucide-react";
@@ -54,6 +55,7 @@ export default function SupportPage() {
           </div>
         </section>
       </main>
+      <Footer />
     </>
   );
 }

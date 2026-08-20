@@ -7,8 +7,10 @@ import { getRankedTracking } from "@/lib/rankedTracking";
 import { getCurrentSeason } from "@/lib/season";
 import { avatarColor } from "@/lib/avatarColor";
 import { getPlayerIconUrl } from "@/lib/assets";
-import { rankedTierLabel } from "@/lib/rankedTier";
+import { rankedTierLabel, rankedTierIconPath } from "@/lib/rankedTier";
+import RankTierIcon from "@/components/RankTierIcon";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
 import { TrophyGlyph, PushGlyph } from "@/components/icons";
@@ -94,6 +96,13 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     ...(rankedTracking && rankedTracking.updatedAt
       ? [{
           icon: RankGlyph,
+          iconEl: (
+            <RankTierIcon
+              src={rankedTierIconPath(rankedTierLabel(rankedTracking.current))}
+              label={rankedTierLabel(rankedTracking.current)}
+              className="h-6 w-6"
+            />
+          ),
           value: formatNumber(rankedTracking.current),
           label: rankedTierLabel(rankedTracking.current),
           title: "Ranked",
@@ -103,6 +112,13 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     ...(rankedTracking && rankedTracking.updatedAt
       ? [{
           icon: RankGlyph,
+          iconEl: (
+            <RankTierIcon
+              src={rankedTierIconPath(rankedTierLabel(rankedTracking.allTimeBest))}
+              label={rankedTierLabel(rankedTracking.allTimeBest)}
+              className="h-6 w-6"
+            />
+          ),
           value: formatNumber(rankedTracking.allTimeBest),
           label: rankedTierLabel(rankedTracking.allTimeBest),
           title: "Ranked all-time",
@@ -198,7 +214,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
             const Icon = s.icon;
             return (
               <div key={i} className="rounded-2xl border border-line bg-panel p-4">
-                <Icon className={`h-6 w-6 ${s.colorClass}`} />
+                {"iconEl" in s && s.iconEl ? s.iconEl : <Icon className={`h-6 w-6 ${s.colorClass}`} />}
                 <p className="mt-2 text-[10px] uppercase tracking-wide text-ash">{s.title}</p>
                 <p className="stat-mono text-lg font-semibold text-white">{s.value}</p>
                 {s.label && <p className="text-[10px] text-ash">{s.label}</p>}
@@ -263,6 +279,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
           </ol>
         </section>
       </main>
+      <Footer />
     </>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Home, Shield, Trophy, TrendingUp, LifeBuoy, LogIn, User } from "lucide-react";
+import SearchBox from "@/components/SearchBox";
 
 const LINKS = [
   { href: "/", label: "Accueil", icon: Home },
@@ -47,6 +48,8 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          <SearchBox />
 
           <div className="ml-1 border-l border-line pl-2 sm:ml-2 sm:pl-3">
             {status === "authenticated" ? (
