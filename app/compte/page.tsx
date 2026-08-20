@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMemberLink } from "@/lib/members";
 import { getPlayer } from "@/lib/brawlstars";
+import { getRankedTracking } from "@/lib/rankedTracking";
 import Navbar from "@/components/Navbar";
 import AccountLinkForm from "@/components/AccountLinkForm";
 import Button from "@/components/Button";
@@ -12,10 +13,6 @@ export const dynamic = "force-dynamic";
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default async function ComptePage() {
@@ -32,8 +29,8 @@ export default async function ComptePage() {
               Connecte-toi pour continuer
             </h1>
             <p className="mt-2 max-w-sm text-sm text-ash">
-              Lie ton compte Discord à ton tag Brawl Stars pour afficher ton Ranked actuel et ton
-              record all-time sur le site.
+              Lie ton compte Discord à ton tag Brawl Stars pour ajouter une présentation et
+              retrouver ta fiche facilement.
             </p>
             <div className="mt-5 flex justify-center">
               <Button href="/api/auth/signin/discord" icon={<LogIn className="h-4 w-4" />}>
@@ -49,12 +46,14 @@ export default async function ComptePage() {
   const link = await getMemberLink(discordId).catch(() => null);
 
   let player = null;
+  let tracking = null;
   if (link) {
     try {
       player = await getPlayer(link.tag);
     } catch {
       player = null;
     }
+    tracking = await getRankedTracking(link.tag).catch(() => null);
   }
 
   return (
@@ -84,23 +83,23 @@ export default async function ComptePage() {
               <div>
                 <p className="flex items-center justify-center gap-1 stat-mono text-lg font-semibold text-signal">
                   <RankGlyph className="h-3.5 w-3.5" />
-                  {link.rankedScore !== undefined ? formatNumber(link.rankedScore) : "—"}
+                  {tracking ? formatNumber(tracking.current) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">Ranked</p>
               </div>
               <div>
                 <p className="stat-mono text-lg font-semibold text-zest2">
-                  {link.rankedBest !== undefined ? formatNumber(link.rankedBest) : "—"}
+                  {tracking ? formatNumber(tracking.allTimeBest) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ash">
                   Ranked all-time
                 </p>
               </div>
             </div>
-            {link.rankedUpdatedAt && (
+            {!tracking && (
               <p className="mt-4 text-[11px] text-ash">
-                Ranked mis à jour le {formatDate(link.rankedUpdatedAt)} — pense à revenir le
-                mettre à jour de temps en temps.
+                Ranked pas encore suivi pour ce compte — la première synchronisation
+                automatique le mettra en place, aucune action de ta part.
               </p>
             )}
           </section>
@@ -110,12 +109,7 @@ export default async function ComptePage() {
           <h2 className="mb-4 font-display text-sm font-semibold text-white">
             {link ? "Modifier ma liaison" : "Lier mon compte Brawl Stars"}
           </h2>
-          <AccountLinkForm
-            existingTag={link?.tag}
-            existingRankedScore={link?.rankedScore}
-            existingRankedBest={link?.rankedBest}
-            existingBio={link?.bio}
-          />
+          <AccountLinkForm existingTag={link?.tag} existingBio={link?.bio} />
         </section>
       </main>
     </>

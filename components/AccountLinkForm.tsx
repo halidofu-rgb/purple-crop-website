@@ -7,23 +7,13 @@ import { Link2, RefreshCw } from "lucide-react";
 
 export default function AccountLinkForm({
   existingTag,
-  existingRankedScore,
-  existingRankedBest,
   existingBio,
 }: {
   existingTag?: string;
-  existingRankedScore?: number;
-  existingRankedBest?: number;
   existingBio?: string;
 }) {
   const router = useRouter();
   const [tag, setTag] = useState(existingTag ?? "");
-  const [rankedScore, setRankedScore] = useState(
-    existingRankedScore !== undefined ? String(existingRankedScore) : ""
-  );
-  const [rankedBest, setRankedBest] = useState(
-    existingRankedBest !== undefined ? String(existingRankedBest) : ""
-  );
   const [bio, setBio] = useState(existingBio ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +29,7 @@ export default function AccountLinkForm({
       const res = await fetch("/api/compte/link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tag, rankedScore, rankedBest, bio }),
+        body: JSON.stringify({ tag, bio }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -68,38 +58,11 @@ export default function AccountLinkForm({
           required
           className="w-full rounded-xl border border-line bg-panel2 px-4 py-2.5 text-sm text-white placeholder:text-ash focus:border-zest focus:outline-none"
         />
+        <p className="mt-1.5 text-[11px] text-ash">
+          Ton Ranked actuel et all-time sont suivis automatiquement dès que ton club est
+          synchronisé — rien d&apos;autre à saisir.
+        </p>
       </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1.5 block font-display text-xs uppercase tracking-wide text-ash">
-            Ranked actuel
-          </label>
-          <input
-            value={rankedScore}
-            onChange={(e) => setRankedScore(e.target.value)}
-            placeholder="ex : 5564"
-            inputMode="numeric"
-            className="w-full rounded-xl border border-line bg-panel2 px-4 py-2.5 text-sm text-white placeholder:text-ash focus:border-zest focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block font-display text-xs uppercase tracking-wide text-ash">
-            Ranked all-time
-          </label>
-          <input
-            value={rankedBest}
-            onChange={(e) => setRankedBest(e.target.value)}
-            placeholder="ex : 6319"
-            inputMode="numeric"
-            className="w-full rounded-xl border border-line bg-panel2 px-4 py-2.5 text-sm text-white placeholder:text-ash focus:border-zest focus:outline-none"
-          />
-        </div>
-      </div>
-      <p className="text-[11px] text-ash">
-        Les deux sont visibles dans ton profil en jeu. L&apos;API Brawl Stars ne les fournit pas,
-        donc c&apos;est à toi de les indiquer — reviens les mettre à jour de temps en temps.
-      </p>
 
       <div>
         <label className="mb-1.5 block font-display text-xs uppercase tracking-wide text-ash">

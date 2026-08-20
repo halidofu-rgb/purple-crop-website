@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
-import { listAllMemberLinks } from "@/lib/members";
 import { getSeasonBaseline } from "@/lib/kv";
+import { listAllRankedTracking } from "@/lib/rankedTracking";
 import { rankedTierLabel } from "@/lib/rankedTier";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
@@ -33,7 +33,7 @@ export default async function ClassementPage({
   const tags = clubTags();
   const season = getCurrentSeason();
 
-  const [clubs, memberLinks, baseline] = await Promise.all([
+  const [clubs, rankedTracking, baseline] = await Promise.all([
     Promise.all(
       tags.map(async (tag) => {
         try {
@@ -43,7 +43,7 @@ export default async function ClassementPage({
         }
       })
     ),
-    listAllMemberLinks().catch(() => []),
+    listAllRankedTracking().catch(() => []),
     getSeasonBaseline(season.key).catch(() => null),
   ]);
 
@@ -104,37 +104,23 @@ export default async function ClassementPage({
     </>
   );
 
-  // Nom du club + pseudo en jeu affichés pour un membre lié, retrouvés via
-  // le classement trophées déjà calculé — pas besoin d'un second appel.
-  const clubNameByTag = new Map(trophyRows.map((m) => [m.tag.toUpperCase(), m.clubName]));
-  const nameByTag = new Map(trophyRows.map((m) => [m.tag.toUpperCase(), m.name]));
-
-  const rankedRows = memberLinks
-    .filter((m) => m.rankedScore !== undefined)
-    .map((m) => ({
-      tag: m.tag,
-      name: nameByTag.get(m.tag.toUpperCase()) ?? m.discordName,
-      clubName: clubNameByTag.get(m.tag.toUpperCase()) ?? "",
-      rankedScore: m.rankedScore!,
-      rankedBest: m.rankedBest,
-    }))
-    .sort((a, b) => b.rankedScore - a.rankedScore);
+  const rankedRows = rankedTracking
+    .filter((r) => r.current > 0 || r.allTimeBest > 0)
+    .sort((a, b) => b.current - a.current);
 
   const rankedPanel = (
     <div>
       <div className="mb-4 flex items-start gap-2">
-        <Badge tone="warning">auto-déclaré</Badge>
+        <Badge tone="warning">suivi automatique</Badge>
         <p className="text-xs text-ash">
-          Score indiqué par chaque membre depuis son compte lié (/compte) — l&apos;API Brawl
-          Stars ne fournit aucun score Ranked, impossible de le récupérer automatiquement.
+          Calculé en synchronisant régulièrement le journal de combats Ranked de chaque membre —
+          l&apos;API Brawl Stars ne fournit aucun score Ranked directement.
         </p>
       </div>
       {rankedRows.length === 0 ? (
         <p className="rounded-2xl border border-line bg-panel px-4 py-6 text-center text-sm text-ash">
-          Personne n&apos;a encore lié son compte et indiqué son Ranked.{" "}
-          <Link href="/compte" className="text-signal hover:underline">
-            Sois le premier →
-          </Link>
+          Aucune donnée pour l&apos;instant — la première synchronisation n&apos;a pas encore eu
+          lieu, ou personne n&apos;a encore joué de combat Ranked depuis.
         </p>
       ) : (
         <>
@@ -143,7 +129,7 @@ export default async function ClassementPage({
               tag: r.tag,
               name: r.name,
               clubName: r.clubName,
-              value: r.rankedScore,
+              value: r.current,
             }))}
           />
           <ol className="divide-y divide-line rounded-2xl border border-line bg-panel">
@@ -161,14 +147,12 @@ export default async function ClassementPage({
                       {row.name}
                     </p>
                     <p className="text-xs text-ash">
-                      {row.clubName} · {rankedTierLabel(row.rankedScore)}
+                      {row.clubName} · {rankedTierLabel(row.current)}
                     </p>
                   </div>
-                  {row.rankedBest !== undefined && (
-                    <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>
-                  )}
+                  <Badge tone="neutral">all-time {formatNumber(row.allTimeBest)}</Badge>
                   <span className="stat-mono shrink-0 text-base font-semibold text-signal">
-                    {formatNumber(row.rankedScore)}
+                    {formatNumber(row.current)}
                   </span>
                 </Link>
               </li>

@@ -1,7 +1,7 @@
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
-import { listAllMemberLinks } from "@/lib/members";
+import { listAllRankedTracking } from "@/lib/rankedTracking";
 import { getCurrentSeason } from "@/lib/season";
 import ClubView from "@/components/ClubView";
 import Navbar from "@/components/Navbar";
@@ -21,7 +21,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
   const allTags = clubTags();
   const season = getCurrentSeason();
 
-  const [allClubs, baseline, memberLinks] = await Promise.all([
+  const [allClubs, baseline, rankedTracking] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -32,7 +32,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
       })
     ),
     getSeasonBaseline(season.key).catch(() => null),
-    listAllMemberLinks().catch(() => []),
+    listAllRankedTracking().catch(() => []),
   ]);
 
   const ranked = allClubs
@@ -49,19 +49,16 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
     }
   }
 
-  // Ranked déclaré, filtré aux membres de CE club uniquement.
+  // Suivi Ranked automatique, filtré aux membres de CE club uniquement.
   const memberTags = new Set(club.members.map((m) => m.tag.toUpperCase()));
-  const rankedRows = memberLinks
-    .filter((m) => m.rankedScore !== undefined && memberTags.has(m.tag.toUpperCase()))
-    .map((m) => {
-      const member = club.members.find((cm) => cm.tag.toUpperCase() === m.tag.toUpperCase());
-      return {
-        tag: m.tag,
-        name: member?.name ?? m.discordName,
-        rankedScore: m.rankedScore!,
-        rankedBest: m.rankedBest,
-      };
-    })
+  const rankedRows = rankedTracking
+    .filter((r) => memberTags.has(r.tag.toUpperCase()) && (r.current > 0 || r.allTimeBest > 0))
+    .map((r) => ({
+      tag: r.tag,
+      name: r.name,
+      rankedScore: r.current,
+      rankedBest: r.allTimeBest,
+    }))
     .sort((a, b) => b.rankedScore - a.rankedScore);
 
   return (

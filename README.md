@@ -131,3 +131,35 @@ façon honnête d'avoir cette donnée sur Purple Corp.
 **Pas de vraies icônes de rang (Bronze/Mythique/etc.)** : aucune source publique identifiée.
 Brawl Time Ninja utilise ses propres images maison (hébergées sur son propre site, pas une
 API ouverte) — rien de légitimement réutilisable trouvé pour l'instant.
+
+## Étape 6 — Suivi Ranked automatique (sans saisie manuelle)
+
+Comme l'API Brawl Stars ne fournit aucun score Ranked, le site interroge en
+boucle le journal de combats (`/battlelog`, 25 derniers combats) de chaque
+membre et accumule les gains/pertes Ranked dans Redis — exactement le
+principe utilisé par les trackers communautaires du même genre (confirmé
+par leur propre documentation : "stats are collected by polling the
+Official API").
+
+- **Ranked (actuel)** = accumulation depuis le début du suivi. Démarre à 0
+  pour chaque joueur au premier passage, grandit avec les vrais combats
+  Ranked joués ensuite.
+- **Ranked all-time** = maximum jamais atteint de ce compteur. Reste fiable
+  même si une synchro est manquée.
+- Indépendant du compte Discord — fonctionne pour tous les membres du club,
+  liés ou non (c'est ce qu'on a vérifié en observant plusieurs profils du
+  site concurrent).
+
+**Fréquence** : le cron Vercel intégré (`vercel.json`) tourne 1x/jour
+(limite du plan Hobby). Pour un suivi plus fin, comme semble le faire
+Projet X, ajoute un déclenchement externe gratuit via
+[cron-job.org](https://cron-job.org) pointant vers :
+```
+https://TON-SITE.vercel.app/api/cron/ranked-sync
+```
+toutes les 15-30 minutes, avec l'en-tête `Authorization: Bearer TON_CRON_SECRET`.
+
+**Limite assumée** : au tout début, tout le monde part de 0 — impossible de
+connaître le score réel au moment du démarrage (même limite qu'on a
+rencontrée partout dans cette recherche). Les chiffres deviennent fiables
+au fil des combats joués après la mise en place.

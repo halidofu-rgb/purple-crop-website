@@ -3,6 +3,7 @@ import { getPlayer, getClub, sortByTrophies } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberLinkByTag } from "@/lib/members";
+import { getRankedTracking } from "@/lib/rankedTracking";
 import { getCurrentSeason } from "@/lib/season";
 import { avatarColor } from "@/lib/avatarColor";
 import { getPlayerIconUrl } from "@/lib/assets";
@@ -46,7 +47,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const season = getCurrentSeason();
   const allTags = clubTags();
 
-  const [allClubs, baseline, memberLink, avatarUrl] = await Promise.all([
+  const [allClubs, baseline, memberLink, avatarUrl, rankedTracking] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -59,6 +60,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     getSeasonBaseline(season.key).catch(() => null),
     getMemberLinkByTag(params.tag).catch(() => null),
     getPlayerIconUrl(player.icon?.id).catch(() => null),
+    getRankedTracking(params.tag).catch(() => null),
   ]);
 
   const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
@@ -89,20 +91,20 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
 
   const mainStats = [
     { icon: TrophyGlyph, value: formatNumber(player.trophies), label: "Total", title: "Trophées", colorClass: "" },
-    ...(memberLink?.rankedScore !== undefined
+    ...(rankedTracking && rankedTracking.updatedAt
       ? [{
           icon: RankGlyph,
-          value: formatNumber(memberLink.rankedScore),
-          label: rankedTierLabel(memberLink.rankedScore),
+          value: formatNumber(rankedTracking.current),
+          label: rankedTierLabel(rankedTracking.current),
           title: "Ranked",
           colorClass: "text-signal",
         }]
       : []),
-    ...(memberLink?.rankedBest !== undefined
+    ...(rankedTracking && rankedTracking.updatedAt
       ? [{
           icon: RankGlyph,
-          value: formatNumber(memberLink.rankedBest),
-          label: rankedTierLabel(memberLink.rankedBest),
+          value: formatNumber(rankedTracking.allTimeBest),
+          label: rankedTierLabel(rankedTracking.allTimeBest),
           title: "Ranked all-time",
           colorClass: "text-zest2",
         }]
