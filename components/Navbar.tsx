@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/clubs", label: "Clubs" },
   { href: "/classement", label: "Classement" },
   { href: "/pusheurs", label: "Pusheurs" },
+  { href: "/actualites", label: "Actualités" },
   { href: "/support", label: "Support" },
 ];
 

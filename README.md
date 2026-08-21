@@ -9,6 +9,7 @@ Site Next.js pour Purple Corp : Accueil, Clubs, Classement général et Pusheurs
 - `/clubs/[tag]` — fiche détaillée d'un club (roster trié par trophées)
 - `/classement` — classement global : tous les membres de tous les clubs, mélangés et triés
 - `/pusheurs` — qui a gagné le plus de trophées depuis la dernière photo (nécessite l'étape Redis ci-dessous)
+- `/actualites` — annonces du club / Brawl Stars, publiées à la main (voir Étape 9)
 
 ## Étape 1 — Clé API Brawl Stars
 
@@ -191,3 +192,20 @@ comme tous les trackers communautaires qu'on a croisés dans cette recherche.
 utilise automatiquement à la place de nos glyphes originaux, partout où
 ils apparaissent (accueil, fiches club/joueur, classement, pusheurs).
 Aucun fichier de code à modifier.
+
+## Étape 9 — Actualités (`/actualites`)
+
+Page d'annonces publiée à la main (club ou Brawl Stars), stockée dans Redis
+(`lib/news.ts`) — pas de rédacteur automatique, pas de récupération externe.
+
+Un seul compte Discord peut publier/supprimer, celui listé dans
+`ADMIN_DISCORD_IDS` (variable d'environnement Vercel, un ou plusieurs ID
+séparés par une virgule) :
+
+1. Sur Discord : **Réglages utilisateur → Avancés → Mode développeur** (activer).
+2. Clic droit sur ton propre profil (ou ton pseudo en haut à gauche) → **Copier l'ID utilisateur**.
+3. Colle-le dans `ADMIN_DISCORD_IDS` sur Vercel, puis redéploie.
+
+Une fois connecté avec ce compte Discord, un formulaire de publication apparaît
+en haut de `/actualites` — titre, texte, image optionnelle (URL). Les visiteurs
+non connectés voient uniquement la liste des actus, sans aucun contrôle.
