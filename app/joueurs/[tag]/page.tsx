@@ -292,11 +292,6 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                           <p className="stat-mono text-[12.5px] text-steel-400">
                             {formatNumber(player.rankedElo!)} Elo
                           </p>
-                          {bestLabel && (
-                            <p className="mt-1 text-[12.5px] text-steel-400">
-                              Record : {bestLabel} ({formatNumber(player.highestAllTimeRankedElo!)})
-                            </p>
-                          )}
                         </div>
                       </div>
                       {rankedProgress.next !== null && (
@@ -312,6 +307,26 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                               className="h-full rounded-full bg-gradient-to-r from-iris to-zest2"
                               style={{ width: `${Math.round(rankedProgress.fraction * 100)}%` }}
                             />
+                          </div>
+                        </div>
+                      )}
+                      {bestLabel && (
+                        <div className="mt-5 flex items-center gap-3 border-t border-paper/10 pt-4">
+                          <RankTierIcon
+                            src={rankedTierIconPath(bestLabel)}
+                            label={bestLabel}
+                            className="h-9 w-9 shrink-0"
+                          />
+                          <div>
+                            <p className="text-[10.5px] tracking-[0.16em] uppercase text-steel-500">
+                              Record all-time
+                            </p>
+                            <p className="text-sm text-paper">
+                              {bestLabel}{" "}
+                              <span className="stat-mono text-zest2">
+                                {formatNumber(player.highestAllTimeRankedElo!)}
+                              </span>
+                            </p>
                           </div>
                         </div>
                       )}

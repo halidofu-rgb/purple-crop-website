@@ -1,10 +1,16 @@
 import Link from "next/link";
+import RankTierIcon from "@/components/RankTierIcon";
 
 export interface PodiumEntry {
   tag: string;
   name: string;
   clubName: string;
   value: number;
+  // Superposé sur l'avatar quand fourni (classements Ranked) — src peut
+  // être null (rang sans icône réelle hébergée), RankTierIcon retombe
+  // alors sur le glyphe original, jamais d'image cassée.
+  rankIconSrc?: string | null;
+  rankLabel?: string;
 }
 
 function formatNumber(n: number): string {
@@ -33,9 +39,16 @@ export default function Podium({ entries }: { entries: PodiumEntry[] }) {
             className="group flex w-24 flex-col items-center sm:w-32"
           >
             <span
-              className={`flex h-10 w-10 items-center justify-center rounded-full border border-paper/10 bg-panel2 text-sm font-medium ${accent} transition group-hover:border-zest2 sm:h-12 sm:w-12`}
+              className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-paper/10 bg-panel2 text-sm font-medium ${accent} transition group-hover:border-zest2 sm:h-12 sm:w-12`}
             >
               {entry.name.trim().charAt(0).toUpperCase()}
+              {entry.rankLabel && (
+                <RankTierIcon
+                  src={entry.rankIconSrc ?? null}
+                  label={entry.rankLabel}
+                  className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5 sm:h-5 sm:w-5"
+                />
+              )}
             </span>
             <p className="mt-2 max-w-full truncate text-xs font-medium text-paper sm:text-sm">
               {entry.name}
