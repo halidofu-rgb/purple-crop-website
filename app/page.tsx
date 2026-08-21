@@ -117,7 +117,7 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              <dl className="grid grid-cols-2 border-t border-paper/10 pt-5 sm:grid-cols-4">
+              <dl className="grid grid-cols-2 gap-y-6 border-t border-paper/10 pt-5">
                 {(
                   [
                     {
@@ -134,12 +134,12 @@ export default async function HomePage() {
                     },
                   ] as { value: string; label: string; icon?: React.ReactNode }[]
                 ).map((s, i) => (
-                  <div key={s.label} className={`min-w-0 ${i === 0 ? "pr-5" : "border-l border-paper/10 px-5"}`}>
-                    <dd className="stat-mono flex items-center gap-1.5 text-[clamp(20px,2.6vw,34px)] leading-none tracking-[-0.02em] text-paper">
+                  <div key={s.label} className={i % 2 === 0 ? "pr-6" : "border-l border-paper/10 pl-6"}>
+                    <dd className="stat-mono flex flex-wrap items-center gap-1.5 text-[clamp(20px,2.6vw,34px)] leading-none tracking-[-0.02em] text-paper">
                       {s.icon}
-                      <span className="truncate">{s.value}</span>
+                      {s.value}
                     </dd>
-                    <dt className="mt-1.5 truncate text-[11px] tracking-[0.14em] uppercase text-steel-600">
+                    <dt className="mt-1.5 text-[11px] leading-snug tracking-[0.14em] uppercase text-steel-600">
                       {s.label}
                     </dt>
                   </div>
