@@ -75,3 +75,24 @@ export function rankedTierIconPath(label: string): string | null {
   const slug = SLUG_BY_LABEL[label];
   return slug ? `/ranked-tiers/${slug}.png` : null;
 }
+
+// Traduit le libellé anglais renvoyé directement par l'API officielle
+// ("DIAMOND III", "MASTERS I", "PRO") vers nos libellés français, pour
+// réutiliser telles quelles les icônes et la logique de progression
+// existantes (SLUG_BY_LABEL, rankedTierProgress...).
+const API_TIER_FR: Record<string, string> = {
+  BRONZE: "Bronze",
+  SILVER: "Argent",
+  GOLD: "Or",
+  DIAMOND: "Diamant",
+  MYTHIC: "Mythique",
+  LEGENDARY: "Légendaire",
+  MASTERS: "Masters",
+  PRO: "Pro",
+};
+
+export function rankLabelFromApi(apiRankName: string): string {
+  const [tier, ...rest] = apiRankName.trim().split(/\s+/);
+  const fr = API_TIER_FR[tier?.toUpperCase() ?? ""] ?? apiRankName;
+  return rest.length > 0 ? `${fr} ${rest.join(" ")}` : fr;
+}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
-import { listAllRankedTracking } from "@/lib/rankedTracking";
+import { getRankedRowsForClubs } from "@/lib/rankedLive";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
@@ -24,24 +24,25 @@ export default async function HomePage() {
   const tags = clubTags();
   const season = getCurrentSeason();
 
-  const [clubResults, baseline, rankedTracking] = await Promise.all([
-    Promise.all(
-      tags.map(async (tag) => {
-        try {
-          const club = await getClub(tag);
-          return { tag, club, error: null as string | null };
-        } catch (err) {
-          return { tag, club: null, error: (err as Error).message };
-        }
-      })
-    ),
-    getSeasonBaseline(season.key).catch(() => null),
-    listAllRankedTracking().catch(() => []),
-  ]);
+  const clubResults = await Promise.all(
+    tags.map(async (tag) => {
+      try {
+        const club = await getClub(tag);
+        return { tag, club, error: null as string | null };
+      } catch (err) {
+        return { tag, club: null, error: (err as Error).message };
+      }
+    })
+  );
 
   const loadedClubs = clubResults.filter((r) => r.club).map((r) => r.club!);
   const totalTrophies = loadedClubs.reduce((sum, c) => sum + c.trophies, 0);
   const totalMembers = loadedClubs.reduce((sum, c) => sum + c.members.length, 0);
+
+  const [baseline, rankedRows] = await Promise.all([
+    getSeasonBaseline(season.key).catch(() => null),
+    getRankedRowsForClubs(loadedClubs).catch(() => []),
+  ]);
 
   let pushRows: { tag: string; name: string; clubName: string; delta: number }[] = [];
   if (baseline) {
@@ -57,9 +58,7 @@ export default async function HomePage() {
       .sort((a, b) => b.delta - a.delta);
   }
   const king = pushRows[0];
-  const rankedBest = [...rankedTracking]
-    .filter((r) => r.current > 0)
-    .sort((a, b) => b.current - a.current)[0];
+  const rankedBest = rankedRows[0];
 
   return (
     <>
@@ -117,7 +116,7 @@ export default async function HomePage() {
                   { value: String(totalMembers), label: "Joueurs actifs" },
                   { value: String(loadedClubs.length), label: "Clubs" },
                   {
-                    value: rankedBest ? formatNumber(rankedBest.current) : "—",
+                    value: rankedBest ? formatNumber(rankedBest.elo) : "—",
                     label: "Meilleur Elo Ranked",
                   },
                 ].map((s, i) => (
@@ -320,32 +319,28 @@ export default async function HomePage() {
               Voir tout →
             </Link>
           </div>
-          {rankedTracking.filter((r) => r.current > 0).length > 0 ? (
+          {rankedRows.length > 0 ? (
             <ol className="mt-3 divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
-              {[...rankedTracking]
-                .filter((r) => r.current > 0)
-                .sort((a, b) => b.current - a.current)
-                .slice(0, 5)
-                .map((row, i) => (
-                  <li key={row.tag}>
-                    <Link
-                      href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-                      className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
-                    >
-                      <span className="rank-index w-7 shrink-0 text-xs text-signal">{i + 1}</span>
-                      <span className="flex-1 truncate font-display text-sm font-medium text-paper">
-                        {row.name}
-                      </span>
-                      <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
-                        {formatNumber(row.current)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+              {rankedRows.slice(0, 5).map((row, i) => (
+                <li key={row.tag}>
+                  <Link
+                    href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
+                    className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
+                  >
+                    <span className="rank-index w-7 shrink-0 text-xs text-signal">{i + 1}</span>
+                    <span className="flex-1 truncate font-display text-sm font-medium text-paper">
+                      {row.name}
+                    </span>
+                    <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
+                      {formatNumber(row.elo)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ol>
           ) : (
             <p className="mt-3 rounded-2xl border border-paper/10 bg-panel px-4 py-4 text-center text-xs text-steel-400">
-              Suivi Ranked pas encore alimenté — revient après quelques combats joués.
+              Personne n&apos;a encore de rang Ranked.
             </p>
           )}
         </section>

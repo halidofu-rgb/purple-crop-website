@@ -73,22 +73,20 @@ Vercel redéploie automatiquement à chaque push.
 - **Ce qui est calculé en direct vs stocké** :
   - Trophées, classement, roster → toujours en direct depuis l'API (jamais stocké).
   - Push de saison → calculé en direct = trophées actuels − photo de départ stockée dans Redis.
-  - Ranked → calculé en direct à partir des 25 derniers combats de chaque joueur (`/battlelog`), jamais stocké (l'API ne garde que cette fenêtre glissante).
+  - Ranked (rang, Elo, record all-time) → champs renvoyés directement par `/players/{tag}`, jamais stocké. Les classements Ranked du site (`lib/rankedLive.ts`) appellent `getPlayer()` pour chaque membre en parallèle.
 - **Design system** : tokens centralisés dans `tailwind.config.ts` (classes utilitaires) et `app/globals.css` (variables CSS `--color-*`) — les deux doivent rester synchronisés si une couleur change. Composants partagés : `Button.tsx`, `Badge.tsx`, `Tabs.tsx`, `ClubBadge.tsx` (emblème généré, pas un asset du jeu), `Podium.tsx`, `RankGlyph.tsx`.
 
 ## Ce qui n'est PAS disponible (limite de l'API officielle, pas de notre code)
 
-- Rang Ranked actuel d'un joueur (Masters, Légendaire, etc.) — Supercell ne l'expose pas.
-- Score Ranked total, saison ou all-time — idem, aucun champ de ce type dans l'API.
 - Classements "1v1" ou "Casino" — aucune donnée correspondante.
 - Logo/badge réel du club — l'API ne renvoie qu'un `badgeId` numérique, pas d'image ; `ClubBadge.tsx` génère un emblème original à la place.
 - Lien Discord d'un club — aucune donnée de ce type dans l'API (à ajouter manuellement si besoin, en dur dans `lib/clubs.ts`).
 
 ## Étape 5 — Connexion Discord (hub de connexion membres)
 
-Permet à chaque membre de lier son compte Discord à son tag Brawl Stars, et
-d'indiquer son score Ranked actuel (seule façon de l'obtenir, l'API ne le
-fournit pas — voir /support).
+Permet à chaque membre de lier son compte Discord à son tag Brawl Stars, pour
+retrouver facilement sa fiche et ajouter une présentation. Le Ranked affiché
+sur `/compte` vient directement de l'API, aucune saisie requise.
 
 1. Sur https://discord.com/developers/applications, crée une application.
 2. Onglet **OAuth2 → General** : copie le **Client ID** et le **Client Secret**.
@@ -107,18 +105,35 @@ fournit pas — voir /support).
 
 **Important** : aucun bot Discord permanent n'est nécessaire pour cette fonctionnalité — c'est uniquement une connexion "Se connecter avec Discord" (OAuth), qui reste 100% hébergée sur Vercel. Un vrai bot avec des commandes Discord (`/profile`, etc.) est un projet séparé qui nécessiterait un hébergement dédié (Railway, Render...).
 
-## Recherche approfondie — score Ranked automatique (résultat)
+## Correction du 20/08/2026 — le score Ranked EST dans l'API officielle
+
+La recherche ci-dessous (menée avant cette date) concluait à tort que l'API officielle
+n'exposait aucun champ Ranked. Vérifié par un appel réel à `/players/{tag}` le 20/08/2026 :
+le payload contient bel et bien `rankedSeasonId`, `rankedRank`, `rankedRankName`, `rankedElo`,
+`highestSeasonRankedRank(Name/Elo)` et `highestAllTimeRankedRank(Name/Elo)`. Supercell a dû
+les ajouter après la publication des docs tierces qu'on avait consultées (aucune des sources
+ci-dessous ne les mentionnait). `lib/brawlstars.ts` les type maintenant explicitement.
+
+Tout le site a été migré vers ces vrais champs le même jour (fiche joueur, `/compte`,
+`/classement`, `/clubs/[tag]`, accueil) via `lib/rankedLive.ts`, qui calcule les classements
+Ranked en direct (un `getPlayer()` par membre, en parallèle) plutôt que de les stocker.
+L'ancien suivi Redis (`lib/rankedTracking.ts`) et le cron `ranked-sync` qui l'alimentait ont
+été retirés — devenus inutiles maintenant que la donnée vient directement de Supercell. La
+section "Étape 6" ci-dessous décrit ce système, gardée pour l'historique.
+
+## Recherche approfondie — score Ranked automatique (résultat, DÉPASSÉ — voir correction ci-dessus)
 
 Vérification exhaustive menée : API officielle Brawl Stars, BrawlAPI (api.brawlapi.com),
 Brawl Time Ninja (et ses 4 sources déclarées dans leur propre page /about : API officielle,
 BrawlAPI, une autre lib tierce, le wiki Fandom), plusieurs libs tierces indépendantes
 (brawlstats, bstats, BrawlPlex...).
 
-**Conclusion : aucune ne fournit le score Ranked actuel ou all-time d'un joueur.** Même
-Brawl Time Ninja, qui l'affiche sur son site, ne le tire d'aucune de ses 4 sources déclarées
-— ils font forcément leur propre suivi maison en continu depuis des années, comme nous avec
-Redis, juste à bien plus grande échelle. La saisie manuelle (`/compte`) reste donc la seule
-façon honnête d'avoir cette donnée sur Purple Corp.
+**Conclusion (erronée, voir correction du 20/08/2026 ci-dessus) : aucune ne fournit le score
+Ranked actuel ou all-time d'un joueur.** Même Brawl Time Ninja, qui l'affiche sur son site,
+ne le tire d'aucune de ses 4 sources déclarées — ils font forcément leur propre suivi maison
+en continu depuis des années, comme nous avec Redis, juste à bien plus grande échelle. La
+saisie manuelle (`/compte`) reste donc la seule façon honnête d'avoir cette donnée sur Purple
+Corp.
 
 **Ce qui EST récupéré automatiquement depuis cette recherche :**
 - Vraie icône de profil (`player.icon.id`) et vrai badge de club (`club.badgeId`), via
@@ -132,37 +147,23 @@ façon honnête d'avoir cette donnée sur Purple Corp.
 Brawl Time Ninja utilise ses propres images maison (hébergées sur son propre site, pas une
 API ouverte) — rien de légitimement réutilisable trouvé pour l'instant.
 
-## Étape 6 — Suivi Ranked automatique (sans saisie manuelle)
+## Étape 6 — Suivi Ranked automatique (ANCIEN SYSTÈME, retiré le 20/08/2026)
 
-Comme l'API Brawl Stars ne fournit aucun score Ranked, le site interroge en
-boucle le journal de combats (`/battlelog`, 25 derniers combats) de chaque
-membre et accumule les gains/pertes Ranked dans Redis — exactement le
-principe utilisé par les trackers communautaires du même genre (confirmé
-par leur propre documentation : "stats are collected by polling the
-Official API").
+Gardé ici pour l'historique — ce système n'existe plus dans le code (voir la correction
+plus haut). Avant qu'on découvre que l'API officielle expose directement `rankedElo` &
+consorts, le site interrogeait en boucle le journal de combats (`/battlelog`, 25 derniers
+combats) de chaque membre et accumulait les gains/pertes Ranked dans Redis — le principe
+utilisé par les trackers communautaires qui n'ont pas accès à ces champs API.
 
 - **Ranked (actuel)** = accumulation depuis le début du suivi. Démarre à 0
   pour chaque joueur au premier passage, grandit avec les vrais combats
   Ranked joués ensuite.
-- **Ranked all-time** = maximum jamais atteint de ce compteur. Reste fiable
-  même si une synchro est manquée.
-- Indépendant du compte Discord — fonctionne pour tous les membres du club,
-  liés ou non (c'est ce qu'on a vérifié en observant plusieurs profils du
-  site concurrent).
+- **Ranked all-time** = maximum jamais atteint de ce compteur.
 
-**Fréquence** : le cron Vercel intégré (`vercel.json`) tourne 1x/jour
-(limite du plan Hobby). Pour un suivi plus fin, comme semble le faire
-Projet X, ajoute un déclenchement externe gratuit via
-[cron-job.org](https://cron-job.org) pointant vers :
-```
-https://TON-SITE.vercel.app/api/cron/ranked-sync
-```
-toutes les 15-30 minutes, avec l'en-tête `Authorization: Bearer TON_CRON_SECRET`.
-
-**Limite assumée** : au tout début, tout le monde part de 0 — impossible de
-connaître le score réel au moment du démarrage (même limite qu'on a
-rencontrée partout dans cette recherche). Les chiffres deviennent fiables
-au fil des combats joués après la mise en place.
+**Limite qu'avait ce système** : au tout début, tout le monde partait de 0 — impossible de
+connaître le score réel au moment du démarrage. C'est précisément ce que la vraie donnée API
+corrige : plus besoin d'accumuler quoi que ce soit, le score exact est disponible dès le
+premier appel.
 
 ## Étape 7 — Icônes de rang réelles (à héberger toi-même)
 

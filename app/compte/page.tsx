@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMemberLink } from "@/lib/members";
 import { getPlayer } from "@/lib/brawlstars";
-import { getRankedTracking } from "@/lib/rankedTracking";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AccountLinkForm from "@/components/AccountLinkForm";
@@ -47,15 +46,14 @@ export default async function ComptePage() {
   const link = await getMemberLink(discordId).catch(() => null);
 
   let player = null;
-  let tracking = null;
   if (link) {
     try {
       player = await getPlayer(link.tag);
     } catch {
       player = null;
     }
-    tracking = await getRankedTracking(link.tag).catch(() => null);
   }
+  const hasRanked = typeof player?.rankedElo === "number";
 
   return (
     <>
@@ -85,23 +83,23 @@ export default async function ComptePage() {
               <div>
                 <p className="flex items-center justify-center gap-1 stat-mono text-lg font-semibold text-signal">
                   <RankGlyph className="h-3.5 w-3.5" />
-                  {tracking ? formatNumber(tracking.current) : "—"}
+                  {hasRanked ? formatNumber(player!.rankedElo!) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">Ranked</p>
               </div>
               <div>
                 <p className="stat-mono text-lg font-semibold text-zest2">
-                  {tracking ? formatNumber(tracking.allTimeBest) : "—"}
+                  {hasRanked ? formatNumber(player!.highestAllTimeRankedElo ?? player!.rankedElo!) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">
                   Ranked all-time
                 </p>
               </div>
             </div>
-            {!tracking && (
+            {!hasRanked && (
               <p className="mt-4 text-[11px] text-steel-400">
-                Ranked pas encore suivi pour ce compte — la première synchronisation
-                automatique le mettra en place, aucune action de ta part.
+                Pas encore de rang Ranked sur ce compte (débloqué à 1 000 trophées, puis un
+                premier combat Ranked joué).
               </p>
             )}
           </section>

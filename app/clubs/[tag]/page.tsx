@@ -1,7 +1,7 @@
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
-import { listAllRankedTracking } from "@/lib/rankedTracking";
+import { getRankedRowsForClubs } from "@/lib/rankedLive";
 import { getCurrentSeason } from "@/lib/season";
 import ClubView from "@/components/ClubView";
 import Navbar from "@/components/Navbar";
@@ -22,7 +22,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
   const allTags = clubTags();
   const season = getCurrentSeason();
 
-  const [allClubs, baseline, rankedTracking] = await Promise.all([
+  const [allClubs, baseline, rankedRows] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -33,7 +33,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
       })
     ),
     getSeasonBaseline(season.key).catch(() => null),
-    listAllRankedTracking().catch(() => []),
+    getRankedRowsForClubs([club]).catch(() => []),
   ]);
 
   const ranked = allClubs
@@ -49,18 +49,6 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
       if (before) pushByTag.set(m.tag, m.trophies - before.trophies);
     }
   }
-
-  // Suivi Ranked automatique, filtré aux membres de CE club uniquement.
-  const memberTags = new Set(club.members.map((m) => m.tag.toUpperCase()));
-  const rankedRows = rankedTracking
-    .filter((r) => memberTags.has(r.tag.toUpperCase()) && (r.current > 0 || r.allTimeBest > 0))
-    .map((r) => ({
-      tag: r.tag,
-      name: r.name,
-      rankedScore: r.current,
-      rankedBest: r.allTimeBest,
-    }))
-    .sort((a, b) => b.rankedScore - a.rankedScore);
 
   return (
     <>

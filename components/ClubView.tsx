@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
 import { discordUrlForTag } from "@/lib/clubs";
-import { rankedTierLabel } from "@/lib/rankedTier";
+import { rankLabelFromApi } from "@/lib/rankedTier";
 import ClubBadge from "@/components/ClubBadge";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
@@ -11,8 +11,9 @@ import Button from "@/components/Button";
 interface ClubRankedRow {
   tag: string;
   name: string;
-  rankedScore: number;
-  rankedBest?: number;
+  elo: number;
+  rankName: string;
+  bestElo: number;
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -119,9 +120,9 @@ export default function ClubView({
   const rankedPanel = rankedRows.length > 0 ? (
     <>
       <div className="mb-3 flex items-start gap-2">
-        <Badge tone="warning">auto-déclaré</Badge>
+        <Badge tone="success">API officielle</Badge>
         <p className="text-xs text-steel-400">
-          Score indiqué par chaque membre depuis son compte lié (/compte).
+          Rang et Elo Ranked en direct depuis l&apos;API Brawl Stars.
         </p>
       </div>
       <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
@@ -134,13 +135,11 @@ export default function ClubView({
               <span className="rank-index w-10 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-paper">{row.name}</p>
-                <p className="text-[11px] text-steel-400">{rankedTierLabel(row.rankedScore)}</p>
+                <p className="text-[11px] text-steel-400">{rankLabelFromApi(row.rankName)}</p>
               </div>
-              {row.rankedBest !== undefined && (
-                <Badge tone="neutral">all-time {formatNumber(row.rankedBest)}</Badge>
-              )}
+              <Badge tone="neutral">record {formatNumber(row.bestElo)}</Badge>
               <span className="stat-mono shrink-0 text-base font-semibold text-signal">
-                {formatNumber(row.rankedScore)}
+                {formatNumber(row.elo)}
               </span>
             </Link>
           </li>
@@ -149,10 +148,8 @@ export default function ClubView({
     </>
   ) : (
     <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
-      Personne n&apos;a encore lié son compte et indiqué son Ranked.{" "}
-      <Link href="/compte" className="text-signal hover:underline">
-        Sois le premier →
-      </Link>
+      Personne dans ce club n&apos;a encore de rang Ranked (débloqué à 1 000 trophées, puis
+      un premier combat Ranked joué).
     </p>
   );
 

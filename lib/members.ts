@@ -1,9 +1,7 @@
-// Liaison entre un compte Discord connecté et un joueur Brawl Stars.
-//
-// rankedScore et rankedBest sont AUTO-DÉCLARÉS par le joueur lui-même —
-// impossible de les récupérer via l'API Brawl Stars, qui ne fournit aucun
-// score Ranked absolu (voir /support). On les affiche tels quels, sans
-// tenter de deviner ou recalculer quoi que ce soit.
+// Liaison entre un compte Discord connecté et un joueur Brawl Stars — sert
+// uniquement à retrouver la fiche joueur et la bio depuis une session
+// Discord. Le Ranked (rang, Elo, record) n'est pas stocké ici : il vient en
+// direct de l'API à chaque affichage (lib/rankedLive.ts, lib/brawlstars.ts).
 import { getRedis } from "@/lib/redis";
 
 export interface MemberLink {
@@ -39,7 +37,6 @@ export async function saveMemberLink(link: MemberLink): Promise<void> {
   await redis.set(reverseKey(link.tag), link.discordId);
 }
 
-// Liste tous les membres liés — sert au classement Ranked (auto-déclaré).
 export async function listAllMemberLinks(): Promise<MemberLink[]> {
   const redis = getRedis();
   const keys = await redis.keys("purplecorp:member:*");

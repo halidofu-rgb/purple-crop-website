@@ -3,11 +3,10 @@ import { getPlayer, getClub, getBattleLog, sortByTrophies } from "@/lib/brawlsta
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberLinkByTag } from "@/lib/members";
-import { getRankedTracking } from "@/lib/rankedTracking";
 import { getCurrentSeason } from "@/lib/season";
 import { avatarColor } from "@/lib/avatarColor";
 import { getPlayerIconUrl } from "@/lib/assets";
-import { rankedTierLabel, rankedTierIconPath, rankedTierProgress } from "@/lib/rankedTier";
+import { rankLabelFromApi, rankedTierIconPath, rankedTierProgress } from "@/lib/rankedTier";
 import RankTierIcon from "@/components/RankTierIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -68,7 +67,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const season = getCurrentSeason();
   const allTags = clubTags();
 
-  const [allClubs, baseline, memberLink, avatarUrl, rankedTracking, battleLog] = await Promise.all([
+  const [allClubs, baseline, memberLink, avatarUrl, battleLog] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -81,7 +80,6 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     getSeasonBaseline(season.key).catch(() => null),
     getMemberLinkByTag(params.tag).catch(() => null),
     getPlayerIconUrl(player.icon?.id).catch(() => null),
-    getRankedTracking(params.tag).catch(() => null),
     getBattleLog(params.tag).catch(() => []),
   ]);
 
@@ -115,8 +113,13 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   ];
   const maxModeVictories = Math.max(...modeStats.map((m) => m.value), 1);
 
-  const rankedCurrent = rankedTracking?.updatedAt ? rankedTracking.current : null;
-  const rankedProgress = rankedCurrent !== null ? rankedTierProgress(rankedCurrent) : null;
+  const hasRanked = typeof player.rankedElo === "number" && !!player.rankedRankName;
+  const currentLabel = hasRanked ? rankLabelFromApi(player.rankedRankName!) : null;
+  const bestLabel =
+    typeof player.highestAllTimeRankedRankName === "string"
+      ? rankLabelFromApi(player.highestAllTimeRankedRankName)
+      : null;
+  const rankedProgress = hasRanked ? rankedTierProgress(player.rankedElo!) : null;
 
   const recentMatches = battleLog.slice(0, 5);
 
@@ -269,7 +272,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
 
               <div className="flex flex-col gap-4">
                 {/* rang Ranked : la carte "premium" de la fiche */}
-                {rankedCurrent !== null && rankedProgress ? (
+                {hasRanked && currentLabel && rankedProgress ? (
                   <div className="relative overflow-hidden rounded-2xl border border-zest2/35 bg-gradient-to-b from-iris/60 to-panel/90 p-6">
                     <div className="pointer-events-none absolute -bottom-16 -right-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.25),transparent_65%)]" />
                     <div className="relative">
@@ -278,18 +281,20 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                       </p>
                       <div className="mt-4 flex items-center gap-4">
                         <RankTierIcon
-                          src={rankedTierIconPath(rankedProgress.label)}
-                          label={rankedProgress.label}
+                          src={rankedTierIconPath(currentLabel)}
+                          label={currentLabel}
                           className="h-14 w-14 shrink-0"
                         />
                         <div>
                           <p className="text-2xl leading-tight tracking-[-0.02em] text-paper">
-                            {rankedProgress.label}
+                            {currentLabel}
                           </p>
-                          {rankedTracking && (
+                          <p className="stat-mono text-[12.5px] text-steel-400">
+                            {formatNumber(player.rankedElo!)} Elo
+                          </p>
+                          {bestLabel && (
                             <p className="mt-1 text-[12.5px] text-steel-400">
-                              Meilleur : {rankedTierLabel(rankedTracking.allTimeBest)} (
-                              {formatNumber(rankedTracking.allTimeBest)})
+                              Record : {bestLabel} ({formatNumber(player.highestAllTimeRankedElo!)})
                             </p>
                           )}
                         </div>
@@ -299,7 +304,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                           <div className="mb-2 flex justify-between text-[11.5px] text-steel-400">
                             <span>Vers le palier suivant</span>
                             <span className="stat-mono text-zest2">
-                              {formatNumber(rankedCurrent)} / {formatNumber(rankedProgress.next)}
+                              {formatNumber(player.rankedElo!)} / {formatNumber(rankedProgress.next)}
                             </span>
                           </div>
                           <div className="h-1.5 rounded-full bg-paper/10">
@@ -316,8 +321,8 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                   <div className="rounded-2xl border border-paper/10 bg-panel p-6 text-center">
                     <RankGlyph className="mx-auto h-6 w-6 text-zest2" />
                     <p className="mt-3 text-sm text-steel-400">
-                      Suivi Ranked pas encore alimenté pour ce joueur — revient après quelques
-                      combats Ranked joués.
+                      Ce joueur n&rsquo;a pas encore de rang Ranked (mode débloqué à 1 000
+                      trophées, puis un premier combat Ranked joué).
                     </p>
                   </div>
                 )}

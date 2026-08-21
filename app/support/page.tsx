@@ -32,12 +32,12 @@ export default function SupportPage() {
             <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-zest" />
             <div>
               <p className="text-sm font-semibold text-paper">
-                Pourquoi certaines données Ranked manquent ?
+                Pourquoi un joueur n&apos;a pas de rang Ranked affiché ?
               </p>
               <p className="mt-1 text-sm text-steel-400">
-                L&apos;API officielle de Brawl Stars ne donne pas de rang Ranked absolu (Masters,
-                Légendaire...). On affiche uniquement l&apos;évolution sur les 25 derniers combats,
-                seule donnée réellement disponible.
+                Le Ranked (rang, Elo, record) vient directement de l&apos;API officielle Brawl
+                Stars. Il n&apos;apparaît que pour les joueurs ayant débloqué le mode (1 000
+                trophées) et joué au moins un combat Ranked.
               </p>
             </div>
           </div>

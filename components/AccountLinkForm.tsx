@@ -59,8 +59,8 @@ export default function AccountLinkForm({
           className="w-full rounded-xl border border-paper/10 bg-panel2 px-4 py-2.5 text-sm text-paper placeholder:text-steel-400 focus:border-zest focus:outline-none"
         />
         <p className="mt-1.5 text-[11px] text-steel-400">
-          Ton Ranked actuel et all-time sont suivis automatiquement dès que ton club est
-          synchronisé — rien d&apos;autre à saisir.
+          Ton Ranked actuel et ton record all-time viennent directement de l&apos;API Brawl
+          Stars — rien d&apos;autre à saisir.
         </p>
       </div>
 

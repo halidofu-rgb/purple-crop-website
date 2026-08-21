@@ -2,8 +2,8 @@ import Link from "next/link";
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
-import { listAllRankedTracking } from "@/lib/rankedTracking";
-import { rankedTierLabel } from "@/lib/rankedTier";
+import { getRankedRowsForClubs } from "@/lib/rankedLive";
+import { rankLabelFromApi } from "@/lib/rankedTier";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -34,22 +34,24 @@ export default async function ClassementPage({
   const tags = clubTags();
   const season = getCurrentSeason();
 
-  const [clubs, rankedTracking, baseline] = await Promise.all([
-    Promise.all(
-      tags.map(async (tag) => {
-        try {
-          return await getClub(tag);
-        } catch {
-          return null;
-        }
-      })
-    ),
-    listAllRankedTracking().catch(() => []),
+  const clubs = await Promise.all(
+    tags.map(async (tag) => {
+      try {
+        return await getClub(tag);
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  const loadedClubs = clubs.filter((c): c is NonNullable<typeof c> => c !== null);
+
+  const [baseline, rankedRows] = await Promise.all([
     getSeasonBaseline(season.key).catch(() => null),
+    getRankedRowsForClubs(loadedClubs).catch(() => []),
   ]);
 
-  const trophyRows: TrophyRow[] = clubs
-    .filter((c): c is NonNullable<typeof c> => c !== null)
+  const trophyRows: TrophyRow[] = loadedClubs
     .flatMap((club) => club.members.map((m) => ({ ...m, clubName: club.name })))
     .sort((a, b) => b.trophies - a.trophies);
 
@@ -105,23 +107,18 @@ export default async function ClassementPage({
     </>
   );
 
-  const rankedRows = rankedTracking
-    .filter((r) => r.current > 0 || r.allTimeBest > 0)
-    .sort((a, b) => b.current - a.current);
-
   const rankedPanel = (
     <div>
       <div className="mb-4 flex items-start gap-2">
-        <Badge tone="warning">suivi automatique</Badge>
+        <Badge tone="success">API officielle</Badge>
         <p className="text-xs text-steel-400">
-          Calculé en synchronisant régulièrement le journal de combats Ranked de chaque membre —
-          l&apos;API Brawl Stars ne fournit aucun score Ranked directement.
+          Rang et Elo Ranked en direct depuis l&apos;API Brawl Stars, pour chaque membre.
         </p>
       </div>
       {rankedRows.length === 0 ? (
         <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
-          Aucune donnée pour l&apos;instant — la première synchronisation n&apos;a pas encore eu
-          lieu, ou personne n&apos;a encore joué de combat Ranked depuis.
+          Personne n&apos;a encore de rang Ranked (débloqué à 1 000 trophées, puis un premier
+          combat Ranked joué).
         </p>
       ) : (
         <>
@@ -130,7 +127,7 @@ export default async function ClassementPage({
               tag: r.tag,
               name: r.name,
               clubName: r.clubName,
-              value: r.current,
+              value: r.elo,
             }))}
           />
           <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
@@ -148,12 +145,12 @@ export default async function ClassementPage({
                       {row.name}
                     </p>
                     <p className="text-xs text-steel-400">
-                      {row.clubName} · {rankedTierLabel(row.current)}
+                      {row.clubName} · {rankLabelFromApi(row.rankName)}
                     </p>
                   </div>
-                  <Badge tone="neutral">all-time {formatNumber(row.allTimeBest)}</Badge>
+                  <Badge tone="neutral">record {formatNumber(row.bestElo)}</Badge>
                   <span className="stat-mono shrink-0 text-base font-semibold text-signal">
-                    {formatNumber(row.current)}
+                    {formatNumber(row.elo)}
                   </span>
                 </Link>
               </li>
