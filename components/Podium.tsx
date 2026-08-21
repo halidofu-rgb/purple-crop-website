@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
 import { avatarColor } from "@/lib/avatarColor";
@@ -18,7 +19,16 @@ function formatNumber(n: number): string {
 
 // Top 3 en trois cartes de même hauteur : seul le #1 porte la lueur violette
 // (la charte réserve la saturation à un seul élément par écran).
-export default function Podium({ entries }: { entries: PodiumEntry[] }) {
+// `valueIcon` : pictogramme affiché devant le chiffre (trophée, flèche de
+// push...) — un seul par podium, tous les podiums d'une page partagent le
+// même sens (trophées OU Ranked, jamais mélangé).
+export default function Podium({
+  entries,
+  valueIcon,
+}: {
+  entries: PodiumEntry[];
+  valueIcon?: ReactNode;
+}) {
   if (entries.length === 0) return null;
 
   return (
@@ -62,7 +72,7 @@ export default function Podium({ entries }: { entries: PodiumEntry[] }) {
                   <RankTierIcon
                     src={entry.rankIconSrc ?? null}
                     label={entry.rankLabel}
-                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5"
+                    className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_10px_rgba(0,0,0,0.35)]"
                   />
                 )}
               </span>
@@ -73,8 +83,15 @@ export default function Podium({ entries }: { entries: PodiumEntry[] }) {
             </div>
 
             <div className="relative mt-5 flex items-end justify-between border-t border-paper/10 pt-4">
-              <span className="stat-mono whitespace-nowrap text-[28px] leading-none tracking-[-0.02em] text-paper">
-                {formatNumber(entry.value)}
+              <span className="flex items-center gap-2">
+                {entry.rankLabel ? (
+                  <RankTierIcon src={entry.rankIconSrc ?? null} label={entry.rankLabel} className="h-7 w-7 shrink-0" />
+                ) : (
+                  valueIcon
+                )}
+                <span className="stat-mono whitespace-nowrap text-[28px] leading-none tracking-[-0.02em] text-paper">
+                  {formatNumber(entry.value)}
+                </span>
               </span>
               {entry.delta !== undefined && (
                 <span className={`text-xs ${entry.delta >= 0 ? "text-signal" : "text-blush"}`}>

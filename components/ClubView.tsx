@@ -1,11 +1,14 @@
+import { ReactNode } from "react";
 import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
 import { discordUrlForTag } from "@/lib/clubs";
-import { rankLabelFromApi } from "@/lib/rankedTier";
+import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
 import { avatarColor } from "@/lib/avatarColor";
 import ClubBadge from "@/components/ClubBadge";
 import RankGlyph from "@/components/RankGlyph";
+import RankTierIcon from "@/components/RankTierIcon";
 import Tabs from "@/components/Tabs";
+import { TrophyGlyph, PushGlyph } from "@/components/icons";
 
 interface ClubRankedRow {
   tag: string;
@@ -36,15 +39,22 @@ function playerHref(tag: string): string {
   return `/joueurs/${encodeURIComponent(tag.replace(/^#/, ""))}`;
 }
 
-const ROW = "grid grid-cols-[48px_minmax(0,1fr)_112px] items-center gap-3.5 px-4 sm:px-6";
+const ROW = "grid grid-cols-[48px_minmax(0,1fr)_132px] items-center gap-3.5 px-4 sm:px-6";
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, rankLabel }: { name: string; rankLabel?: string }) {
   return (
     <span
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
+      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
       style={{ backgroundColor: avatarColor(name) }}
     >
       {name.trim().charAt(0).toUpperCase()}
+      {rankLabel && (
+        <RankTierIcon
+          src={rankedTierIconPath(rankLabel)}
+          label={rankLabel}
+          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
+        />
+      )}
     </span>
   );
 }
@@ -67,6 +77,8 @@ function RosterRow({
   tag,
   name,
   sub,
+  rankLabel,
+  valueIcon,
   value,
   tone = "accent",
   last,
@@ -75,6 +87,8 @@ function RosterRow({
   tag: string;
   name: string;
   sub?: string;
+  rankLabel?: string;
+  valueIcon?: ReactNode;
   value: string;
   tone?: "accent" | "signal" | "blush" | "muted";
   last: boolean;
@@ -95,14 +109,21 @@ function RosterRow({
     >
       <span className="rank-index text-xs text-zest">[{String(index + 1).padStart(2, "0")}]</span>
       <span className="flex min-w-0 items-center gap-3">
-        <Avatar name={name} />
+        <Avatar name={name} rankLabel={rankLabel} />
         <span className="min-w-0">
           <span className="block truncate text-sm text-paper">{name}</span>
           {sub && <span className="block truncate text-xs text-steel-400">{sub}</span>}
         </span>
       </span>
-      <span className={`stat-mono whitespace-nowrap text-right text-[15px] ${valueColor}`}>
-        {value}
+      <span className="flex items-center justify-end gap-1.5">
+        {rankLabel ? (
+          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-6 w-6 shrink-0" />
+        ) : (
+          valueIcon
+        )}
+        <span className={`stat-mono whitespace-nowrap text-right text-[15px] ${valueColor}`}>
+          {value}
+        </span>
       </span>
     </Link>
   );
@@ -154,6 +175,7 @@ export default function ClubView({
           tag={member.tag}
           name={member.name}
           sub={ROLE_LABEL[member.role] ?? member.role}
+          valueIcon={<TrophyGlyph className="h-4 w-4 shrink-0" />}
           value={formatNumber(member.trophies)}
           last={i === roster.length - 1}
         />
@@ -180,6 +202,7 @@ export default function ClubView({
               tag={member.tag}
               name={member.name}
               sub={ROLE_LABEL[member.role] ?? member.role}
+              valueIcon={delta !== undefined ? <PushGlyph className="h-4 w-4 shrink-0" /> : undefined}
               value={delta === undefined ? "—" : `${delta >= 0 ? "+" : "−"}${formatNumber(Math.abs(delta))}`}
               tone={delta === undefined ? "muted" : delta >= 0 ? "signal" : "blush"}
               last={i === pushRoster.length - 1}
@@ -205,6 +228,7 @@ export default function ClubView({
             tag={row.tag}
             name={row.name}
             sub={`${rankLabelFromApi(row.rankName)} · record ${formatNumber(row.bestElo)}`}
+            rankLabel={rankLabelFromApi(row.rankName)}
             value={formatNumber(row.elo)}
             tone="signal"
             last={i === rankedRows.length - 1}
@@ -262,7 +286,8 @@ export default function ClubView({
 
             <div className="lg:justify-self-end lg:text-right">
               <p className="text-[11px] uppercase tracking-[0.16em] text-ash">Trophées cumulés</p>
-              <p className="stat-mono mt-2 whitespace-nowrap text-[clamp(44px,5vw,64px)] leading-none tracking-[-0.03em] text-zest2">
+              <p className="stat-mono mt-2 flex items-center justify-end gap-2 whitespace-nowrap text-[clamp(44px,5vw,64px)] leading-none tracking-[-0.03em] text-zest2">
+                <TrophyGlyph className="h-9 w-9 shrink-0" />
                 {formatNumber(club.trophies)}
               </p>
               <dl className="mt-5 flex lg:justify-end">

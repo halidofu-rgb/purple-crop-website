@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClubBadge from "@/components/ClubBadge";
 import PageBanner from "@/components/PageBanner";
+import { TrophyGlyph, PushGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -122,12 +123,13 @@ export default async function ClubsListPage() {
                     </span>
                     {push !== undefined && (
                       <span
-                        className={`stat-mono rounded-md px-2.5 py-1 text-[10.5px] ${
+                        className={`stat-mono flex items-center gap-1 rounded-md px-2.5 py-1 text-[10.5px] ${
                           push >= 0
                             ? "border border-signal/35 bg-signal/10 text-signal"
                             : "border border-paper/15 text-blush"
                         }`}
                       >
+                        {push >= 0 && <PushGlyph className="h-3 w-3" />}
                         {push >= 0 ? "+" : "−"}
                         {formatNumber(Math.abs(push))} push
                       </span>
@@ -136,7 +138,8 @@ export default async function ClubsListPage() {
 
                   <div className="relative mt-6 flex items-end justify-between border-t border-paper/10 pt-4">
                     <div>
-                      <p className="stat-mono whitespace-nowrap text-[32px] leading-none tracking-[-0.02em] text-zest2">
+                      <p className="stat-mono flex items-center gap-2 whitespace-nowrap text-[32px] leading-none tracking-[-0.02em] text-zest2">
+                        <TrophyGlyph className="h-7 w-7 shrink-0" />
                         {formatNumber(club.trophies)}
                       </p>
                       <p className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ash">

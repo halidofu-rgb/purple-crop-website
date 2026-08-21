@@ -6,7 +6,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AccountLinkForm from "@/components/AccountLinkForm";
 import Button from "@/components/Button";
-import RankGlyph from "@/components/RankGlyph";
+import RankTierIcon from "@/components/RankTierIcon";
+import { TrophyGlyph } from "@/components/icons";
+import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
 import { LogIn } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +56,12 @@ export default async function ComptePage() {
     }
   }
   const hasRanked = typeof player?.rankedElo === "number";
+  const currentRankLabel =
+    hasRanked && player!.rankedRankName ? rankLabelFromApi(player!.rankedRankName) : null;
+  const bestRankLabel =
+    hasRanked && player!.highestAllTimeRankedRankName
+      ? rankLabelFromApi(player!.highestAllTimeRankedRankName)
+      : currentRankLabel;
 
   return (
     <>
@@ -75,20 +83,34 @@ export default async function ComptePage() {
             <p className="relative mt-1 font-mono text-xs text-steel-400">#{link.tag}</p>
             <div className="relative mt-5 grid grid-cols-3 gap-3">
               <div>
-                <p className="stat-mono text-lg font-semibold text-zest">
+                <p className="flex items-center justify-center gap-1.5 stat-mono text-lg font-semibold text-zest">
+                  <TrophyGlyph className="h-5 w-5 shrink-0" />
                   {formatNumber(player.trophies)}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">Trophées</p>
               </div>
               <div>
-                <p className="flex items-center justify-center gap-1 stat-mono text-lg font-semibold text-signal">
-                  <RankGlyph className="h-3.5 w-3.5" />
+                <p className="flex items-center justify-center gap-1.5 stat-mono text-lg font-semibold text-signal">
+                  {currentRankLabel && (
+                    <RankTierIcon
+                      src={rankedTierIconPath(currentRankLabel)}
+                      label={currentRankLabel}
+                      className="h-6 w-6 shrink-0"
+                    />
+                  )}
                   {hasRanked ? formatNumber(player!.rankedElo!) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">Ranked</p>
               </div>
               <div>
-                <p className="stat-mono text-lg font-semibold text-zest2">
+                <p className="flex items-center justify-center gap-1.5 stat-mono text-lg font-semibold text-zest2">
+                  {bestRankLabel && (
+                    <RankTierIcon
+                      src={rankedTierIconPath(bestRankLabel)}
+                      label={bestRankLabel}
+                      className="h-6 w-6 shrink-0"
+                    />
+                  )}
                   {hasRanked ? formatNumber(player!.highestAllTimeRankedElo ?? player!.rankedElo!) : "—"}
                 </p>
                 <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">

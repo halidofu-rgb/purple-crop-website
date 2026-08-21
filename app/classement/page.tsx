@@ -13,6 +13,7 @@ import RankGlyph from "@/components/RankGlyph";
 import RankTierIcon from "@/components/RankTierIcon";
 import Podium from "@/components/Podium";
 import PageBanner from "@/components/PageBanner";
+import { TrophyGlyph, PushGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ interface TrophyRow extends ClubMember {
 }
 
 const ROW =
-  "grid grid-cols-[48px_minmax(0,1fr)_96px_112px] items-center gap-3.5 px-4 sm:px-6";
+  "grid grid-cols-[48px_minmax(0,1fr)_96px_132px] items-center gap-3.5 px-4 sm:px-6";
 
 function Avatar({ name, rankLabel }: { name: string; rankLabel?: string }) {
   return (
@@ -38,7 +39,7 @@ function Avatar({ name, rankLabel }: { name: string; rankLabel?: string }) {
         <RankTierIcon
           src={rankedTierIconPath(rankLabel)}
           label={rankLabel}
-          className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5"
+          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
         />
       )}
     </span>
@@ -93,19 +94,27 @@ function Row({
       <span className="justify-self-end">
         {delta !== undefined && (
           <span
-            className={`stat-mono whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] ${
+            className={`stat-mono flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] ${
               delta >= 0
                 ? "border border-signal/35 bg-signal/10 text-signal"
                 : "border border-paper/15 text-blush"
             }`}
           >
+            {delta >= 0 && <PushGlyph className="h-3 w-3" />}
             {delta >= 0 ? "+" : "−"}
             {formatNumber(Math.abs(delta))}
           </span>
         )}
       </span>
-      <span className="stat-mono whitespace-nowrap text-right text-[15px] text-zest2">
-        {formatNumber(value)}
+      <span className="flex items-center justify-end gap-1.5">
+        {rankLabel ? (
+          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-6 w-6 shrink-0" />
+        ) : (
+          <TrophyGlyph className="h-4 w-4 shrink-0" />
+        )}
+        <span className="stat-mono whitespace-nowrap text-right text-[15px] text-zest2">
+          {formatNumber(value)}
+        </span>
       </span>
     </Link>
   );
@@ -180,6 +189,7 @@ export default async function ClassementPage({
   const trophiesPanel = (
     <>
       <Podium
+        valueIcon={<TrophyGlyph className="h-6 w-6" />}
         entries={trophyRows.slice(0, 3).map((m) => ({
           tag: m.tag,
           name: m.name,

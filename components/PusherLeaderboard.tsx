@@ -31,7 +31,7 @@ function Avatar({ name, rankLabel, rankIconSrc }: { name: string; rankLabel: str
         <RankTierIcon
           src={rankIconSrc}
           label={rankLabel}
-          className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5"
+          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
         />
       )}
     </span>
@@ -106,8 +106,13 @@ function PodiumCard({
           </>
         ) : (
           <>
-            <p className="stat-mono text-3xl leading-none tracking-[-0.02em] text-signal">
-              {formatNumber(entry.value)}
+            <p className="flex items-center gap-2">
+              {entry.rankLabel && (
+                <RankTierIcon src={entry.rankIconSrc} label={entry.rankLabel} className="h-8 w-8 shrink-0" />
+              )}
+              <span className="stat-mono text-3xl leading-none tracking-[-0.02em] text-signal">
+                {formatNumber(entry.value)}
+              </span>
             </p>
             <p className="mt-1 text-[10.5px] tracking-[0.14em] uppercase text-steel-500">
               {entry.rankLabel ?? "Elo"} — cette saison
@@ -231,6 +236,13 @@ export default function PusherLeaderboard({
                         }}
                       />
                     </span>
+                    {mode === "ranked" && entry.rankLabel && (
+                      <RankTierIcon
+                        src={entry.rankIconSrc}
+                        label={entry.rankLabel}
+                        className="h-6 w-6 shrink-0"
+                      />
+                    )}
                     <span
                       className={`stat-mono flex shrink-0 items-center gap-1 text-[15px] whitespace-nowrap ${
                         mode === "push"

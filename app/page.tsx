@@ -4,13 +4,15 @@ import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getRankedRowsForClubs } from "@/lib/rankedLive";
+import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Button from "@/components/Button";
+import RankTierIcon from "@/components/RankTierIcon";
 import { MessageCircle } from "lucide-react";
-import { TrophyGlyph, SwordsGlyph } from "@/components/icons";
+import { TrophyGlyph, PushGlyph, SwordsGlyph } from "@/components/icons";
 
 // La partie "meilleur pusher" dépend de Redis, pas du cache fetch() —
 // on garde la page toujours calculée à la demande.
@@ -117,17 +119,31 @@ export default async function HomePage() {
               </div>
 
               <dl className="grid grid-cols-2 border-t border-paper/10 pt-5 sm:grid-cols-4">
-                {[
-                  { value: formatNumber(totalTrophies), label: "Trophées cumulés" },
-                  { value: String(totalMembers), label: "Joueurs actifs" },
-                  { value: String(loadedClubs.length), label: "Clubs" },
-                  {
-                    value: rankedBest ? formatNumber(rankedBest.elo) : "—",
-                    label: "Meilleur Elo Ranked",
-                  },
-                ].map((s, i) => (
+                {(
+                  [
+                    {
+                      value: formatNumber(totalTrophies),
+                      label: "Trophées cumulés",
+                      icon: <TrophyGlyph className="h-6 w-6 shrink-0" />,
+                    },
+                    { value: String(totalMembers), label: "Joueurs actifs", icon: undefined },
+                    { value: String(loadedClubs.length), label: "Clubs", icon: undefined },
+                    {
+                      value: rankedBest ? formatNumber(rankedBest.elo) : "—",
+                      label: "Meilleur Elo Ranked",
+                      icon: rankedBest ? (
+                        <RankTierIcon
+                          src={rankedTierIconPath(rankLabelFromApi(rankedBest.rankName))}
+                          label={rankLabelFromApi(rankedBest.rankName)}
+                          className="h-6 w-6 shrink-0"
+                        />
+                      ) : undefined,
+                    },
+                  ] as { value: string; label: string; icon?: React.ReactNode }[]
+                ).map((s, i) => (
                   <div key={s.label} className={i === 0 ? "pr-5" : "border-l border-paper/10 px-5"}>
-                    <dd className="stat-mono text-[34px] leading-none tracking-[-0.02em] text-paper">
+                    <dd className="stat-mono flex items-center gap-1.5 text-[34px] leading-none tracking-[-0.02em] text-paper">
+                      {s.icon}
                       {s.value}
                     </dd>
                     <dt className="mt-1.5 text-[11px] tracking-[0.14em] uppercase text-steel-600">
@@ -175,7 +191,8 @@ export default async function HomePage() {
                       <h2 className="mt-0.5 text-2xl tracking-[-0.02em] text-paper">{club.name}</h2>
                     </div>
                     <div className="text-right">
-                      <p className="stat-mono text-xl tracking-[-0.01em] text-paper">
+                      <p className="stat-mono flex items-center justify-end gap-1.5 text-xl tracking-[-0.01em] text-paper">
+                        <TrophyGlyph className="h-4 w-4 shrink-0" />
                         {formatNumber(club.trophies)}
                       </p>
                       <p className="text-[10.5px] tracking-[0.12em] uppercase text-steel-500">
@@ -316,7 +333,8 @@ export default async function HomePage() {
                     <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                       {row.name}
                     </span>
-                    <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
+                    <span className="stat-mono flex shrink-0 items-center gap-1 text-sm font-semibold text-signal">
+                      <PushGlyph className="h-3.5 w-3.5" />
                       +{formatNumber(row.delta)}
                     </span>
                   </Link>
@@ -352,7 +370,12 @@ export default async function HomePage() {
                     <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                       {row.name}
                     </span>
-                    <span className="stat-mono shrink-0 text-sm font-semibold text-signal">
+                    <span className="stat-mono flex shrink-0 items-center gap-1.5 text-sm font-semibold text-signal">
+                      <RankTierIcon
+                        src={rankedTierIconPath(rankLabelFromApi(row.rankName))}
+                        label={rankLabelFromApi(row.rankName)}
+                        className="h-5 w-5 shrink-0"
+                      />
                       {formatNumber(row.elo)}
                     </span>
                   </Link>
