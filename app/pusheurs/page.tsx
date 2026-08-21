@@ -114,12 +114,12 @@ export default async function PusheursPage({
   // — pas besoin d'une photo de départ comme pour les trophées, la valeur
   // actuelle EST la progression de la saison.
   const rankedEntries: PusherEntry[] = loadedClubs.flatMap((club) =>
-    club.members
-      .map((m) => {
-        const ranked = rankedByTag.get(m.tag.toUpperCase());
-        if (!ranked) return null;
-        const rankLabel = rankLabelFromApi(ranked.rankName);
-        return {
+    club.members.flatMap((m): PusherEntry[] => {
+      const ranked = rankedByTag.get(m.tag.toUpperCase());
+      if (!ranked) return [];
+      const rankLabel = rankLabelFromApi(ranked.rankName);
+      return [
+        {
           tag: m.tag,
           name: m.name,
           clubName: club.name,
@@ -127,9 +127,9 @@ export default async function PusheursPage({
           value: ranked.elo,
           rankLabel,
           rankIconSrc: rankedTierIconPath(rankLabel),
-        };
-      })
-      .filter((e): e is PusherEntry => e !== null)
+        },
+      ];
+    })
   );
 
   const totalPush = pushEntries.reduce((sum, e) => sum + e.value, 0);
