@@ -65,7 +65,6 @@ export default async function HomePage() {
       .sort((a, b) => b.delta - a.delta);
   }
   const king = pushRows[0];
-  const rankedBest = rankedRows[0];
 
   return (
     <>
@@ -129,24 +128,18 @@ export default async function HomePage() {
                     { value: String(totalMembers), label: "Joueurs actifs", icon: undefined },
                     { value: String(loadedClubs.length), label: "Clubs", icon: undefined },
                     {
-                      value: rankedBest ? formatNumber(rankedBest.elo) : "—",
-                      label: "Meilleur Elo Ranked",
-                      icon: rankedBest ? (
-                        <RankTierIcon
-                          src={rankedTierIconPath(rankLabelFromApi(rankedBest.rankName))}
-                          label={rankLabelFromApi(rankedBest.rankName)}
-                          className="h-6 w-6 shrink-0"
-                        />
-                      ) : undefined,
+                      value: king ? `+${formatNumber(king.delta)}` : "—",
+                      label: king ? `Pusheur du mois — ${king.name}` : "Pusheur du mois",
+                      icon: king ? <PushGlyph className="h-6 w-6 shrink-0" /> : undefined,
                     },
                   ] as { value: string; label: string; icon?: React.ReactNode }[]
                 ).map((s, i) => (
-                  <div key={s.label} className={i === 0 ? "pr-5" : "border-l border-paper/10 px-5"}>
-                    <dd className="stat-mono flex items-center gap-1.5 text-[34px] leading-none tracking-[-0.02em] text-paper">
+                  <div key={s.label} className={`min-w-0 ${i === 0 ? "pr-5" : "border-l border-paper/10 px-5"}`}>
+                    <dd className="stat-mono flex items-center gap-1.5 text-[clamp(20px,2.6vw,34px)] leading-none tracking-[-0.02em] text-paper">
                       {s.icon}
-                      {s.value}
+                      <span className="truncate">{s.value}</span>
                     </dd>
-                    <dt className="mt-1.5 text-[11px] tracking-[0.14em] uppercase text-steel-600">
+                    <dt className="mt-1.5 truncate text-[11px] tracking-[0.14em] uppercase text-steel-600">
                       {s.label}
                     </dt>
                   </div>
