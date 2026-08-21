@@ -178,9 +178,9 @@ export default async function ClassementPage({
   const rankedPanel = (
     <div>
       <div className="mb-4 flex items-start gap-2">
-        <Badge tone="success">API officielle</Badge>
+        <Badge tone="success">à jour</Badge>
         <p className="text-xs text-steel-400">
-          Rang et Elo Ranked de la saison en cours, en direct depuis l&apos;API Brawl Stars.
+          Rang et Elo Ranked de la saison en cours, pour chaque membre.
         </p>
       </div>
       {rankedByCurrent.length === 0 ? (
@@ -206,7 +206,7 @@ export default async function ClassementPage({
   const rankedAllTimePanel = (
     <div>
       <div className="mb-4 flex items-start gap-2">
-        <Badge tone="success">API officielle</Badge>
+        <Badge tone="success">à jour</Badge>
         <p className="text-xs text-steel-400">
           Meilleur rang et Elo jamais atteints par chaque membre, toutes saisons confondues.
         </p>

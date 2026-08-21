@@ -120,9 +120,9 @@ export default function ClubView({
   const rankedPanel = rankedRows.length > 0 ? (
     <>
       <div className="mb-3 flex items-start gap-2">
-        <Badge tone="success">API officielle</Badge>
+        <Badge tone="success">à jour</Badge>
         <p className="text-xs text-steel-400">
-          Rang et Elo Ranked en direct depuis l&apos;API Brawl Stars.
+          Rang et Elo Ranked de chaque membre.
         </p>
       </div>
       <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
