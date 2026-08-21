@@ -16,8 +16,6 @@ export interface PusherEntry {
   rankIconSrc: string | null;
 }
 
-type Sort = "push" | "trophies" | "ranked";
-
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
@@ -76,18 +74,17 @@ function PodiumCard({
           <p className="mt-0.5 text-xs text-steel-500">{entry.role}</p>
         </div>
       </div>
-      <div className="relative mt-5 flex items-end justify-between border-t border-paper/10 pt-4">
-        <div>
-          <p className="stat-mono text-2xl leading-none tracking-[-0.02em] text-paper">
-            {formatNumber(entry.trophies)}
-          </p>
-          <p className="mt-1 text-[10.5px] tracking-[0.14em] uppercase text-steel-500">
-            trophées
-          </p>
-        </div>
-        <p className={`stat-mono text-sm ${entry.delta >= 0 ? "text-signal" : "text-blush"}`}>
+      <div className="relative mt-5 border-t border-paper/10 pt-4">
+        <p
+          className={`stat-mono text-3xl leading-none tracking-[-0.02em] ${
+            entry.delta >= 0 ? "text-signal" : "text-blush"
+          }`}
+        >
           {entry.delta >= 0 ? "+" : ""}
           {formatNumber(entry.delta)}
+        </p>
+        <p className="mt-1 text-[10.5px] tracking-[0.14em] uppercase text-steel-500">
+          trophées gagnés
         </p>
       </div>
     </Link>
@@ -102,7 +99,6 @@ export default function PusherLeaderboard({
   clubNames: string[];
 }) {
   const [scope, setScope] = useState<string>("Tous les clubs");
-  const [sort, setSort] = useState<Sort>("push");
   const [search, setSearch] = useState("");
 
   const scopes = ["Tous les clubs", ...clubNames];
@@ -114,27 +110,12 @@ export default function PusherLeaderboard({
       const q = search.trim().toLowerCase();
       list = list.filter((e) => e.name.toLowerCase().includes(q));
     }
-    return [...list].sort((a, b) => {
-      if (sort === "trophies") return b.trophies - a.trophies;
-      if (sort === "ranked") {
-        const ra = a.rankLabel ? 1 : 0;
-        const rb = b.rankLabel ? 1 : 0;
-        if (ra !== rb) return rb - ra;
-        return b.trophies - a.trophies;
-      }
-      return b.delta - a.delta;
-    });
-  }, [entries, scope, sort, search]);
+    return [...list].sort((a, b) => b.delta - a.delta);
+  }, [entries, scope, search]);
 
   const podium = filtered.slice(0, 3);
   const rows = filtered.slice(3);
   const maxDelta = Math.max(...filtered.map((e) => e.delta), 1);
-
-  const SORTS: { id: Sort; label: string }[] = [
-    { id: "push", label: "Push" },
-    { id: "trophies", label: "Trophées" },
-    { id: "ranked", label: "Rang Ranked" },
-  ];
 
   return (
     <div>
@@ -160,20 +141,6 @@ export default function PusherLeaderboard({
             </button>
           ))}
         </div>
-        <div className="flex gap-5 text-xs tracking-[0.1em] uppercase text-steel-600">
-          {SORTS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setSort(s.id)}
-              className={`pb-0.5 transition-colors ${
-                sort === s.id ? "border-b border-zest2 text-paper" : "hover:text-steel-300"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
         <label className="ml-auto flex min-w-[200px] flex-1 items-center gap-2.5 rounded-lg border border-paper/10 px-3.5 py-2 focus-within:border-zest sm:flex-none">
           <span className="h-3 w-3 shrink-0 rounded-full border border-steel-600" />
           <input
@@ -193,19 +160,17 @@ export default function PusherLeaderboard({
         </p>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
-          <div className="hidden items-center gap-4 border-b border-paper/10 px-4 py-3 text-[10.5px] tracking-[0.14em] uppercase text-steel-600 sm:grid sm:grid-cols-[48px_minmax(0,1.4fr)_minmax(0,1fr)_92px_88px]">
+          <div className="hidden items-center gap-4 border-b border-paper/10 px-4 py-3 text-[10.5px] tracking-[0.14em] uppercase text-steel-600 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_180px]">
             <span>Rang</span>
             <span>Joueur</span>
-            <span>Push</span>
-            <span className="text-right">Trophées</span>
-            <span className="text-right">Ranked</span>
+            <span className="text-right">Push cette saison</span>
           </div>
           <ol className="divide-y divide-paper/[0.07]">
             {rows.map((entry, i) => (
               <li key={entry.tag}>
                 <Link
                   href={`/joueurs/${encodeURIComponent(entry.tag.replace(/^#/, ""))}`}
-                  className="flex items-center gap-4 px-4 py-3.5 transition hover:bg-panel2 sm:grid sm:grid-cols-[48px_minmax(0,1.4fr)_minmax(0,1fr)_92px_88px]"
+                  className="flex items-center gap-4 px-4 py-3.5 transition hover:bg-panel2 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_180px]"
                 >
                   <span className="stat-mono hidden text-lg text-steel-500 sm:block">
                     {String(i + 4).padStart(2, "0")}
@@ -231,8 +196,8 @@ export default function PusherLeaderboard({
                       </span>
                     </span>
                   </span>
-                  <span className="hidden items-center gap-3 sm:flex">
-                    <span className="h-[3px] flex-1 rounded-full bg-paper/10">
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="hidden h-[3px] flex-1 rounded-full bg-paper/10 sm:block">
                       <span
                         className="block h-full rounded-full bg-gradient-to-r from-iris to-zest2"
                         style={{
@@ -241,17 +206,11 @@ export default function PusherLeaderboard({
                       />
                     </span>
                     <span
-                      className={`stat-mono shrink-0 text-xs whitespace-nowrap ${entry.delta >= 0 ? "text-zest2" : "text-blush"}`}
+                      className={`stat-mono shrink-0 text-[15px] whitespace-nowrap ${entry.delta >= 0 ? "text-zest2" : "text-blush"}`}
                     >
                       {entry.delta >= 0 ? "+" : ""}
                       {formatNumber(entry.delta)}
                     </span>
-                  </span>
-                  <span className="stat-mono shrink-0 text-right text-[15px] whitespace-nowrap text-paper sm:block">
-                    {formatNumber(entry.trophies)}
-                  </span>
-                  <span className="hidden truncate text-right text-[11px] tracking-[0.1em] uppercase text-steel-600 sm:block">
-                    {entry.rankLabel ?? "—"}
                   </span>
                 </Link>
               </li>
