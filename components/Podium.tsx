@@ -1,14 +1,13 @@
 import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
+import { avatarColor } from "@/lib/avatarColor";
 
 export interface PodiumEntry {
   tag: string;
   name: string;
   clubName: string;
   value: number;
-  // Superposé sur l'avatar quand fourni (classements Ranked) — src peut
-  // être null (rang sans icône réelle hébergée), RankTierIcon retombe
-  // alors sur le glyphe original, jamais d'image cassée.
+  delta?: number;
   rankIconSrc?: string | null;
   rankLabel?: string;
 }
@@ -17,47 +16,72 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-// Podium graphique pour les 3 premiers — le #1 au centre, plus grand,
-// entouré du #2 et #3, façon estrade de compétition.
+// Top 3 en trois cartes de même hauteur : seul le #1 porte la lueur violette
+// (la charte réserve la saturation à un seul élément par écran).
 export default function Podium({ entries }: { entries: PodiumEntry[] }) {
-  const [first, second, third] = entries;
-  if (!first) return null;
-
-  const heights: Record<number, string> = { 1: "h-28", 2: "h-20", 3: "h-14" };
-  const order = [second, first, third];
+  if (entries.length === 0) return null;
 
   return (
-    <div className="mb-8 flex items-end justify-center gap-3 sm:gap-5">
-      {order.map((entry, idx) => {
-        if (!entry) return <div key={idx} className="w-24 sm:w-32" />;
-        const place = entry === first ? 1 : entry === second ? 2 : 3;
-        const accent = place === 1 ? "text-zest2" : place === 2 ? "text-zest2/70" : "text-steel-500";
+    <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {entries.slice(0, 3).map((entry, i) => {
+        const lead = i === 0;
         return (
           <Link
             key={entry.tag}
             href={`/joueurs/${encodeURIComponent(entry.tag.replace(/^#/, ""))}`}
-            className="group flex w-24 flex-col items-center sm:w-32"
+            className={`relative overflow-hidden rounded-2xl px-6 py-6 no-underline transition ${
+              lead
+                ? "border border-zest2/40 bg-gradient-to-br from-iris/70 to-panel/85 hover:border-zest2/70"
+                : "border border-paper/15 bg-gradient-to-br from-panel/95 to-ink/70 hover:border-paper/30"
+            }`}
           >
-            <span
-              className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-paper/10 bg-panel2 text-sm font-medium ${accent} transition group-hover:border-zest2 sm:h-12 sm:w-12`}
-            >
-              {entry.name.trim().charAt(0).toUpperCase()}
-              {entry.rankLabel && (
-                <RankTierIcon
-                  src={entry.rankIconSrc ?? null}
-                  label={entry.rankLabel}
-                  className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5 sm:h-5 sm:w-5"
-                />
+            {lead && (
+              <span className="pointer-events-none absolute -top-[70px] -right-[70px] h-[230px] w-[230px] rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.28),transparent_65%)]" />
+            )}
+
+            <div className="relative mb-5 flex items-center justify-between">
+              <span className={`rank-index text-[13px] tracking-[0.08em] ${lead ? "text-zest2" : "text-ash"}`}>
+                [{String(i + 1).padStart(2, "0")}]
+              </span>
+              <span
+                className={`rounded-md px-2.5 py-1 text-[10.5px] uppercase tracking-[0.14em] ${
+                  lead ? "border border-zest2/40 bg-iris/60 text-zest2" : "border border-paper/15 text-steel-400"
+                }`}
+              >
+                {entry.clubName}
+              </span>
+            </div>
+
+            <div className="relative flex items-center gap-3.5">
+              <span
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[17px] font-medium text-ink"
+                style={{ backgroundColor: avatarColor(entry.name) }}
+              >
+                {entry.name.trim().charAt(0).toUpperCase()}
+                {entry.rankLabel && (
+                  <RankTierIcon
+                    src={entry.rankIconSrc ?? null}
+                    label={entry.rankLabel}
+                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5"
+                  />
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[23px] leading-tight tracking-[-0.02em] text-paper">{entry.name}</p>
+                {entry.rankLabel && <p className="mt-0.5 truncate text-xs text-ash">{entry.rankLabel}</p>}
+              </div>
+            </div>
+
+            <div className="relative mt-5 flex items-end justify-between border-t border-paper/10 pt-4">
+              <span className="stat-mono whitespace-nowrap text-[28px] leading-none tracking-[-0.02em] text-paper">
+                {formatNumber(entry.value)}
+              </span>
+              {entry.delta !== undefined && (
+                <span className={`text-xs ${entry.delta >= 0 ? "text-signal" : "text-blush"}`}>
+                  {entry.delta >= 0 ? "+" : ""}
+                  {formatNumber(entry.delta)}
+                </span>
               )}
-            </span>
-            <p className="mt-2 max-w-full truncate text-xs font-medium text-paper sm:text-sm">
-              {entry.name}
-            </p>
-            <p className="stat-mono text-xs text-steel-500 sm:text-sm">{formatNumber(entry.value)}</p>
-            <div
-              className={`mt-2 flex w-full items-center justify-center rounded-t-lg border border-b-0 border-paper/10 bg-panel text-lg font-medium ${accent} ${heights[place]}`}
-            >
-              {place}
             </div>
           </Link>
         );

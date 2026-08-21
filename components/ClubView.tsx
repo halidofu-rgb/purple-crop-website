@@ -2,11 +2,10 @@ import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
 import { discordUrlForTag } from "@/lib/clubs";
 import { rankLabelFromApi } from "@/lib/rankedTier";
+import { avatarColor } from "@/lib/avatarColor";
 import ClubBadge from "@/components/ClubBadge";
 import RankGlyph from "@/components/RankGlyph";
-import Badge from "@/components/Badge";
 import Tabs from "@/components/Tabs";
-import Button from "@/components/Button";
 
 interface ClubRankedRow {
   tag: string;
@@ -33,8 +32,97 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-function rankIndex(i: number): string {
-  return `[${String(i + 1).padStart(2, "0")}]`;
+function playerHref(tag: string): string {
+  return `/joueurs/${encodeURIComponent(tag.replace(/^#/, ""))}`;
+}
+
+const ROW = "grid grid-cols-[48px_minmax(0,1fr)_112px] items-center gap-3.5 px-4 sm:px-6";
+
+function Avatar({ name }: { name: string }) {
+  return (
+    <span
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
+      style={{ backgroundColor: avatarColor(name) }}
+    >
+      {name.trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
+/** En-tête de colonne des listes d'effectif. */
+function RosterHeader({ valueLabel }: { valueLabel: string }) {
+  return (
+    <div
+      className={`${ROW} border-b border-paper/10 py-3.5 text-[10.5px] uppercase tracking-[0.14em] text-steel-600`}
+    >
+      <span>Rang</span>
+      <span>Membre</span>
+      <span className="text-right">{valueLabel}</span>
+    </div>
+  );
+}
+
+function RosterRow({
+  index,
+  tag,
+  name,
+  sub,
+  value,
+  tone = "accent",
+  last,
+}: {
+  index: number;
+  tag: string;
+  name: string;
+  sub?: string;
+  value: string;
+  tone?: "accent" | "signal" | "blush" | "muted";
+  last: boolean;
+}) {
+  const valueColor = {
+    accent: "text-zest2",
+    signal: "text-signal",
+    blush: "text-blush",
+    muted: "text-steel-400",
+  }[tone];
+
+  return (
+    <Link
+      href={playerHref(tag)}
+      className={`${ROW} py-3 no-underline transition hover:bg-panel2 ${
+        last ? "" : "border-b border-paper/[0.07]"
+      }`}
+    >
+      <span className="rank-index text-xs text-zest">[{String(index + 1).padStart(2, "0")}]</span>
+      <span className="flex min-w-0 items-center gap-3">
+        <Avatar name={name} />
+        <span className="min-w-0">
+          <span className="block truncate text-sm text-paper">{name}</span>
+          {sub && <span className="block truncate text-xs text-steel-400">{sub}</span>}
+        </span>
+      </span>
+      <span className={`stat-mono whitespace-nowrap text-right text-[15px] ${valueColor}`}>
+        {value}
+      </span>
+    </Link>
+  );
+}
+
+/** Coquille des panneaux : collée sous la barre d'onglets (pas d'arrondi haut). */
+function RosterPanel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-b-2xl border border-t-0 border-paper/10 bg-panel">
+      {children}
+    </div>
+  );
+}
+
+function EmptyPanel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-b-2xl border border-t-0 border-paper/10 bg-panel px-6 py-8 text-sm text-steel-400">
+      {children}
+    </div>
+  );
 }
 
 export default function ClubView({
@@ -53,174 +141,166 @@ export default function ClubView({
   seasonLabel?: string;
 }) {
   const roster = sortByTrophies(club.members);
-  const best = roster[0];
   const average = roster.length > 0 ? Math.round(club.trophies / roster.length) : 0;
+  const discordUrl = discordUrlForTag(club.tag);
 
   const trophiesPanel = (
-    <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
+    <RosterPanel>
+      <RosterHeader valueLabel="Trophées" />
       {roster.map((member, i) => (
-        <li key={member.tag}>
-          <Link
-            href={`/joueurs/${encodeURIComponent(member.tag.replace(/^#/, ""))}`}
-            className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
-          >
-            <span className="rank-index w-10 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-paper">
-                {member.name}
-              </p>
-              <p className="text-xs text-steel-400">{ROLE_LABEL[member.role] ?? member.role}</p>
-            </div>
-            <span className="stat-mono shrink-0 text-base font-semibold text-zest2">
-              {formatNumber(member.trophies)}
-            </span>
-          </Link>
-        </li>
+        <RosterRow
+          key={member.tag}
+          index={i}
+          tag={member.tag}
+          name={member.name}
+          sub={ROLE_LABEL[member.role] ?? member.role}
+          value={formatNumber(member.trophies)}
+          last={i === roster.length - 1}
+        />
       ))}
-    </ol>
+    </RosterPanel>
   );
 
   const pushRoster = pushByTag
-    ? [...roster].sort((a, b) => (pushByTag.get(b.tag) ?? -Infinity) - (pushByTag.get(a.tag) ?? -Infinity))
+    ? [...roster].sort(
+        (a, b) => (pushByTag.get(b.tag) ?? -Infinity) - (pushByTag.get(a.tag) ?? -Infinity)
+      )
     : [];
-  const pushPanel = pushByTag && pushByTag.size > 0 ? (
-    <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
-      {pushRoster.map((member, i) => {
-        const delta = pushByTag.get(member.tag);
-        return (
-          <li key={member.tag}>
-            <Link
-              href={`/joueurs/${encodeURIComponent(member.tag.replace(/^#/, ""))}`}
-              className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
-            >
-              <span className="rank-index w-10 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-paper">
-                  {member.name}
-                </p>
-              </div>
-              <span
-                className={`stat-mono shrink-0 text-base font-semibold ${
-                  delta === undefined ? "text-steel-400" : delta >= 0 ? "text-signal" : "text-blush"
-                }`}
-              >
-                {delta === undefined ? "—" : `${delta >= 0 ? "+" : ""}${formatNumber(delta)}`}
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ol>
-  ) : (
-    <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
-      Pas encore de photo de départ pour {seasonLabel ?? "cette saison"}.
-    </p>
-  );
 
-  const rankedPanel = rankedRows.length > 0 ? (
-    <>
-      <div className="mb-3 flex items-start gap-2">
-        <Badge tone="success">à jour</Badge>
-        <p className="text-xs text-steel-400">
-          Rang et Elo Ranked de chaque membre.
-        </p>
-      </div>
-      <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
+  const pushPanel =
+    pushByTag && pushByTag.size > 0 ? (
+      <RosterPanel>
+        <RosterHeader valueLabel="Push" />
+        {pushRoster.map((member, i) => {
+          const delta = pushByTag.get(member.tag);
+          return (
+            <RosterRow
+              key={member.tag}
+              index={i}
+              tag={member.tag}
+              name={member.name}
+              sub={ROLE_LABEL[member.role] ?? member.role}
+              value={delta === undefined ? "—" : `${delta >= 0 ? "+" : "−"}${formatNumber(Math.abs(delta))}`}
+              tone={delta === undefined ? "muted" : delta >= 0 ? "signal" : "blush"}
+              last={i === pushRoster.length - 1}
+            />
+          );
+        })}
+      </RosterPanel>
+    ) : (
+      <EmptyPanel>
+        Pas encore de photo de départ pour {seasonLabel ?? "cette saison"} — le push apparaîtra dès
+        le premier instantané de la saison.
+      </EmptyPanel>
+    );
+
+  const rankedPanel =
+    rankedRows.length > 0 ? (
+      <RosterPanel>
+        <RosterHeader valueLabel="Elo" />
         {rankedRows.map((row, i) => (
-          <li key={row.tag}>
-            <Link
-              href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-              className="flex items-center gap-4 px-4 py-3 transition hover:bg-panel2"
-            >
-              <span className="rank-index w-10 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-paper">{row.name}</p>
-                <p className="text-[11px] text-steel-400">{rankLabelFromApi(row.rankName)}</p>
-              </div>
-              <Badge tone="neutral">record {formatNumber(row.bestElo)}</Badge>
-              <span className="stat-mono shrink-0 text-base font-semibold text-signal">
-                {formatNumber(row.elo)}
-              </span>
-            </Link>
-          </li>
+          <RosterRow
+            key={row.tag}
+            index={i}
+            tag={row.tag}
+            name={row.name}
+            sub={`${rankLabelFromApi(row.rankName)} · record ${formatNumber(row.bestElo)}`}
+            value={formatNumber(row.elo)}
+            tone="signal"
+            last={i === rankedRows.length - 1}
+          />
         ))}
-      </ol>
-    </>
-  ) : (
-    <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
-      Personne dans ce club n&apos;a encore de rang Ranked (débloqué à 1 000 trophées, puis
-      un premier combat Ranked joué).
-    </p>
-  );
+      </RosterPanel>
+    ) : (
+      <EmptyPanel>
+        Personne dans ce club n&apos;a encore de rang Ranked (débloqué à 1 000 trophées, puis un
+        premier combat Ranked joué).
+      </EmptyPanel>
+    );
 
   return (
-    <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-      <section className="relative overflow-hidden rounded-2xl border border-zest2/25 mx-auto max-w-4xl bg-panel px-6 py-8 text-center sm:px-10 sm:py-10">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.18),transparent_65%)]" />
-        <div className="relative flex justify-center">
-          <ClubBadge tag={club.tag} badgeId={club.badgeId} size={52} />
-        </div>
-        <p className="mt-3 text-xs uppercase tracking-[0.3em] text-signal">
-          {TYPE_LABEL[club.type] ?? club.type} · {formatNumber(club.requiredTrophies)} trophées requis
-        </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
-          {club.name}
-        </h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-steel-400">
-          {club.description || "Pas de description."}
-        </p>
-        {discordUrlForTag(club.tag) && (
-          <div className="mt-4">
-            <Button href={discordUrlForTag(club.tag)!} variant="secondary">
-              Rejoindre le Discord
-            </Button>
-          </div>
-        )}
+    <main className="min-h-screen animate-fadeInUp px-4 pb-24 sm:px-8 lg:px-16">
+      <div className="mx-auto max-w-[1160px]">
+        {/* Bannière : même construction que PageBanner, enrichie des méta du club. */}
+        <div className="relative overflow-hidden border-x border-b border-paper/10 bg-[linear-gradient(160deg,#262a60_0%,#1b1d33_48%,#161826_100%)]">
+          <div className="pointer-events-none absolute inset-0 opacity-30 bg-[linear-gradient(90deg,rgba(233,233,237,0.06)_1px,transparent_1px)] bg-[length:64px_64px]" />
+          <div className="pointer-events-none absolute -top-[150px] -right-[90px] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.2),transparent_65%)]" />
+          <div className="pointer-events-none absolute inset-y-0 left-[72%] w-px -skew-x-12 bg-gradient-to-b from-zest2/45 to-transparent" />
 
-        <div className="mt-8 border-t border-paper/10 pt-8">
-          <p className="stat-mono text-5xl font-semibold text-zest sm:text-6xl">
-            {formatNumber(club.trophies)}
-          </p>
-          <p className="mt-1 text-xs uppercase tracking-[0.25em] text-steel-400">
-            Trophées cumulés · {club.members.length} membres
-          </p>
+          <div className="relative grid items-end gap-10 px-6 pt-14 pb-8 sm:px-10 lg:grid-cols-[1fr_auto]">
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <ClubBadge tag={club.tag} badgeId={club.badgeId} size={34} />
+                <span className="rounded-md border border-zest2/40 bg-iris/55 px-2.5 py-1 text-[10.5px] uppercase tracking-[0.14em] text-zest2">
+                  {TYPE_LABEL[club.type] ?? club.type}
+                </span>
+                <span className="stat-mono text-[11.5px] text-steel-600">{club.tag}</span>
+                <span className="text-[11px] uppercase tracking-[0.14em] text-ash">
+                  {formatNumber(club.requiredTrophies)} trophées requis
+                </span>
+              </div>
+
+              <h1 className="font-display text-[clamp(40px,5.4vw,72px)] font-medium uppercase leading-[0.94] tracking-[-0.035em] text-paper">
+                {club.name}
+              </h1>
+
+              <p className="mt-4 max-w-[520px] text-[15.5px] leading-relaxed text-steel-400">
+                {club.description || "Pas de description."}
+              </p>
+
+              {discordUrl && (
+                <a
+                  href={discordUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-block rounded-lg border border-zest px-5 py-2.5 text-[12.5px] uppercase tracking-[0.12em] text-zest2 no-underline transition hover:bg-zest/15 active:bg-zest/25"
+                >
+                  Rejoindre le Discord
+                </a>
+              )}
+            </div>
+
+            <div className="lg:justify-self-end lg:text-right">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-ash">Trophées cumulés</p>
+              <p className="stat-mono mt-2 whitespace-nowrap text-[clamp(44px,5vw,64px)] leading-none tracking-[-0.03em] text-zest2">
+                {formatNumber(club.trophies)}
+              </p>
+              <dl className="mt-5 flex lg:justify-end">
+                <div className="pr-5 lg:text-right">
+                  <dd className="stat-mono whitespace-nowrap text-[22px] leading-none text-paper">
+                    {formatNumber(average)}
+                  </dd>
+                  <dt className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ash">
+                    Moy. / membre
+                  </dt>
+                </div>
+                <div className="border-l border-paper/15 px-5 lg:text-right">
+                  <dd className="stat-mono whitespace-nowrap text-[22px] leading-none text-paper">
+                    {roster.length}
+                  </dd>
+                  <dt className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ash">
+                    Membres
+                  </dt>
+                </div>
+                <div className="border-l border-paper/15 pl-5 lg:text-right">
+                  <dd className="stat-mono whitespace-nowrap text-[22px] leading-none text-paper">
+                    {clubRank ? `#${clubRank}` : "—"}
+                    {totalClubs ? <span className="text-steel-600"> / {totalClubs}</span> : null}
+                  </dd>
+                  <dt className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ash">
+                    Dans Purple Corp
+                  </dt>
+                </div>
+              </dl>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-paper/10 pt-6">
-          <div>
-            <p className="stat-mono text-xl font-semibold text-paper">
-              {formatNumber(average)}
-            </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">
-              Moyenne / membre
-            </p>
-          </div>
-          <div>
-            <p className="truncate text-sm font-semibold text-paper">
-              {best ? best.name : "—"}
-            </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">Meilleur joueur</p>
-          </div>
-          <div>
-            <p className="stat-mono text-xl font-semibold text-paper">
-              {clubRank ? `#${clubRank}` : "—"}
-              {totalClubs ? <span className="text-steel-400"> / {totalClubs}</span> : null}
-            </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-steel-400">
-              Rang dans Purple Corp
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto mt-10 max-w-3xl">
-        <h2 className="mb-4 text-xs uppercase tracking-[0.2em] text-steel-400">
-          Effectif
-        </h2>
         <Tabs
+          seamless
           tabs={[
             { id: "trophies", label: "Trophées", panel: trophiesPanel },
-            { id: "push", label: `Push · ${seasonLabel ?? ""}`, panel: pushPanel },
+            { id: "push", label: `Push${seasonLabel ? ` · ${seasonLabel}` : ""}`, panel: pushPanel },
             {
               id: "ranked",
               label: "Ranked",
@@ -229,7 +309,7 @@ export default function ClubView({
             },
           ]}
         />
-      </section>
+      </div>
     </main>
   );
 }

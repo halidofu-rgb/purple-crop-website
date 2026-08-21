@@ -6,7 +6,7 @@ import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClubBadge from "@/components/ClubBadge";
-import Badge from "@/components/Badge";
+import PageBanner from "@/components/PageBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +34,7 @@ export default async function ClubsListPage() {
 
   const loadedClubs = results.filter((r) => r.club).map((r) => r.club!);
   const ranked = [...loadedClubs].sort((a, b) => b.trophies - a.trophies);
+  const totalMembers = loadedClubs.reduce((sum, c) => sum + c.members.length, 0);
 
   // Progression du club = somme des push individuels de ses membres,
   // seulement si une photo de départ de saison existe.
@@ -52,70 +53,109 @@ export default async function ClubsListPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-        <section className="mx-auto max-w-3xl text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-signal">
-            La communauté
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
-            Nos clubs
-          </h1>
-          <p className="mt-3 text-sm text-steel-400">
-            Purple Corp regroupe plusieurs clubs Brawl Stars. Choisis-en un pour voir sa fiche complète.
-          </p>
-        </section>
+      <main className="min-h-screen animate-fadeInUp px-4 pb-20 sm:px-8 lg:px-16">
+        <div className="mx-auto max-w-[1160px]">
+          <PageBanner
+            kicker="La communauté"
+            title="Nos clubs"
+            intro="Purple Corp regroupe plusieurs clubs Brawl Stars. Choisis-en un pour voir sa fiche complète."
+            stats={[
+              { value: String(loadedClubs.length), label: "Clubs" },
+              { value: formatNumber(totalMembers), label: "Membres" },
+            ]}
+          />
 
-        <section className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-2">
-          {results.map(({ tag, club, error }) => {
-            if (error || !club) {
-              return (
-                <div key={tag} className="rounded-2xl border border-paper/10 bg-panel p-6 text-left">
-                  <p className="text-sm font-semibold text-blush">Erreur pour {tag}</p>
-                  <p className="mt-1 text-xs text-steel-400">{error}</p>
-                </div>
-              );
-            }
-            const push = clubPush.get(club.tag);
-            const position = ranked.findIndex((c) => c.tag === club.tag) + 1;
-
-            return (
-              <Link
-                key={tag}
-                href={`/clubs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
-                className="card-lift rounded-2xl border border-paper/10 bg-panel p-6 text-left shadow-card"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <ClubBadge tag={club.tag} badgeId={club.badgeId} size={36} />
-                    <div>
-                      <p className="text-lg font-bold text-paper">{club.name}</p>
-                      <p className="font-mono text-[11px] text-steel-400">{club.tag}</p>
-                    </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            {results.map(({ tag, club, error }) => {
+              if (error || !club) {
+                return (
+                  <div key={tag} className="rounded-2xl border border-blush/30 bg-panel p-6">
+                    <p className="text-sm font-medium text-blush">Erreur pour {tag}</p>
+                    <p className="mt-1 text-xs text-steel-400">{error}</p>
                   </div>
-                  <Badge tone="primary">#{position}</Badge>
-                </div>
+                );
+              }
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Badge tone="neutral">{club.members.length} membres</Badge>
-                  <Badge tone="neutral">{formatNumber(club.requiredTrophies)} req.</Badge>
-                  {push !== undefined && (
-                    <Badge tone={push >= 0 ? "success" : "danger"}>
-                      {push >= 0 ? "+" : ""}
-                      {formatNumber(push)} push
-                    </Badge>
+              const push = clubPush.get(club.tag);
+              const position = ranked.findIndex((c) => c.tag === club.tag) + 1;
+              const lead = position === 1;
+
+              return (
+                <Link
+                  key={tag}
+                  href={`/clubs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
+                  className={`relative block overflow-hidden rounded-2xl px-7 py-6 no-underline transition ${
+                    lead
+                      ? "border border-zest2/40 bg-gradient-to-br from-iris/60 to-panel/90 hover:border-zest2/75"
+                      : "border border-paper/10 bg-panel hover:border-paper/30"
+                  }`}
+                >
+                  {lead && (
+                    <span className="pointer-events-none absolute -top-[70px] -right-[70px] h-[240px] w-[240px] rounded-full bg-[radial-gradient(circle,rgba(181,171,252,0.26),transparent_65%)]" />
                   )}
-                </div>
 
-                <p className="stat-mono mt-4 text-3xl font-bold text-zest">
-                  {formatNumber(club.trophies)}
-                </p>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-steel-400">
-                  trophées cumulés
-                </p>
-              </Link>
-            );
-          })}
-        </section>
+                  <div className="relative flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <ClubBadge tag={club.tag} badgeId={club.badgeId} size={40} />
+                      <div className="min-w-0">
+                        <p className="truncate text-[22px] leading-tight tracking-[-0.02em] text-paper">
+                          {club.name}
+                        </p>
+                        <p className="stat-mono mt-0.5 text-[11.5px] text-steel-600">{club.tag}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`rank-index shrink-0 text-xs tracking-[0.08em] ${
+                        lead ? "text-zest2" : "text-ash"
+                      }`}
+                    >
+                      [{String(position).padStart(2, "0")}]
+                    </span>
+                  </div>
+
+                  <div className="relative mt-5 flex flex-wrap gap-2">
+                    <span className="rounded-md border border-paper/15 px-2.5 py-1 text-[10.5px] uppercase tracking-[0.12em] text-steel-400">
+                      {club.members.length} membres
+                    </span>
+                    <span className="rounded-md border border-paper/15 px-2.5 py-1 text-[10.5px] uppercase tracking-[0.12em] text-steel-400">
+                      {formatNumber(club.requiredTrophies)} req.
+                    </span>
+                    {push !== undefined && (
+                      <span
+                        className={`stat-mono rounded-md px-2.5 py-1 text-[10.5px] ${
+                          push >= 0
+                            ? "border border-signal/35 bg-signal/10 text-signal"
+                            : "border border-paper/15 text-blush"
+                        }`}
+                      >
+                        {push >= 0 ? "+" : "−"}
+                        {formatNumber(Math.abs(push))} push
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="relative mt-6 flex items-end justify-between border-t border-paper/10 pt-4">
+                    <div>
+                      <p className="stat-mono whitespace-nowrap text-[32px] leading-none tracking-[-0.02em] text-zest2">
+                        {formatNumber(club.trophies)}
+                      </p>
+                      <p className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ash">
+                        trophées cumulés
+                      </p>
+                    </div>
+                    <span
+                      className={`text-[11px] uppercase tracking-[0.14em] ${
+                        lead ? "text-zest2" : "text-steel-400"
+                      }`}
+                    >
+                      Voir →
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </main>
       <Footer />
     </>

@@ -12,7 +12,7 @@ import Tabs from "@/components/Tabs";
 import RankGlyph from "@/components/RankGlyph";
 import RankTierIcon from "@/components/RankTierIcon";
 import Podium from "@/components/Podium";
-import Badge from "@/components/Badge";
+import PageBanner from "@/components/PageBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -20,24 +20,14 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-function rankIndex(i: number): string {
-  return `[${String(i + 1).padStart(2, "0")}]`;
-}
-
 interface TrophyRow extends ClubMember {
   clubName: string;
 }
 
-// Avatar généré (pas de vraie photo côté Brawl Stars), avec un badge de
-// rang superposé quand on est dans un contexte Ranked — même principe que
-// Podium.tsx, pour que classement et podium se répondent visuellement.
-function Avatar({
-  name,
-  rankLabel,
-}: {
-  name: string;
-  rankLabel?: string;
-}) {
+const ROW =
+  "grid grid-cols-[48px_minmax(0,1fr)_96px_112px] items-center gap-3.5 px-4 sm:px-6";
+
+function Avatar({ name, rankLabel }: { name: string; rankLabel?: string }) {
   return (
     <span
       className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
@@ -55,34 +45,93 @@ function Avatar({
   );
 }
 
+function ListHeader({ valueLabel, deltaLabel }: { valueLabel: string; deltaLabel: string }) {
+  return (
+    <div className={`${ROW} border-b border-paper/10 py-3.5 text-[10.5px] uppercase tracking-[0.14em] text-steel-600`}>
+      <span>Rang</span>
+      <span>Joueur</span>
+      <span className="text-right">{deltaLabel}</span>
+      <span className="text-right">{valueLabel}</span>
+    </div>
+  );
+}
+
+function Row({
+  index,
+  tag,
+  name,
+  sub,
+  rankLabel,
+  value,
+  delta,
+  last,
+}: {
+  index: number;
+  tag: string;
+  name: string;
+  sub: string;
+  rankLabel?: string;
+  value: number;
+  delta?: number;
+  last: boolean;
+}) {
+  return (
+    <Link
+      href={`/joueurs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
+      className={`${ROW} py-3 no-underline transition hover:bg-panel2 ${
+        last ? "" : "border-b border-paper/[0.07]"
+      }`}
+    >
+      <span className="rank-index text-xs text-zest2">[{String(index + 1).padStart(2, "0")}]</span>
+      <span className="flex min-w-0 items-center gap-3">
+        <Avatar name={name} rankLabel={rankLabel} />
+        <span className="min-w-0">
+          <span className="block truncate text-sm text-paper">{name}</span>
+          <span className="block truncate text-xs text-steel-400">{sub}</span>
+        </span>
+      </span>
+      <span className="justify-self-end">
+        {delta !== undefined && (
+          <span
+            className={`stat-mono whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] ${
+              delta >= 0
+                ? "border border-signal/35 bg-signal/10 text-signal"
+                : "border border-paper/15 text-blush"
+            }`}
+          >
+            {delta >= 0 ? "+" : "−"}
+            {formatNumber(Math.abs(delta))}
+          </span>
+        )}
+      </span>
+      <span className="stat-mono whitespace-nowrap text-right text-[15px] text-zest2">
+        {formatNumber(value)}
+      </span>
+    </Link>
+  );
+}
+
 function RankedList({ rows, valueKey }: { rows: RankedRow[]; valueKey: "elo" | "bestElo" }) {
   const nameKey = valueKey === "elo" ? "rankName" : "bestRankName";
   return (
-    <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
+    <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
+      <ListHeader valueLabel="Elo" deltaLabel="" />
       {rows.map((row, i) => {
         const label = rankLabelFromApi(row[nameKey]);
         return (
-          <li key={row.tag}>
-            <Link
-              href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
-              className="flex items-center gap-3.5 px-4 py-3 transition hover:bg-panel2"
-            >
-              <span className="rank-index w-8 shrink-0 text-xs text-signal">{rankIndex(i)}</span>
-              <Avatar name={row.name} rankLabel={label} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-paper">{row.name}</p>
-                <p className="truncate text-xs text-steel-400">
-                  {row.clubName} · {label}
-                </p>
-              </div>
-              <span className="stat-mono shrink-0 text-base font-semibold text-signal">
-                {formatNumber(row[valueKey])}
-              </span>
-            </Link>
-          </li>
+          <Row
+            key={row.tag}
+            index={i}
+            tag={row.tag}
+            name={row.name}
+            sub={`${row.clubName} · ${label}`}
+            rankLabel={label}
+            value={row[valueKey]}
+            last={i === rows.length - 1}
+          />
         );
       })}
-    </ol>
+    </div>
   );
 }
 
@@ -126,6 +175,8 @@ export default async function ClassementPage({
     }
   }
 
+  const totalTrophies = trophyRows.reduce((sum, m) => sum + m.trophies, 0);
+
   const trophiesPanel = (
     <>
       <Podium
@@ -134,102 +185,57 @@ export default async function ClassementPage({
           name: m.name,
           clubName: m.clubName,
           value: m.trophies,
+          delta: pushByTag.get(m.tag),
         }))}
       />
-      <ol className="divide-y divide-paper/10 rounded-2xl border border-paper/10 bg-panel">
-        {trophyRows.map((member, i) => {
-          const push = pushByTag.get(member.tag);
-          return (
-            <li key={member.tag}>
-              <Link
-                href={`/joueurs/${encodeURIComponent(member.tag.replace(/^#/, ""))}`}
-                className="flex items-center gap-3.5 px-4 py-3 transition hover:bg-panel2"
-              >
-                <span className="rank-index w-8 shrink-0 text-xs text-zest">{rankIndex(i)}</span>
-                <Avatar name={member.name} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-paper">{member.name}</p>
-                  <p className="truncate text-xs text-steel-400">{member.clubName}</p>
-                </div>
-                {push !== undefined && (
-                  <Badge tone={push >= 0 ? "success" : "danger"}>
-                    {push >= 0 ? "+" : ""}
-                    {formatNumber(push)}
-                  </Badge>
-                )}
-                <span className="stat-mono shrink-0 text-base font-semibold text-zest2">
-                  {formatNumber(member.trophies)}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
+      <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
+        <ListHeader valueLabel="Trophées" deltaLabel="Push" />
+        {trophyRows.map((member, i) => (
+          <Row
+            key={member.tag}
+            index={i}
+            tag={member.tag}
+            name={member.name}
+            sub={member.clubName}
+            value={member.trophies}
+            delta={pushByTag.get(member.tag)}
+            last={i === trophyRows.length - 1}
+          />
+        ))}
+      </div>
     </>
   );
 
   const emptyRanked = (
-    <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
+    <p className="rounded-2xl border border-paper/10 bg-panel px-6 py-8 text-sm text-steel-400">
       Personne n&apos;a encore de rang Ranked (débloqué à 1 000 trophées, puis un premier combat
       Ranked joué).
     </p>
   );
 
-  const rankedPanel = (
-    <div>
-      <div className="mb-4 flex items-start gap-2">
-        <Badge tone="success">à jour</Badge>
-        <p className="text-xs text-steel-400">
-          Rang et Elo Ranked de la saison en cours, pour chaque membre.
+  function rankedPanel(rows: RankedRow[], key: "elo" | "bestElo", note: string) {
+    if (rows.length === 0) return emptyRanked;
+    const nameKey = key === "elo" ? "rankName" : "bestRankName";
+    return (
+      <div>
+        <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
+          {note}
         </p>
+        <Podium
+          entries={rows.slice(0, 3).map((r) => ({
+            tag: r.tag,
+            name: r.name,
+            clubName: r.clubName,
+            value: r[key],
+            rankIconSrc: rankedTierIconPath(rankLabelFromApi(r[nameKey])),
+            rankLabel: rankLabelFromApi(r[nameKey]),
+          }))}
+        />
+        <RankedList rows={rows} valueKey={key} />
       </div>
-      {rankedByCurrent.length === 0 ? (
-        emptyRanked
-      ) : (
-        <>
-          <Podium
-            entries={rankedByCurrent.slice(0, 3).map((r) => ({
-              tag: r.tag,
-              name: r.name,
-              clubName: r.clubName,
-              value: r.elo,
-              rankIconSrc: rankedTierIconPath(rankLabelFromApi(r.rankName)),
-              rankLabel: rankLabelFromApi(r.rankName),
-            }))}
-          />
-          <RankedList rows={rankedByCurrent} valueKey="elo" />
-        </>
-      )}
-    </div>
-  );
-
-  const rankedAllTimePanel = (
-    <div>
-      <div className="mb-4 flex items-start gap-2">
-        <Badge tone="success">à jour</Badge>
-        <p className="text-xs text-steel-400">
-          Meilleur rang et Elo jamais atteints par chaque membre, toutes saisons confondues.
-        </p>
-      </div>
-      {rankedByBest.length === 0 ? (
-        emptyRanked
-      ) : (
-        <>
-          <Podium
-            entries={rankedByBest.slice(0, 3).map((r) => ({
-              tag: r.tag,
-              name: r.name,
-              clubName: r.clubName,
-              value: r.bestElo,
-              rankIconSrc: rankedTierIconPath(rankLabelFromApi(r.bestRankName)),
-              rankLabel: rankLabelFromApi(r.bestRankName),
-            }))}
-          />
-          <RankedList rows={rankedByBest} valueKey="bestElo" />
-        </>
-      )}
-    </div>
-  );
+    );
+  }
 
   const defaultTab =
     searchParams?.tab === "ranked"
@@ -241,21 +247,27 @@ export default async function ClassementPage({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-        <section className="mx-auto max-w-3xl text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-signal">
-            Purple Corp
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
-            Classement général
-          </h1>
-          <p className="mt-3 text-sm text-steel-400">
-            Tous les membres de tous les clubs, par trophées, Ranked ou record all-time.
-          </p>
-        </section>
+      <main className="min-h-screen animate-fadeInUp px-4 pb-20 sm:px-8 lg:px-16">
+        <div className="mx-auto max-w-[1160px]">
+          <PageBanner
+            flush
+            kicker={`Purple Corp — Saison ${season.label}`}
+            title={
+              <>
+                Classement
+                <br />
+                général
+              </>
+            }
+            intro="Tous les membres de tous les clubs, par trophées, Ranked de la saison ou record all-time."
+            stats={[
+              { value: formatNumber(trophyRows.length), label: "Membres classés" },
+              { value: formatNumber(totalTrophies), label: "Trophées cumulés" },
+            ]}
+          />
 
-        <section className="mx-auto mt-10 max-w-3xl">
           <Tabs
+            attached
             defaultTab={defaultTab}
             tabs={[
               { id: "trophies", label: "Trophées", panel: trophiesPanel },
@@ -263,17 +275,25 @@ export default async function ClassementPage({
                 id: "ranked",
                 label: "Ranked",
                 icon: <RankGlyph className="h-3.5 w-3.5" />,
-                panel: rankedPanel,
+                panel: rankedPanel(
+                  rankedByCurrent,
+                  "elo",
+                  "Rang et Elo Ranked de la saison en cours, pour chaque membre."
+                ),
               },
               {
                 id: "ranked-alltime",
                 label: "Ranked all-time",
                 icon: <RankGlyph className="h-3.5 w-3.5" />,
-                panel: rankedAllTimePanel,
+                panel: rankedPanel(
+                  rankedByBest,
+                  "bestElo",
+                  "Meilleur rang et Elo jamais atteints, toutes saisons confondues."
+                ),
               },
             ]}
           />
-        </section>
+        </div>
       </main>
       <Footer />
     </>
