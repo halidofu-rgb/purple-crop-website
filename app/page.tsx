@@ -217,7 +217,7 @@ export default async function HomePage() {
         {/* DISCORD — bloc premium avec dégradé */}
         <section className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-paper/10 bg-gradient-to-br from-panel via-panel to-[#241335] px-6 py-8 text-center sm:px-10">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-zest/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-signal/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-iris/25 blur-3xl" />
           <div className="relative">
             <p className="font-display text-lg font-semibold text-paper sm:text-xl">
               Rejoins-nous sur le Discord Purple Corp
@@ -240,7 +240,7 @@ export default async function HomePage() {
 
         {/* NOTRE HISTOIRE */}
         <section className="mx-auto mt-10 max-w-3xl rounded-3xl border border-paper/10 bg-panel px-6 py-8 sm:px-10">
-          <p className="font-display text-xs uppercase tracking-[0.25em] text-signal">
+          <p className="font-display text-xs uppercase tracking-[0.25em] text-zest2">
             Purple Corp – Plus qu&apos;un club, une famille
           </p>
           <div className="mt-4 space-y-4 text-sm leading-relaxed text-steel-400">
@@ -279,7 +279,7 @@ export default async function HomePage() {
         <section className="mx-auto mt-10 max-w-4xl">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xs uppercase tracking-[0.2em] text-steel-400">Nos clubs</h2>
-            <Link href="/clubs" className="text-xs text-signal hover:underline">
+            <Link href="/clubs" className="text-xs text-zest2 hover:underline">
               Voir la famille →
             </Link>
           </div>
@@ -308,9 +308,9 @@ export default async function HomePage() {
         <section className="mx-auto mt-6 max-w-4xl">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xs uppercase tracking-[0.2em] text-steel-400">
-              Meilleurs pusheurs
+              Meilleurs pusheurs de la saison en cours
             </h2>
-            <Link href="/pusheurs" className="text-xs text-signal hover:underline">
+            <Link href="/pusheurs" className="text-xs text-zest2 hover:underline">
               Voir tout →
             </Link>
           </div>
@@ -326,7 +326,7 @@ export default async function HomePage() {
                     <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                       {row.name}
                     </span>
-                    <span className="stat-mono flex shrink-0 items-center gap-1 text-sm font-semibold text-signal">
+                    <span className="stat-mono flex shrink-0 items-center gap-1 text-sm font-semibold text-zest2">
                       <PushGlyph className="h-3.5 w-3.5" />
                       +{formatNumber(row.delta)}
                     </span>
@@ -345,9 +345,9 @@ export default async function HomePage() {
         <section className="mx-auto mt-6 max-w-4xl">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-steel-400">
-              <SwordsGlyph className="h-3.5 w-3.5" /> Meilleurs Elos
+              <SwordsGlyph className="h-3.5 w-3.5" /> Meilleurs Elos de la saison en cours
             </h2>
-            <Link href="/pusheurs?tab=ranked" className="text-xs text-signal hover:underline">
+            <Link href="/pusheurs?tab=ranked" className="text-xs text-zest2 hover:underline">
               Voir tout →
             </Link>
           </div>
@@ -359,11 +359,11 @@ export default async function HomePage() {
                     href={`/joueurs/${encodeURIComponent(row.tag.replace(/^#/, ""))}`}
                     className="flex items-center gap-3 px-4 py-3 transition hover:bg-panel2"
                   >
-                    <span className="rank-index w-7 shrink-0 text-xs text-signal">{i + 1}</span>
+                    <span className="rank-index w-7 shrink-0 text-xs text-zest2">{i + 1}</span>
                     <span className="flex-1 truncate font-display text-sm font-medium text-paper">
                       {row.name}
                     </span>
-                    <span className="stat-mono flex shrink-0 items-center gap-1.5 text-sm font-semibold text-signal">
+                    <span className="stat-mono flex shrink-0 items-center gap-1.5 text-sm font-semibold text-zest2">
                       <RankTierIcon
                         src={rankedTierIconPath(rankLabelFromApi(row.rankName))}
                         label={rankLabelFromApi(row.rankName)}
@@ -391,7 +391,7 @@ export default async function HomePage() {
           </p>
           <Link
             href={PURPLE_CORP_DISCORD_URL}
-            className="mt-3 inline-block text-xs text-signal hover:underline"
+            className="mt-3 inline-block text-xs text-zest2 hover:underline"
           >
             {PURPLE_CORP_DISCORD_URL}
           </Link>
