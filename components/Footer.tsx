@@ -18,8 +18,8 @@ export default function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-xs text-xs leading-relaxed text-ash">
-              Structure de clubs Brawl Stars compétitive : Purple Line et Indigo Line, réunis
-              autour de la performance et de la progression.
+              Structure de clubs Brawl Stars compétitive : Purple Line, Indigo Line et Iris Line,
+              réunis autour de la performance et de la progression.
             </p>
           </div>
 
@@ -29,6 +29,7 @@ export default function Footer() {
               <li><Link href="/clubs" className="hover:text-paper">Clubs</Link></li>
               <li><Link href="/classement" className="hover:text-paper">Classement</Link></li>
               <li><Link href="/pusheurs" className="hover:text-paper">Pusheurs</Link></li>
+              <li><Link href="/actualites" className="hover:text-paper">Actualités</Link></li>
               <li><Link href="/saisons" className="hover:text-paper">Saisons passées</Link></li>
               <li><Link href="/support" className="hover:text-paper">Support</Link></li>
             </ul>
@@ -37,7 +38,7 @@ export default function Footer() {
           <div>
             <p className="font-display text-xs uppercase tracking-[0.2em] text-ash">Communauté</p>
             <p className="mt-3 max-w-xs text-xs leading-relaxed text-ash">
-              Discussions, recrutement, annonces des deux clubs.
+              Discussions, recrutement, annonces de nos clubs.
             </p>
             <Link
               href={PURPLE_CORP_DISCORD_URL}

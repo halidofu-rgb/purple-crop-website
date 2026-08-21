@@ -38,6 +38,11 @@ export default async function HomePage() {
   const loadedClubs = clubResults.filter((r) => r.club).map((r) => r.club!);
   const totalTrophies = loadedClubs.reduce((sum, c) => sum + c.trophies, 0);
   const totalMembers = loadedClubs.reduce((sum, c) => sum + c.members.length, 0);
+  // Rang de chaque club par exigence d'entrée (trophées requis) — sert à
+  // étiqueter "principal / confirmé / académie" indépendamment du
+  // classement par trophées cumulés actuels (qui, lui, sert à l'accent
+  // visuel du #1).
+  const tierRank = [...loadedClubs].sort((a, b) => b.requiredTrophies - a.requiredTrophies);
 
   const [baseline, rankedRows] = await Promise.all([
     getSeasonBaseline(season.key).catch(() => null),
@@ -81,7 +86,7 @@ export default async function HomePage() {
               </div>
 
               <h1 className="font-display text-5xl leading-[0.95] font-medium tracking-[-0.03em] uppercase text-paper lg:text-[84px]">
-                Deux lignes.
+                Trois lignes.
                 <br />
                 <span className="text-zest2 [text-shadow:0_0_60px_rgba(181,171,252,0.45)]">
                   Un seul standard.
@@ -89,9 +94,10 @@ export default async function HomePage() {
               </h1>
 
               <p className="mt-5 mb-8 max-w-[520px] text-[17px] leading-relaxed text-steel-400">
-                Purple Corp réunit <strong className="font-medium text-paper">Purple Line</strong>{" "}
-                et <strong className="font-medium text-paper">Indigo Line</strong> : deux clubs,
-                une même exigence compétitive. Trophées, rangs Ranked et push de saison, suivis en
+                Purple Corp réunit <strong className="font-medium text-paper">Purple Line</strong>,{" "}
+                <strong className="font-medium text-paper">Indigo Line</strong> et{" "}
+                <strong className="font-medium text-paper">Iris Line</strong> : trois clubs, une
+                même exigence compétitive. Trophées, rangs Ranked et push de saison, suivis en
                 direct.
               </p>
 
@@ -133,7 +139,15 @@ export default async function HomePage() {
             </div>
 
             <div className="flex flex-col gap-3.5">
-              {[...loadedClubs].sort((a, b) => b.trophies - a.trophies).map((club, i) => (
+              {[...loadedClubs].sort((a, b) => b.trophies - a.trophies).map((club, i) => {
+                const tierIndex = tierRank.findIndex((c) => c.tag === club.tag);
+                const tierLabel =
+                  tierIndex === 0
+                    ? "Club principal"
+                    : tierIndex === tierRank.length - 1
+                      ? "Club académie"
+                      : "Club confirmé";
+                return (
                 <Link
                   key={club.tag}
                   href={`/clubs/${encodeURIComponent(club.tag.replace(/^#/, ""))}`}
@@ -156,7 +170,7 @@ export default async function HomePage() {
                     />
                     <div className="flex-1">
                       <p className={`text-[11px] tracking-[0.16em] uppercase ${i === 0 ? "text-zest2" : "text-steel-500"}`}>
-                        {i === 0 ? "Club principal" : "Club académie"}
+                        {tierLabel}
                       </p>
                       <h2 className="mt-0.5 text-2xl tracking-[-0.02em] text-paper">{club.name}</h2>
                     </div>
@@ -175,7 +189,8 @@ export default async function HomePage() {
                     <span>{formatNumber(club.requiredTrophies)}+ requis</span>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
 
               <div className="flex items-center justify-between rounded-2xl border border-paper/10 bg-panel/40 px-5 py-4">
                 <p className="text-xs tracking-[0.12em] uppercase text-steel-600">
@@ -198,7 +213,7 @@ export default async function HomePage() {
               Rejoins-nous sur le Discord Purple Corp
             </p>
             <p className="mx-auto mt-2 max-w-md text-sm text-steel-400">
-              Discussions, recrutement, annonces des deux clubs — tout se passe là-bas.
+              Discussions, recrutement, annonces de nos clubs — tout se passe là-bas.
             </p>
             <div className="mt-5">
               <Button
@@ -235,6 +250,12 @@ export default async function HomePage() {
               À côté de ça, notre <span className="text-paper">Indigo Line</span> (100K+ trophées
               minimum) accueille les joueurs compétitifs qui veulent progresser dans une ambiance
               bienveillante, avec entraide, suivi et un Discord actif — actuellement Top 93 France.
+            </p>
+            <p>
+              Et pour ceux qui montent en puissance, notre{" "}
+              <span className="text-paper">Iris Line</span> (70K+ trophées minimum) est le point
+              d&apos;entrée dans la famille — membres actifs et motivés, Discord et événements
+              obligatoires, avec le même état d&apos;esprit que nos deux autres lignes.
             </p>
             <p>
               Ici, pas de place pour l&apos;individualisme : événements réguliers, communauté

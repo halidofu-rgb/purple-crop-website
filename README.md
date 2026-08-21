@@ -5,7 +5,7 @@ Site Next.js pour Purple Corp : Accueil, Clubs, Classement général et Pusheurs
 ## Pages
 
 - `/` — Accueil, logo, trophées cumulés de tout Purple Corp
-- `/clubs` — liste des clubs (Purple Line, Indigo Line)
+- `/clubs` — liste des clubs (Purple Line, Indigo Line, Iris Line)
 - `/clubs/[tag]` — fiche détaillée d'un club (roster trié par trophées)
 - `/classement` — classement global : tous les membres de tous les clubs, mélangés et triés
 - `/pusheurs` — qui a gagné le plus de trophées depuis la dernière photo (nécessite l'étape Redis ci-dessous)
@@ -33,7 +33,7 @@ Dans **Settings → Environment Variables** sur Vercel (en plus de celles inject
 | Nom | Valeur |
 |---|---|
 | `BRAWL_STARS_API_KEY` | ta clé Brawl Stars |
-| `CLUB_TAGS` | `#80CLJG9LQ,#2QJ0Q29CL` (tags de Purple Line et Indigo Line, virgule sans espace) |
+| `CLUB_TAGS` | `#80CLJG9LQ,#2QJ0Q29CL,#2Q29PJVYL` (tags de Purple Line, Indigo Line et Iris Line, virgule sans espace) |
 | `CRON_SECRET` | une phrase secrète de ton choix (ex : un mot de passe généré aléatoirement) |
 
 `CRON_SECRET` sert à empêcher que n'importe qui déclenche une capture en visitant l'URL — Vercel ajoute automatiquement l'en-tête d'autorisation correspondant quand le cron se déclenche.

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const TOPICS = [
   {
     title: "Candidature",
-    body: "Tu veux rejoindre Purple Line ou Indigo Line ? Passe sur le Discord, le recrutement s'y fait en direct.",
+    body: "Tu veux rejoindre Purple Line, Indigo Line ou Iris Line ? Passe sur le Discord, le recrutement s'y fait en direct.",
     cta: "Postuler",
     href: PURPLE_CORP_DISCORD_URL,
     icon: UserPlus,
@@ -47,8 +47,8 @@ const FAQS = [
     a: "Connecte-toi avec Discord (bouton en haut à droite), puis va sur /compte pour renseigner ton tag et une présentation.",
   },
   {
-    q: "Comment rejoindre Purple Line ou Indigo Line ?",
-    a: "Passe sur le Discord de Purple Corp — le recrutement des deux clubs s'y fait directement, en fonction des places disponibles.",
+    q: "Comment rejoindre un club Purple Corp ?",
+    a: "Passe sur le Discord de Purple Corp — le recrutement de nos clubs s'y fait directement, en fonction des places disponibles.",
   },
 ];
 
