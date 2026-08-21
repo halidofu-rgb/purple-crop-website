@@ -336,7 +336,7 @@ export default async function HomePage() {
             <h2 className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.2em] text-steel-400">
               <SwordsGlyph className="h-3.5 w-3.5" /> Meilleurs Elos
             </h2>
-            <Link href="/classement?tab=ranked" className="text-xs text-signal hover:underline">
+            <Link href="/pusheurs?tab=ranked" className="text-xs text-signal hover:underline">
               Voir tout →
             </Link>
           </div>

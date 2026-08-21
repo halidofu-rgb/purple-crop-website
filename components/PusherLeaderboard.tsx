@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
+import { TrophyGlyph } from "@/components/icons";
 import { avatarColor } from "@/lib/avatarColor";
 
 export interface PusherEntry {
@@ -10,8 +11,7 @@ export interface PusherEntry {
   name: string;
   clubName: string;
   role: string;
-  trophies: number;
-  delta: number;
+  value: number; // push de trophées (peut être négatif) OU Elo Ranked actuel
   rankLabel: string | null;
   rankIconSrc: string | null;
 }
@@ -20,14 +20,34 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
+function Avatar({ name, rankLabel, rankIconSrc }: { name: string; rankLabel: string | null; rankIconSrc: string | null }) {
+  return (
+    <span
+      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
+      style={{ backgroundColor: avatarColor(name) }}
+    >
+      {name.trim().charAt(0).toUpperCase()}
+      {rankLabel && (
+        <RankTierIcon
+          src={rankIconSrc}
+          label={rankLabel}
+          className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5"
+        />
+      )}
+    </span>
+  );
+}
+
 function PodiumCard({
   entry,
   place,
   lead,
+  mode,
 }: {
   entry: PusherEntry;
   place: number;
   lead?: boolean;
+  mode: "push" | "ranked";
 }) {
   return (
     <Link
@@ -60,13 +80,7 @@ function PodiumCard({
         </span>
       </div>
       <div className="relative flex items-center gap-4">
-        <span
-          className={`relative h-12 w-12 shrink-0 rotate-45 rounded-[10px] ${
-            lead
-              ? "bg-gradient-to-br from-zest2 to-iris shadow-[0_0_26px_rgba(181,171,252,0.5)]"
-              : "bg-gradient-to-br from-zest to-iris"
-          }`}
-        />
+        <Avatar name={entry.name} rankLabel={mode === "ranked" ? entry.rankLabel : null} rankIconSrc={entry.rankIconSrc} />
         <div className="min-w-0">
           <p className="truncate text-xl leading-tight tracking-[-0.01em] text-paper">
             {entry.name}
@@ -75,17 +89,31 @@ function PodiumCard({
         </div>
       </div>
       <div className="relative mt-5 border-t border-paper/10 pt-4">
-        <p
-          className={`stat-mono text-3xl leading-none tracking-[-0.02em] ${
-            entry.delta >= 0 ? "text-signal" : "text-blush"
-          }`}
-        >
-          {entry.delta >= 0 ? "+" : ""}
-          {formatNumber(entry.delta)}
-        </p>
-        <p className="mt-1 text-[10.5px] tracking-[0.14em] uppercase text-steel-500">
-          trophées gagnés
-        </p>
+        {mode === "push" ? (
+          <>
+            <p
+              className={`stat-mono flex items-center gap-1.5 text-3xl leading-none tracking-[-0.02em] ${
+                entry.value >= 0 ? "text-signal" : "text-blush"
+              }`}
+            >
+              <TrophyGlyph className="h-6 w-6" />
+              {entry.value >= 0 ? "+" : ""}
+              {formatNumber(entry.value)}
+            </p>
+            <p className="mt-1 text-[10.5px] tracking-[0.14em] uppercase text-steel-500">
+              trophées gagnés cette saison
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="stat-mono text-3xl leading-none tracking-[-0.02em] text-signal">
+              {formatNumber(entry.value)}
+            </p>
+            <p className="mt-1 text-[10.5px] tracking-[0.14em] uppercase text-steel-500">
+              {entry.rankLabel ?? "Elo"} — cette saison
+            </p>
+          </>
+        )}
       </div>
     </Link>
   );
@@ -94,9 +122,11 @@ function PodiumCard({
 export default function PusherLeaderboard({
   entries,
   clubNames,
+  mode,
 }: {
   entries: PusherEntry[];
   clubNames: string[];
+  mode: "push" | "ranked";
 }) {
   const [scope, setScope] = useState<string>("Tous les clubs");
   const [search, setSearch] = useState("");
@@ -110,18 +140,24 @@ export default function PusherLeaderboard({
       const q = search.trim().toLowerCase();
       list = list.filter((e) => e.name.toLowerCase().includes(q));
     }
-    return [...list].sort((a, b) => b.delta - a.delta);
+    return [...list].sort((a, b) => b.value - a.value);
   }, [entries, scope, search]);
 
   const podium = filtered.slice(0, 3);
   const rows = filtered.slice(3);
-  const maxDelta = Math.max(...filtered.map((e) => e.delta), 1);
+  const maxValue = Math.max(...filtered.map((e) => e.value), 1);
+
+  const valueColumnLabel = mode === "push" ? "Push cette saison" : "Elo Ranked cette saison";
+  const emptyMessage =
+    mode === "push"
+      ? "Aucun joueur ne correspond à cette recherche."
+      : "Aucun joueur avec un rang Ranked ne correspond à cette recherche.";
 
   return (
     <div>
       <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {podium.map((entry, i) => (
-          <PodiumCard key={entry.tag} entry={entry} place={i + 1} lead={i === 0} />
+          <PodiumCard key={entry.tag} entry={entry} place={i + 1} lead={i === 0} mode={mode} />
         ))}
       </div>
 
@@ -156,43 +192,33 @@ export default function PusherLeaderboard({
       {/* table */}
       {filtered.length === 0 ? (
         <p className="rounded-2xl border border-paper/10 bg-panel px-4 py-6 text-center text-sm text-steel-400">
-          Aucun joueur ne correspond à cette recherche.
+          {emptyMessage}
         </p>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
-          <div className="hidden items-center gap-4 border-b border-paper/10 px-4 py-3 text-[10.5px] tracking-[0.14em] uppercase text-steel-600 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_180px]">
+          <div className="hidden items-center gap-4 border-b border-paper/10 px-4 py-3 text-[10.5px] tracking-[0.14em] uppercase text-steel-600 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_200px]">
             <span>Rang</span>
             <span>Joueur</span>
-            <span className="text-right">Push cette saison</span>
+            <span className="text-right">{valueColumnLabel}</span>
           </div>
           <ol className="divide-y divide-paper/[0.07]">
             {rows.map((entry, i) => (
               <li key={entry.tag}>
                 <Link
                   href={`/joueurs/${encodeURIComponent(entry.tag.replace(/^#/, ""))}`}
-                  className="flex items-center gap-4 px-4 py-3.5 transition hover:bg-panel2 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_180px]"
+                  className="flex items-center gap-4 px-4 py-3.5 transition hover:bg-panel2 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_200px]"
                 >
                   <span className="stat-mono hidden text-lg text-steel-500 sm:block">
                     {String(i + 4).padStart(2, "0")}
                   </span>
                   <span className="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
-                    <span
-                      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
-                      style={{ backgroundColor: avatarColor(entry.name) }}
-                    >
-                      {entry.name.trim().charAt(0).toUpperCase()}
-                      {entry.rankLabel && (
-                        <RankTierIcon
-                          src={entry.rankIconSrc}
-                          label={entry.rankLabel}
-                          className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-panel bg-panel2 p-0.5"
-                        />
-                      )}
-                    </span>
+                    <Avatar name={entry.name} rankLabel={entry.rankLabel} rankIconSrc={entry.rankIconSrc} />
                     <span className="min-w-0">
                       <span className="block truncate text-[15px] text-paper">{entry.name}</span>
                       <span className="block truncate text-[11.5px] text-steel-500">
-                        {entry.clubName}
+                        {mode === "ranked" && entry.rankLabel
+                          ? `${entry.clubName} · ${entry.rankLabel}`
+                          : entry.clubName}
                       </span>
                     </span>
                   </span>
@@ -201,15 +227,22 @@ export default function PusherLeaderboard({
                       <span
                         className="block h-full rounded-full bg-gradient-to-r from-iris to-zest2"
                         style={{
-                          width: `${Math.round((Math.max(entry.delta, 0) / maxDelta) * 100)}%`,
+                          width: `${Math.round((Math.max(entry.value, 0) / maxValue) * 100)}%`,
                         }}
                       />
                     </span>
                     <span
-                      className={`stat-mono shrink-0 text-[15px] whitespace-nowrap ${entry.delta >= 0 ? "text-zest2" : "text-blush"}`}
+                      className={`stat-mono flex shrink-0 items-center gap-1 text-[15px] whitespace-nowrap ${
+                        mode === "push"
+                          ? entry.value >= 0
+                            ? "text-zest2"
+                            : "text-blush"
+                          : "text-zest2"
+                      }`}
                     >
-                      {entry.delta >= 0 ? "+" : ""}
-                      {formatNumber(entry.delta)}
+                      {mode === "push" && <TrophyGlyph className="h-3.5 w-3.5" />}
+                      {mode === "push" && entry.value >= 0 ? "+" : ""}
+                      {formatNumber(entry.value)}
                     </span>
                   </span>
                 </Link>

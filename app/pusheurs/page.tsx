@@ -7,6 +7,9 @@ import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Tabs from "@/components/Tabs";
+import RankGlyph from "@/components/RankGlyph";
+import { TrophyGlyph } from "@/components/icons";
 import PusherLeaderboard, { PusherEntry } from "@/components/PusherLeaderboard";
 
 export const dynamic = "force-dynamic";
@@ -22,9 +25,14 @@ const ROLE_LABEL: Record<string, string> = {
   member: "Membre",
 };
 
-export default async function PusheursPage() {
+export default async function PusheursPage({
+  searchParams,
+}: {
+  searchParams?: { tab?: string };
+}) {
   const season = getCurrentSeason();
   const tags = clubTags();
+  const defaultTab = searchParams?.tab === "ranked" ? "ranked" : "push";
 
   let baseline;
   let baselineError: string | null = null;
@@ -84,7 +92,7 @@ export default async function PusheursPage() {
   const rankedByTag = new Map(rankedRows.map((r) => [r.tag.toUpperCase(), r]));
   const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
 
-  const entries: PusherEntry[] = loadedClubs.flatMap((club) =>
+  const pushEntries: PusherEntry[] = loadedClubs.flatMap((club) =>
     club.members.map((m) => {
       const before = baselineByTag.get(m.tag);
       const delta = before ? m.trophies - before.trophies : 0;
@@ -95,16 +103,37 @@ export default async function PusheursPage() {
         name: m.name,
         clubName: club.name,
         role: ROLE_LABEL[m.role] ?? m.role,
-        trophies: m.trophies,
-        delta,
+        value: delta,
         rankLabel,
         rankIconSrc: rankLabel ? rankedTierIconPath(rankLabel) : null,
       };
     })
   );
 
-  const totalPush = entries.reduce((sum, e) => sum + e.delta, 0);
-  const averagePush = entries.length > 0 ? Math.round(totalPush / entries.length) : 0;
+  // Le rang Ranked (rankedElo) est déjà scopé à la saison en cours côté API
+  // — pas besoin d'une photo de départ comme pour les trophées, la valeur
+  // actuelle EST la progression de la saison.
+  const rankedEntries: PusherEntry[] = loadedClubs.flatMap((club) =>
+    club.members
+      .map((m) => {
+        const ranked = rankedByTag.get(m.tag.toUpperCase());
+        if (!ranked) return null;
+        const rankLabel = rankLabelFromApi(ranked.rankName);
+        return {
+          tag: m.tag,
+          name: m.name,
+          clubName: club.name,
+          role: ROLE_LABEL[m.role] ?? m.role,
+          value: ranked.elo,
+          rankLabel,
+          rankIconSrc: rankedTierIconPath(rankLabel),
+        };
+      })
+      .filter((e): e is PusherEntry => e !== null)
+  );
+
+  const totalPush = pushEntries.reduce((sum, e) => sum + e.value, 0);
+  const averagePush = pushEntries.length > 0 ? Math.round(totalPush / pushEntries.length) : 0;
   const clubNames = loadedClubs.map((c) => c.name);
 
   return (
@@ -119,18 +148,19 @@ export default async function PusheursPage() {
           <div className="relative mx-auto flex max-w-[1200px] flex-wrap items-end gap-8 py-14 sm:py-16">
             <div className="min-w-[280px] flex-1">
               <p className="mb-3 text-[11.5px] tracking-[0.16em] uppercase text-zest2">
-                Course aux trophées — {season.label}
+                Pusheurs — {season.label}
               </p>
               <h1 className="font-display text-5xl leading-[0.94] font-medium tracking-[-0.035em] uppercase text-paper lg:text-[72px]">
-                Classement
+                Qui progresse
                 <br />
                 <span className="text-zest2 [text-shadow:0_0_60px_rgba(181,171,252,0.4)]">
-                  pusheurs
+                  cette saison
                 </span>
               </h1>
               <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-steel-400">
-                Les {entries.length} membres de Purple Corp, triés par progression depuis le
-                début de la saison — pas par total cumulé.
+                Uniquement la progression depuis le début de la saison — pas les totaux cumulés
+                (ça, c&apos;est le classement général). Trophées gagnés ou Elo Ranked, au choix
+                ci-dessous.
               </p>
               <Link
                 href="/saisons"
@@ -146,7 +176,7 @@ export default async function PusheursPage() {
                   {formatNumber(totalPush)}
                 </dd>
                 <dt className="mt-1.5 text-[11px] tracking-[0.14em] uppercase text-steel-600">
-                  Gagnés cette saison
+                  Trophées gagnés (famille)
                 </dt>
               </div>
               <div className="border-l border-paper/10 pl-6">
@@ -155,7 +185,7 @@ export default async function PusheursPage() {
                   {formatNumber(averagePush)}
                 </dd>
                 <dt className="mt-1.5 text-[11px] tracking-[0.14em] uppercase text-steel-600">
-                  Moyenne du roster
+                  Moyenne par joueur
                 </dt>
               </div>
               <div className="border-l border-paper/10 pl-6">
@@ -172,7 +202,23 @@ export default async function PusheursPage() {
 
         <section className="px-4 py-8 sm:px-8 lg:px-12">
           <div className="mx-auto max-w-[1200px]">
-            <PusherLeaderboard entries={entries} clubNames={clubNames} />
+            <Tabs
+              defaultTab={defaultTab}
+              tabs={[
+                {
+                  id: "push",
+                  label: "Trophées",
+                  icon: <TrophyGlyph className="h-3.5 w-3.5" />,
+                  panel: <PusherLeaderboard entries={pushEntries} clubNames={clubNames} mode="push" />,
+                },
+                {
+                  id: "ranked",
+                  label: "Ranked",
+                  icon: <RankGlyph className="h-3.5 w-3.5" />,
+                  panel: <PusherLeaderboard entries={rankedEntries} clubNames={clubNames} mode="ranked" />,
+                },
+              ]}
+            />
           </div>
         </section>
       </main>

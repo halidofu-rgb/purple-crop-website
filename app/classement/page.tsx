@@ -237,12 +237,7 @@ export default async function ClassementPage({
     );
   }
 
-  const defaultTab =
-    searchParams?.tab === "ranked"
-      ? "ranked"
-      : searchParams?.tab === "ranked-alltime"
-        ? "ranked-alltime"
-        : "trophies";
+  const defaultTab = searchParams?.tab === "ranked-alltime" ? "ranked-alltime" : "trophies";
 
   return (
     <>
@@ -259,7 +254,7 @@ export default async function ClassementPage({
                 général
               </>
             }
-            intro="Tous les membres de tous les clubs, par trophées, Ranked de la saison ou record all-time."
+            intro="Tous les membres de tous les clubs, par trophées cumulés ou record Ranked all-time. La progression de la saison en cours (push) est sur sa propre page."
             stats={[
               { value: formatNumber(trophyRows.length), label: "Membres classés" },
               { value: formatNumber(totalTrophies), label: "Trophées cumulés" },
@@ -271,16 +266,6 @@ export default async function ClassementPage({
             defaultTab={defaultTab}
             tabs={[
               { id: "trophies", label: "Trophées", panel: trophiesPanel },
-              {
-                id: "ranked",
-                label: "Ranked",
-                icon: <RankGlyph className="h-3.5 w-3.5" />,
-                panel: rankedPanel(
-                  rankedByCurrent,
-                  "elo",
-                  "Rang et Elo Ranked de la saison en cours, pour chaque membre."
-                ),
-              },
               {
                 id: "ranked-alltime",
                 label: "Ranked all-time",
