@@ -42,6 +42,8 @@ Dans **Settings → Environment Variables** sur Vercel (en plus de celles inject
 
 Le fichier `vercel.json` déclare un Cron Job qui appelle `/api/cron/snapshot` chaque jour à 6h (heure UTC). Vercel l'active automatiquement au déploiement, rien à faire de plus.
 
+Cette même route gère aussi les arrivées en cours de saison : elle compare le roster actuel de chaque club à la photo déjà en place et **ajoute automatiquement tout nouveau membre** qui n'y figurait pas encore, avec ses trophées du jour comme point de départ. Un joueur qui rejoint le 15 du mois n'attend donc pas la saison suivante pour apparaître sur `/pusheurs` — il y est dès le passage du cron suivant (~24h max), avec son propre push à partir de son arrivée. Les membres déjà suivis ne sont jamais réécrits.
+
 **Pour tester tout de suite sans attendre le lendemain**, tu peux déclencher une capture manuelle en visitant, une fois déployé :
 ```
 https://TON-SITE.vercel.app/api/cron/snapshot

@@ -5,9 +5,15 @@ import { getSeasonBaseline, setSeasonBaseline, BaselinePlayer } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
 
 // Appelée automatiquement chaque jour par Vercel Cron (voir vercel.json).
-// Elle ne fait qu'une chose : si aucune photo n'existe encore pour la
-// saison en cours, elle en prend une — c'est cette photo qui sert de
-// point de départ ("0") pour calculer le push de chacun sur /pusheurs.
+// Deux cas :
+// - Aucune photo pour la saison en cours → on en prend une complète, elle
+//   sert de point de départ ("0") pour calculer le push de chacun.
+// - Une photo existe déjà → on ne la remplace pas (les membres déjà suivis
+//   gardent leur point de départ initial), mais on ajoute les membres
+//   qu'on n'avait encore jamais vus cette saison — typiquement un nouveau
+//   membre qui vient de rejoindre un club. Leur push démarre alors à 0 à
+//   partir d'ici (leurs trophées actuels), au lieu d'attendre la saison
+//   suivante pour être suivis.
 export async function GET(request: NextRequest) {
   const auth = request.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
@@ -16,14 +22,9 @@ export async function GET(request: NextRequest) {
   }
 
   const season = getCurrentSeason();
-  const existing = await getSeasonBaseline(season.key);
-  if (existing) {
-    return NextResponse.json({ ok: true, skipped: true, season: season.key });
-  }
-
   const tags = clubTags();
-  const players: BaselinePlayer[] = [];
 
+  const players: BaselinePlayer[] = [];
   for (const tag of tags) {
     try {
       const club = await getClub(tag);
@@ -40,11 +41,31 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  await setSeasonBaseline({
-    seasonKey: season.key,
-    capturedAt: new Date().toISOString(),
-    players,
-  });
+  const existing = await getSeasonBaseline(season.key);
 
-  return NextResponse.json({ ok: true, season: season.key, players: players.length });
+  if (!existing) {
+    await setSeasonBaseline({
+      seasonKey: season.key,
+      capturedAt: new Date().toISOString(),
+      players,
+    });
+    return NextResponse.json({ ok: true, season: season.key, created: players.length });
+  }
+
+  const known = new Set(existing.players.map((p) => p.tag));
+  const newcomers = players.filter((p) => !known.has(p.tag));
+
+  if (newcomers.length > 0) {
+    await setSeasonBaseline({
+      ...existing,
+      players: [...existing.players, ...newcomers],
+    });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    season: season.key,
+    added: newcomers.length,
+    newcomers: newcomers.map((p) => p.name),
+  });
 }
