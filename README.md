@@ -209,3 +209,16 @@ séparés par une virgule) :
 Une fois connecté avec ce compte Discord, un formulaire de publication apparaît
 en haut de `/actualites` — titre, texte, image optionnelle (URL). Les visiteurs
 non connectés voient uniquement la liste des actus, sans aucun contrôle.
+
+## Étape 10 — Statistiques de visite (Vercel Web Analytics)
+
+Le composant `<Analytics />` est branché dans `app/layout.tsx` (package
+`@vercel/analytics`), mais il ne collecte rien tant que l'option n'est pas
+activée côté Vercel :
+
+1. Sur ton projet Vercel → onglet **Analytics** (menu de gauche).
+2. Clique **Enable**.
+3. Redéploie (le prochain push suffit).
+
+Gratuit sur le plan Hobby avec une rétention limitée ; les visites remontent
+dans l'onglet Analytics du dashboard Vercel, pas sur le site lui-même.

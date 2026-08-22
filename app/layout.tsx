@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
@@ -25,6 +26,7 @@ export default function RootLayout({
     <html lang="fr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <Analytics />
       </body>
     </html>
   );
