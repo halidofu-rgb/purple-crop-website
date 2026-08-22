@@ -1,10 +1,10 @@
-// Une saison Brawl Stars démarre le 1er jeudi de chaque mois (heure UTC,
-// approximation suffisante pour un site entre potes — Supercell ne publie
-// pas l'heure exacte à la minute près).
+// Une saison Brawl Stars démarre le 1er jeudi de chaque mois à 9h00 UTC
+// pile — confirmé par Supercell lui-même sur X : "The current Ranked
+// season ends tomorrow at 9 AM UTC!" (x.com/BrawlStars, avril 2026).
 
 function firstThursday(year: number, month: number): Date {
   // month: 0-11
-  const d = new Date(Date.UTC(year, month, 1));
+  const d = new Date(Date.UTC(year, month, 1, 9, 0, 0));
   const day = d.getUTCDay(); // 0 = dimanche ... 4 = jeudi
   const offset = (4 - day + 7) % 7;
   d.setUTCDate(1 + offset);
