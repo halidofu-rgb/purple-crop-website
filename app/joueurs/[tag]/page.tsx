@@ -7,11 +7,13 @@ import { getCurrentSeason } from "@/lib/season";
 import { avatarColor } from "@/lib/avatarColor";
 import { getPlayerIconUrl } from "@/lib/assets";
 import { rankLabelFromApi, rankedTierIconPath, rankedTierProgress } from "@/lib/rankedTier";
+import { getTrophyHistory } from "@/lib/trophyHistory";
 import RankTierIcon from "@/components/RankTierIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import RankGlyph from "@/components/RankGlyph";
 import Badge from "@/components/Badge";
+import TrophyHistoryChart from "@/components/TrophyHistoryChart";
 import { TrophyGlyph, PushGlyph } from "@/components/icons";
 import { Link2 } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -67,7 +69,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   const season = getCurrentSeason();
   const allTags = clubTags();
 
-  const [allClubs, baseline, memberLink, avatarUrl, battleLog] = await Promise.all([
+  const [allClubs, baseline, memberLink, avatarUrl, battleLog, trophyHistory] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -81,6 +83,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     getMemberLinkByTag(params.tag).catch(() => null),
     getPlayerIconUrl(player.icon?.id).catch(() => null),
     getBattleLog(params.tag).catch(() => []),
+    getTrophyHistory(params.tag).catch(() => []),
   ]);
 
   const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
@@ -216,6 +219,8 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
             {/* ── corps ── */}
             <div className="mt-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
               <div className="flex flex-col gap-4">
+                <TrophyHistoryChart points={trophyHistory} />
+
                 <div className="grid gap-4 sm:grid-cols-3">
                   {modeStats.map((m) => (
                     <div key={m.label} className="rounded-2xl border border-paper/10 bg-panel p-5">

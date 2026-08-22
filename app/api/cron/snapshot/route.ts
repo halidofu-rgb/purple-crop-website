@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, setSeasonBaseline, BaselinePlayer } from "@/lib/kv";
+import { recordTrophySnapshot } from "@/lib/trophyHistory";
 import { getCurrentSeason } from "@/lib/season";
 
 // Appelée automatiquement chaque jour par Vercel Cron (voir vercel.json).
-// Deux cas :
+// Enregistre aussi un point d'historique de trophées par joueur (voir
+// lib/trophyHistory.ts, pour le graphique de progression sur /joueurs/[tag]).
+// Pour la photo de saison, deux cas :
 // - Aucune photo pour la saison en cours → on en prend une complète, elle
 //   sert de point de départ ("0") pour calculer le push de chacun.
 // - Une photo existe déjà → on ne la remplace pas (les membres déjà suivis
@@ -40,6 +43,18 @@ export async function GET(request: NextRequest) {
       console.error(`Snapshot: échec pour le club ${tag}`, err);
     }
   }
+
+  // Historique jour par jour (fiche joueur) — indépendant de la logique de
+  // photo de saison ci-dessous, alimenté avec les mêmes données déjà
+  // récupérées, sans appel API supplémentaire.
+  const today = new Date().toISOString().slice(0, 10);
+  await Promise.all(
+    players.map((p) =>
+      recordTrophySnapshot(p.tag, p.trophies, today).catch((err) =>
+        console.error(`Historique trophées : échec pour ${p.tag}`, err)
+      )
+    )
+  );
 
   const existing = await getSeasonBaseline(season.key);
 
