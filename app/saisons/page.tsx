@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { getClub } from "@/lib/brawlstars";
-import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, listSeasonKeys, SeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CrownGlyph } from "@/components/icons";
+import PageBanner from "@/components/PageBanner";
+import { CrownGlyph, PushGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -82,60 +81,82 @@ export default async function SaisonsPage() {
   }
   summaries.reverse(); // plus récente en premier
 
+  const closedCount = summaries.filter((s) => !s.ongoing).length;
+  const bestSeason = summaries
+    .filter((s) => !s.ongoing)
+    .reduce<SeasonSummary | null>((best, s) => (!best || s.totalPush > best.totalPush ? s : best), null);
+
   return (
     <>
       <Navbar />
-      <main className="min-h-screen animate-fadeInUp px-4 py-10 sm:px-8 lg:px-16">
-        <section className="mx-auto max-w-3xl text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-signal">
-            Purple Corp
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-paper sm:text-5xl">
-            Saisons passées
-          </h1>
-          <p className="mt-3 text-sm text-steel-400">
-            L&apos;historique du push, saison après saison. Se construit automatiquement au fil
-            du temps.
-          </p>
-        </section>
+      <main className="min-h-screen animate-fadeInUp px-4 pb-20 sm:px-8 lg:px-16">
+        <div className="mx-auto max-w-[1160px]">
+          <PageBanner
+            kicker="Purple Corp"
+            title="Saisons passées"
+            intro="L'historique du push, saison après saison — se construit automatiquement au fil du temps, aucune action de notre part."
+            stats={[
+              { value: String(closedCount), label: "Saisons enregistrées" },
+              {
+                value: bestSeason ? `+${formatNumber(bestSeason.totalPush)}` : "—",
+                label: bestSeason ? `Meilleure saison — ${bestSeason.label}` : "Meilleure saison",
+              },
+            ]}
+          />
 
-        <section className="mx-auto mt-10 max-w-3xl">
-          {summaries.length === 0 ? (
-            <p className="rounded-2xl border border-paper/10 bg-panel px-6 py-8 text-center text-sm text-steel-400">
-              Pas encore d&apos;historique — reviens à la fin de la saison en cours.
-            </p>
-          ) : (
-            <ol className="space-y-3">
-              {summaries.map((s) => (
-                <li
-                  key={s.key}
-                  className="flex items-center justify-between rounded-2xl border border-paper/10 bg-panel px-5 py-4"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-paper">{s.label}</p>
-                    {s.ongoing ? (
-                      <Link href="/pusheurs" className="text-xs text-signal hover:underline">
-                        En cours — voir le direct →
-                      </Link>
-                    ) : (
-                      s.king && (
-                        <p className="flex items-center gap-1 text-xs text-steel-400">
-                          <CrownGlyph className="h-3 w-3" /> {s.king.name} · +
-                          {formatNumber(s.king.delta)}
-                        </p>
-                      )
-                    )}
-                  </div>
-                  {!s.ongoing && (
-                    <span className="stat-mono text-lg font-semibold text-signal">
-                      +{formatNumber(s.totalPush)}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-paper/10 bg-panel">
+            {summaries.length === 0 ? (
+              <p className="px-6 py-10 text-center text-sm text-steel-400">
+                Pas encore d&apos;historique — reviens à la fin de la saison en cours.
+              </p>
+            ) : (
+              <ol className="divide-y divide-paper/[0.07]">
+                {summaries.map((s, i) => (
+                  <li key={s.key}>
+                    <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+                      <div className="flex items-center gap-4">
+                        <span className="rank-index w-8 shrink-0 text-xs text-zest2">
+                          [{String(i + 1).padStart(2, "0")}]
+                        </span>
+                        <div>
+                          <p className="text-[15px] text-paper">
+                            {s.label}
+                            {s.ongoing && (
+                              <span className="ml-2 rounded-md border border-zest2/40 bg-iris/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-zest2">
+                                En cours
+                              </span>
+                            )}
+                          </p>
+                          {s.ongoing ? (
+                            <Link href="/pusheurs" className="text-xs text-zest2 hover:underline">
+                              Voir le direct →
+                            </Link>
+                          ) : (
+                            s.king && (
+                              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-steel-400">
+                                <CrownGlyph className="h-3.5 w-3.5" />
+                                {s.king.name}
+                                <span className="stat-mono text-zest2">
+                                  +{formatNumber(s.king.delta)}
+                                </span>
+                              </p>
+                            )
+                          )}
+                        </div>
+                      </div>
+                      {!s.ongoing && (
+                        <span className="stat-mono flex shrink-0 items-center gap-1.5 text-lg font-semibold text-zest2">
+                          <PushGlyph className="h-4 w-4" />
+                          +{formatNumber(s.totalPush)}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
       </main>
       <Footer />
     </>
