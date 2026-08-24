@@ -33,6 +33,7 @@ export default async function OpengraphImage() {
         <img src={logoBase64} width={160} height={160} style={{ borderRadius: 32 }} />
         <div
           style={{
+            display: "flex",
             marginTop: 36,
             fontSize: 80,
             fontWeight: 600,
@@ -41,7 +42,8 @@ export default async function OpengraphImage() {
             textTransform: "uppercase",
           }}
         >
-          Purple <span style={{ color: "#b5abfc" }}>Corp</span>
+          <span>Purple&nbsp;</span>
+          <span style={{ color: "#b5abfc" }}>Corp</span>
         </div>
         <div style={{ marginTop: 14, fontSize: 30, color: "#9397ab" }}>
           Le classement et les stats, en direct

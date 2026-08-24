@@ -15,12 +15,27 @@ const display = Chakra_Petch({
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
-const SITE_URL = process.env.NEXTAUTH_URL || "https://purple-corp-website.vercel.app";
+// new URL() plante si la variable est mal formée (pas de https:// devant,
+// etc.) — on ne veut jamais que ça fasse échouer le build pour un simple
+// détail de métadonnées de partage, donc on retombe sur l'URL par défaut
+// si NEXTAUTH_URL n'est pas une URL absolue valide.
+function siteUrl(): URL {
+  const candidate = process.env.NEXTAUTH_URL;
+  if (candidate) {
+    try {
+      return new URL(candidate);
+    } catch {
+      // ignore, retombe sur la valeur par défaut ci-dessous
+    }
+  }
+  return new URL("https://purple-corp-website.vercel.app");
+}
+
 const TITLE = "Purple Corp — Brawl Stars";
 const DESCRIPTION = "Le classement et les stats de Purple Corp, en direct.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: siteUrl(),
   title: TITLE,
   description: DESCRIPTION,
   openGraph: {
