@@ -5,10 +5,9 @@ import { discordUrlForTag } from "@/lib/clubs";
 import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
 import { avatarColor } from "@/lib/avatarColor";
 import ClubBadge from "@/components/ClubBadge";
-import RankGlyph from "@/components/RankGlyph";
 import RankTierIcon from "@/components/RankTierIcon";
 import Tabs from "@/components/Tabs";
-import { TrophyGlyph, PushGlyph } from "@/components/icons";
+import { TrophyGlyph, PushGlyph, RankedGlyph } from "@/components/icons";
 
 interface ClubRankedRow {
   tag: string;
@@ -329,7 +328,7 @@ export default function ClubView({
             {
               id: "ranked",
               label: "Ranked",
-              icon: <RankGlyph className="h-3.5 w-3.5" />,
+              icon: <RankedGlyph className="h-3.5 w-3.5" />,
               panel: rankedPanel,
             },
           ]}

@@ -8,8 +8,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Tabs from "@/components/Tabs";
-import RankGlyph from "@/components/RankGlyph";
-import { TrophyGlyph } from "@/components/icons";
+import { TrophyGlyph, RankedGlyph } from "@/components/icons";
 import PusherLeaderboard, { PusherEntry } from "@/components/PusherLeaderboard";
 
 export const dynamic = "force-dynamic";
@@ -214,7 +213,7 @@ export default async function PusheursPage({
                 {
                   id: "ranked",
                   label: "Ranked",
-                  icon: <RankGlyph className="h-3.5 w-3.5" />,
+                  icon: <RankedGlyph className="h-3.5 w-3.5" />,
                   panel: <PusherLeaderboard entries={rankedEntries} clubNames={clubNames} mode="ranked" />,
                 },
               ]}

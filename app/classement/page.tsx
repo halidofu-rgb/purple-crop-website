@@ -9,11 +9,10 @@ import { avatarColor } from "@/lib/avatarColor";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Tabs from "@/components/Tabs";
-import RankGlyph from "@/components/RankGlyph";
 import RankTierIcon from "@/components/RankTierIcon";
 import Podium from "@/components/Podium";
 import PageBanner from "@/components/PageBanner";
-import { TrophyGlyph, PushGlyph } from "@/components/icons";
+import { TrophyGlyph, PushGlyph, RankedGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -279,7 +278,7 @@ export default async function ClassementPage({
               {
                 id: "ranked-alltime",
                 label: "Ranked all-time",
-                icon: <RankGlyph className="h-3.5 w-3.5" />,
+                icon: <RankedGlyph className="h-3.5 w-3.5" />,
                 panel: rankedPanel(
                   rankedByBest,
                   "bestElo",

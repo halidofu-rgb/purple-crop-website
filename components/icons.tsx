@@ -6,6 +6,7 @@
 // retombent sur ce dessin original si le fichier n'existe pas encore.
 // Bouclier et Épées restent 100% originaux (rien d'équivalent côté jeu).
 import RealIcon from "@/components/RealIcon";
+import RankGlyph from "@/components/RankGlyph";
 
 function GlyphBase({
   className,
@@ -111,6 +112,17 @@ export function PushGlyph({ className = "h-5 w-5" }: { className?: string }) {
       alt="Push"
       className={className}
       fallback={<PushFallback className={className} />}
+    />
+  );
+}
+
+export function RankedGlyph({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <RealIcon
+      src="/icons/ranked.png"
+      alt="Ranked"
+      className={className}
+      fallback={<RankGlyph className={className} />}
     />
   );
 }
