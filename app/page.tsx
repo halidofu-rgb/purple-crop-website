@@ -252,7 +252,7 @@ export default async function HomePage() {
             <p>
               Sous la présidence de <span className="text-paper">Rapso</span>, notre club s&apos;est
               hissé parmi l&apos;élite française et mondiale : Top 14 monde et Top 9 France au
-              record, aujourd&apos;hui stable en Top 50 France / Top 530 monde. Une performance qui
+              record, aujourd&apos;hui stable en Top 50 France / Top 450 monde. Une performance qui
               reflète l&apos;exigence et la mentalité tryhard de notre ligne compétitive, la{" "}
               <span className="text-paper">Purple Line</span> (130K+ trophées minimum).
             </p>
@@ -263,7 +263,7 @@ export default async function HomePage() {
             </p>
             <p>
               Et pour ceux qui montent en puissance, notre{" "}
-              <span className="text-paper">Iris Line</span> (80K+ trophées minimum) est le point
+              <span className="text-paper">Iris Line</span> (90K+ trophées minimum) est le point
               d&apos;entrée dans la famille — membres actifs et motivés, Discord et événements
               obligatoires, avec le même état d&apos;esprit que nos deux autres lignes.
             </p>
