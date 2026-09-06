@@ -55,6 +55,13 @@ export function getCurrentSeason(now: Date = new Date()): SeasonInfo {
   };
 }
 
+// Libellé lisible à partir d'une clé de saison ("2026-08" → "Août 2026")
+// — utilisé pour /saisons et sa page de détail.
+export function labelForKey(key: string): string {
+  const [year, month] = key.split("-").map(Number);
+  return `${MONTH_LABELS[month - 1]} ${year}`;
+}
+
 export function formatCountdown(target: Date, now: Date = new Date()): string {
   const ms = target.getTime() - now.getTime();
   if (ms <= 0) return "d'un instant à l'autre";

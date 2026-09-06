@@ -24,6 +24,21 @@ export async function getTrophyHistory(tag: string): Promise<TrophyHistoryPoint[
   return (JSON.parse(raw) as TrophyHistoryPoint[]).sort((a, b) => a.date.localeCompare(b.date));
 }
 
+// Dernier point d'historique daté au plus tard "cutoffDate" (inclus) —
+// sert à retrouver les trophées d'un joueur juste avant le vrai reset de
+// saison (9h UTC), plutôt que ses trophées du moment où le cron tourne,
+// qui peuvent déjà être après le reset si le passage quotidien arrive
+// trop tard. Le cron capture toujours avant 9h UTC (voir vercel.json),
+// donc un point daté "cutoffDate" est de toute façon antérieur au reset
+// de ce jour-là. Retourne null si aucun point n'existe avant cette date
+// (joueur trop récent pour avoir un historique).
+export async function getTrophiesAtOrBefore(tag: string, cutoffDate: string): Promise<number | null> {
+  const history = await getTrophyHistory(tag);
+  const candidates = history.filter((p) => p.date <= cutoffDate);
+  if (candidates.length === 0) return null;
+  return candidates[candidates.length - 1].trophies;
+}
+
 // Idempotent : si le cron tourne deux fois le même jour, le point du jour
 // est juste remplacé plutôt que dupliqué.
 export async function recordTrophySnapshot(

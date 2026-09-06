@@ -2,21 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, setSeasonBaseline, BaselinePlayer } from "@/lib/kv";
-import { recordTrophySnapshot } from "@/lib/trophyHistory";
+import { recordTrophySnapshot, getTrophiesAtOrBefore } from "@/lib/trophyHistory";
 import { getCurrentSeason } from "@/lib/season";
 
 // Appelée automatiquement chaque jour par Vercel Cron (voir vercel.json).
 // Enregistre aussi un point d'historique de trophées par joueur (voir
 // lib/trophyHistory.ts, pour le graphique de progression sur /joueurs/[tag]).
-// Pour la photo de saison, deux cas :
-// - Aucune photo pour la saison en cours → on en prend une complète, elle
-//   sert de point de départ ("0") pour calculer le push de chacun.
-// - Une photo existe déjà → on ne la remplace pas (les membres déjà suivis
-//   gardent leur point de départ initial), mais on ajoute les membres
-//   qu'on n'avait encore jamais vus cette saison — typiquement un nouveau
-//   membre qui vient de rejoindre un club. Leur push démarre alors à 0 à
-//   partir d'ici (leurs trophées actuels), au lieu d'attendre la saison
-//   suivante pour être suivis.
+//
+// Pour la photo de saison :
+// - Aucune photo pour la saison en cours → on en prend une. Comme le cron
+//   tourne 1x/jour et que le vrai reset Brawl Stars a lieu à 9h UTC, il
+//   peut arriver que la première capture du mois tombe APRÈS le reset —
+//   dans ce cas les trophées "actuels" du joueur incluent déjà ses gains
+//   du jour, et cette première journée de push disparaît silencieusement
+//   (elle finit comptée dans le total de la saison PRÉCÉDENTE sur
+//   /saisons, puisque cette même photo sert de point de clôture pour
+//   l'ancienne saison). Pour éviter ça, on regarde d'abord si un point
+//   d'historique quotidien existe daté d'avant le reset (le cron capture
+//   toujours avant 9h UTC, donc un point du jour même ou d'avant convient)
+//   et on l'utilise à la place des trophées du moment si c'est le cas.
+// - Une photo existe déjà → on ne la remplace pas pour les membres déjà
+//   suivis, SAUF si un point d'historique pré-reset plus bas existe (=
+//   la toute première capture du mois avait raté la fenêtre pré-reset,
+//   comme ci-dessus) : dans ce cas on corrige rétroactivement, ce qui
+//   restaure la journée perdue. On ajoute aussi les membres qu'on n'avait
+//   encore jamais vus cette saison (nouveaux arrivants).
 export async function GET(request: NextRequest) {
   const auth = request.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
@@ -56,30 +66,59 @@ export async function GET(request: NextRequest) {
     )
   );
 
+  // Date butoir pour considérer un point d'historique "antérieur au
+  // reset" de cette saison — voir le commentaire au-dessus.
+  const cutoffDate = season.start.toISOString().slice(0, 10);
+
+  async function preResetTrophies(tag: string, fallback: number): Promise<number> {
+    const historical = await getTrophiesAtOrBefore(tag, cutoffDate).catch(() => null);
+    return historical ?? fallback;
+  }
+
   const existing = await getSeasonBaseline(season.key);
 
   if (!existing) {
+    const baselinePlayers = await Promise.all(
+      players.map(async (p) => ({ ...p, trophies: await preResetTrophies(p.tag, p.trophies) }))
+    );
     await setSeasonBaseline({
       seasonKey: season.key,
       capturedAt: new Date().toISOString(),
-      players,
+      players: baselinePlayers,
     });
-    return NextResponse.json({ ok: true, season: season.key, created: players.length });
+    return NextResponse.json({ ok: true, season: season.key, created: baselinePlayers.length });
   }
 
-  const known = new Set(existing.players.map((p) => p.tag));
+  // Corrige les entrées existantes si un point pré-reset plus bas est
+  // apparu depuis (rattrape une première capture qui avait raté la
+  // fenêtre pré-reset) — ne touche jamais à un membre sans historique
+  // utilisable, et ne baisse jamais un point déjà correct.
+  let correctedCount = 0;
+  const correctedExisting = await Promise.all(
+    existing.players.map(async (p) => {
+      const historical = await getTrophiesAtOrBefore(p.tag, cutoffDate).catch(() => null);
+      if (historical !== null && historical < p.trophies) {
+        correctedCount++;
+        return { ...p, trophies: historical };
+      }
+      return p;
+    })
+  );
+
+  const known = new Set(correctedExisting.map((p) => p.tag));
   const newcomers = players.filter((p) => !known.has(p.tag));
 
-  if (newcomers.length > 0) {
+  if (correctedCount > 0 || newcomers.length > 0) {
     await setSeasonBaseline({
       ...existing,
-      players: [...existing.players, ...newcomers],
+      players: [...correctedExisting, ...newcomers],
     });
   }
 
   return NextResponse.json({
     ok: true,
     season: season.key,
+    corrected: correctedCount,
     added: newcomers.length,
     newcomers: newcomers.map((p) => p.name),
   });

@@ -1,24 +1,17 @@
 import Link from "next/link";
 import { getSeasonBaseline, listSeasonKeys, SeasonBaseline } from "@/lib/kv";
-import { getCurrentSeason } from "@/lib/season";
+import { computeSeasonPush } from "@/lib/seasonPush";
+import { getCurrentSeason, labelForKey } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageBanner from "@/components/PageBanner";
 import { CrownGlyph, PushGlyph } from "@/components/icons";
+import { ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
-}
-
-function labelForKey(key: string): string {
-  const [year, month] = key.split("-").map(Number);
-  const MONTHS = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-  ];
-  return `${MONTHS[month - 1]} ${year}`;
 }
 
 interface SeasonSummary {
@@ -27,27 +20,6 @@ interface SeasonSummary {
   totalPush: number;
   king: { name: string; delta: number } | null;
   ongoing: boolean;
-}
-
-// Calcule le push d'une saison PASSÉE en comparant sa photo de départ à
-// celle de la saison suivante (= son propre point final). La saison en
-// cours n'a pas encore de photo "de fin" : on ne peut afficher un vrai
-// total que pour les saisons déjà terminées, sinon voir /pusheurs pour le
-// direct.
-function summarizeClosedSeason(start: SeasonBaseline, end: SeasonBaseline): SeasonSummary {
-  const endByTag = new Map(end.players.map((p) => [p.tag, p]));
-  let totalPush = 0;
-  let king: { name: string; delta: number } | null = null;
-
-  for (const p of start.players) {
-    const after = endByTag.get(p.tag);
-    if (!after) continue;
-    const delta = after.trophies - p.trophies;
-    totalPush += delta;
-    if (!king || delta > king.delta) king = { name: p.name, delta };
-  }
-
-  return { key: start.seasonKey, label: labelForKey(start.seasonKey), totalPush, king, ongoing: false };
 }
 
 export default async function SaisonsPage() {
@@ -66,7 +38,16 @@ export default async function SaisonsPage() {
     const current = validBaselines[i];
     const next = validBaselines[i + 1];
     if (next) {
-      summaries.push(summarizeClosedSeason(current, next));
+      const rows = computeSeasonPush(current, next);
+      const totalPush = rows.reduce((sum, r) => sum + r.delta, 0);
+      const king = rows[0] ? { name: rows[0].name, delta: rows[0].delta } : null;
+      summaries.push({
+        key: current.seasonKey,
+        label: labelForKey(current.seasonKey),
+        totalPush,
+        king,
+        ongoing: false,
+      });
     } else if (current.seasonKey === currentSeason.key) {
       // Saison en cours : pas de photo de fin, on renvoie vers /pusheurs
       // pour le direct plutôt que d'afficher un total figé et faux.
@@ -111,8 +92,8 @@ export default async function SaisonsPage() {
               </p>
             ) : (
               <ol className="divide-y divide-paper/[0.07]">
-                {summaries.map((s, i) => (
-                  <li key={s.key}>
+                {summaries.map((s, i) => {
+                  const row = (
                     <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
                       <div className="flex items-center gap-4">
                         <span className="rank-index w-8 shrink-0 text-xs text-zest2">
@@ -128,9 +109,7 @@ export default async function SaisonsPage() {
                             )}
                           </p>
                           {s.ongoing ? (
-                            <Link href="/pusheurs" className="text-xs text-zest2 hover:underline">
-                              Voir le direct →
-                            </Link>
+                            <span className="text-xs text-zest2">Voir le direct sur /pusheurs →</span>
                           ) : (
                             s.king && (
                               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-steel-400">
@@ -144,15 +123,32 @@ export default async function SaisonsPage() {
                           )}
                         </div>
                       </div>
-                      {!s.ongoing && (
-                        <span className="stat-mono flex shrink-0 items-center gap-1.5 text-lg font-semibold text-zest2">
-                          <PushGlyph className="h-4 w-4" />
-                          +{formatNumber(s.totalPush)}
-                        </span>
-                      )}
+                      <div className="flex shrink-0 items-center gap-3">
+                        {!s.ongoing && (
+                          <span className="stat-mono flex items-center gap-1.5 text-lg font-semibold text-zest2">
+                            <PushGlyph className="h-4 w-4" />
+                            +{formatNumber(s.totalPush)}
+                          </span>
+                        )}
+                        {!s.ongoing && <ChevronRight className="h-4 w-4 text-steel-600" />}
+                      </div>
                     </div>
-                  </li>
-                ))}
+                  );
+
+                  return (
+                    <li key={s.key}>
+                      {s.ongoing ? (
+                        <Link href="/pusheurs" className="block transition hover:bg-panel2">
+                          {row}
+                        </Link>
+                      ) : (
+                        <Link href={`/saisons/${s.key}`} className="block transition hover:bg-panel2">
+                          {row}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
             )}
           </div>
