@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
+import { listNews } from "@/lib/news";
 import { getRankedRowsForClubs } from "@/lib/rankedLive";
 import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
@@ -10,6 +11,7 @@ import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Button from "@/components/Button";
+import NewsPostCard from "@/components/NewsPostCard";
 import RankTierIcon from "@/components/RankTierIcon";
 import { MessageCircle } from "lucide-react";
 import { TrophyGlyph, PushGlyph, SwordsGlyph } from "@/components/icons";
@@ -46,10 +48,12 @@ export default async function HomePage() {
   // visuel du #1).
   const tierRank = [...loadedClubs].sort((a, b) => b.requiredTrophies - a.requiredTrophies);
 
-  const [baseline, rankedRows] = await Promise.all([
+  const [baseline, rankedRows, newsPosts] = await Promise.all([
     getSeasonBaseline(season.key).catch(() => null),
     getRankedRowsForClubs(loadedClubs).catch(() => []),
+    listNews().catch(() => []),
   ]);
+  const latestNews = newsPosts[0];
 
   let pushRows: { tag: string; name: string; clubName: string; delta: number }[] = [];
   if (baseline) {
@@ -214,6 +218,25 @@ export default async function HomePage() {
 
         <div className="px-4 py-6 sm:px-8 lg:px-16">
 
+        {/* ACTUALITÉS — dernier post mis en avant dès l'arrivée sur le site,
+            pour que nouveaux et anciens membres voient tout de suite ce qui
+            se passe (challenge en cours, etc.) sans devoir aller sur
+            /actualites. */}
+        {latestNews && (
+          <section className="mx-auto mt-10 max-w-4xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-xl font-semibold text-paper">Actualités</h2>
+              <Link
+                href="/actualites"
+                className="text-xs uppercase tracking-[0.12em] text-zest2 transition hover:text-paper"
+              >
+                Toutes les actualités →
+              </Link>
+            </div>
+            <NewsPostCard post={latestNews} canDelete={false} featured />
+          </section>
+        )}
+
         {/* DISCORD — bloc premium avec dégradé */}
         <section className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-paper/10 bg-gradient-to-br from-panel via-panel to-[#241335] px-6 py-8 text-center sm:px-10">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-zest/20 blur-3xl" />
@@ -252,12 +275,12 @@ export default async function HomePage() {
             <p>
               Sous la présidence de <span className="text-paper">Rapso</span>, notre club s&apos;est
               hissé parmi l&apos;élite française et mondiale : Top 14 monde et Top 9 France au
-              record, aujourd&apos;hui stable en Top 50 France / Top 450 monde. Une performance qui
+              record, aujourd&apos;hui stable en Top 35 France / Top 280 monde. Une performance qui
               reflète l&apos;exigence et la mentalité tryhard de notre ligne compétitive, la{" "}
-              <span className="text-paper">Purple Line</span> (130K+ trophées minimum).
+              <span className="text-paper">Purple Line</span> (140K+ trophées minimum).
             </p>
             <p>
-              À côté de ça, notre <span className="text-paper">Indigo Line</span> (115K+ trophées
+              À côté de ça, notre <span className="text-paper">Indigo Line</span> (120K+ trophées
               minimum) accueille les joueurs compétitifs qui veulent progresser dans une ambiance
               bienveillante, avec entraide, suivi et un Discord actif — actuellement Top 93 France.
             </p>
