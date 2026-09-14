@@ -11,7 +11,7 @@ import { PURPLE_CORP_DISCORD_URL } from "@/lib/site";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Button from "@/components/Button";
-import NewsPostCard from "@/components/NewsPostCard";
+import HomeNewsBanner from "@/components/HomeNewsBanner";
 import RankTierIcon from "@/components/RankTierIcon";
 import { MessageCircle } from "lucide-react";
 import { TrophyGlyph, PushGlyph, SwordsGlyph } from "@/components/icons";
@@ -219,23 +219,11 @@ export default async function HomePage() {
         <div className="px-4 py-6 sm:px-8 lg:px-16">
 
         {/* ACTUALITÉS — dernier post mis en avant dès l'arrivée sur le site,
-            pour que nouveaux et anciens membres voient tout de suite ce qui
-            se passe (challenge en cours, etc.) sans devoir aller sur
-            /actualites. */}
-        {latestNews && (
-          <section className="mx-auto mt-10 max-w-4xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-xl font-semibold text-paper">Actualités</h2>
-              <Link
-                href="/actualites"
-                className="text-xs uppercase tracking-[0.12em] text-zest2 transition hover:text-paper"
-              >
-                Toutes les actualités →
-              </Link>
-            </div>
-            <NewsPostCard post={latestNews} canDelete={false} featured />
-          </section>
-        )}
+            replié par défaut (voir components/HomeNewsBanner) pour que
+            nouveaux et anciens membres voient tout de suite qu'il y a du
+            nouveau (challenge en cours, etc.) sans que ça prenne toute la
+            page. */}
+        {latestNews && <HomeNewsBanner post={latestNews} />}
 
         {/* DISCORD — bloc premium avec dégradé */}
         <section className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-3xl border border-paper/10 bg-gradient-to-br from-panel via-panel to-[#241335] px-6 py-8 text-center sm:px-10">
