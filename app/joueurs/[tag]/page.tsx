@@ -3,6 +3,7 @@ import { getPlayer, getClub, getBattleLog, sortByTrophies } from "@/lib/brawlsta
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberLinkByTag } from "@/lib/members";
+import { getRankedRowsForClubs } from "@/lib/rankedLive";
 import { getCurrentSeason } from "@/lib/season";
 import { avatarColor } from "@/lib/avatarColor";
 import { getPlayerIconUrl } from "@/lib/assets";
@@ -105,6 +106,38 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   if (baseline) {
     const before = baseline.players.find((p) => p.tag === player.tag);
     if (before) seasonPush = player.trophies - before.trophies;
+  }
+
+  // Position dans les classements de /pusheurs (mêmes règles : push trophées
+  // depuis la photo de saison, Elo Ranked actuel). Uniquement pour les
+  // membres de nos clubs — les autres joueurs ne figurent pas dans ces listes.
+  // Égalité = même rang (on compte seulement ceux strictement devant).
+  let pushStanding: { rank: number; total: number; delta: number } | null = null;
+  if (baseline && homeClub && seasonPush !== undefined) {
+    const playerPush = seasonPush;
+    const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
+    const deltas = allMembers.map((m) => {
+      const b = baselineByTag.get(m.tag);
+      return b ? m.trophies - b.trophies : 0;
+    });
+    pushStanding = {
+      rank: 1 + deltas.filter((d) => d > playerPush).length,
+      total: deltas.length,
+      delta: playerPush,
+    };
+  }
+
+  let rankedStanding: { rank: number; total: number; elo: number } | null = null;
+  if (homeClub && typeof player.rankedElo === "number") {
+    const playerElo = player.rankedElo;
+    const rankedRows = await getRankedRowsForClubs(loadedClubs).catch(() => []);
+    if (rankedRows.some((r) => r.tag.toUpperCase() === player.tag.toUpperCase())) {
+      rankedStanding = {
+        rank: 1 + rankedRows.filter((r) => r.elo > playerElo).length,
+        total: rankedRows.length,
+        elo: playerElo,
+      };
+    }
   }
 
   const brawlers = [...player.brawlers].sort((a, b) => b.trophies - a.trophies);
@@ -344,6 +377,69 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                       Ce joueur n&rsquo;a pas encore de rang Ranked (mode débloqué à 1 000
                       trophées, puis un premier combat Ranked joué).
                     </p>
+                  </div>
+                )}
+
+                {(pushStanding || rankedStanding) && (
+                  <div className="rounded-2xl border border-paper/10 bg-panel p-6">
+                    <h2 className="mb-4 text-[11px] tracking-[0.16em] uppercase text-steel-500">
+                      Classements pusheurs — {season.label}
+                    </h2>
+                    <ul className="flex flex-col">
+                      {pushStanding && (
+                        <li className="border-t border-paper/[0.08] first:border-none">
+                          <Link
+                            href="/pusheurs"
+                            className="flex items-center gap-3 py-3 transition hover:opacity-80"
+                          >
+                            <TrophyGlyph className="h-5 w-5 shrink-0" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm text-paper">Push Trophées</span>
+                              <span
+                                className={`stat-mono block text-[12px] ${
+                                  pushStanding.delta >= 0 ? "text-zest2" : "text-blush"
+                                }`}
+                              >
+                                {pushStanding.delta >= 0 ? "+" : ""}
+                                {formatNumber(pushStanding.delta)} trophées
+                              </span>
+                            </span>
+                            <span
+                              className={`stat-mono text-xl ${
+                                pushStanding.rank <= 3 ? "text-zest2" : "text-paper"
+                              }`}
+                            >
+                              #{pushStanding.rank}{" "}
+                              <span className="text-xs text-steel-600">/ {pushStanding.total}</span>
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                      {rankedStanding && (
+                        <li className="border-t border-paper/[0.08] first:border-none">
+                          <Link
+                            href="/pusheurs?tab=ranked"
+                            className="flex items-center gap-3 py-3 transition hover:opacity-80"
+                          >
+                            <RankGlyph className="h-5 w-5 shrink-0 text-zest2" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm text-paper">Push Ranked</span>
+                              <span className="stat-mono block text-[12px] text-steel-400">
+                                {formatNumber(rankedStanding.elo)} Elo
+                              </span>
+                            </span>
+                            <span
+                              className={`stat-mono text-xl ${
+                                rankedStanding.rank <= 3 ? "text-zest2" : "text-paper"
+                              }`}
+                            >
+                              #{rankedStanding.rank}{" "}
+                              <span className="text-xs text-steel-600">/ {rankedStanding.total}</span>
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </ul>
                   </div>
                 )}
 
