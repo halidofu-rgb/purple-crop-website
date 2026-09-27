@@ -91,7 +91,7 @@ export default async function HomePage() {
               </div>
 
               <h1 className="font-display text-5xl leading-[0.95] font-medium tracking-[-0.03em] uppercase text-paper lg:text-[84px]">
-                Trois lignes.
+                Quatre lignes.
                 <br />
                 <span className="text-zest2 [text-shadow:0_0_60px_rgba(181,171,252,0.45)]">
                   Un seul standard.
@@ -100,8 +100,9 @@ export default async function HomePage() {
 
               <p className="mt-5 mb-8 max-w-[520px] text-[17px] leading-relaxed text-steel-400">
                 Purple Corp réunit <strong className="font-medium text-paper">Purple Line</strong>,{" "}
-                <strong className="font-medium text-paper">Indigo Line</strong> et{" "}
-                <strong className="font-medium text-paper">Iris Line</strong> : trois clubs, une
+                <strong className="font-medium text-paper">Indigo Line</strong>,{" "}
+                <strong className="font-medium text-paper">Iris Line</strong> et{" "}
+                <strong className="font-medium text-paper">Orchid Line</strong> : quatre clubs, une
                 même exigence compétitive. Trophées, rangs Ranked et push de saison, suivis en
                 direct.
               </p>
@@ -268,15 +269,20 @@ export default async function HomePage() {
               <span className="text-paper">Purple Line</span> (140K+ trophées minimum).
             </p>
             <p>
-              À côté de ça, notre <span className="text-paper">Indigo Line</span> (120K+ trophées
+              À côté de ça, notre <span className="text-paper">Indigo Line</span> (130K+ trophées
               minimum) accueille les joueurs compétitifs qui veulent progresser dans une ambiance
               bienveillante, avec entraide, suivi et un Discord actif — actuellement Top 93 France.
             </p>
             <p>
+              Ensuite, notre <span className="text-paper">Iris Line</span> (110K+ trophées minimum)
+              rassemble des joueurs sérieux en progression constante, avec la même exigence
+              d&apos;investissement — Discord actif et événements réguliers.
+            </p>
+            <p>
               Et pour ceux qui montent en puissance, notre{" "}
-              <span className="text-paper">Iris Line</span> (90K+ trophées minimum) est le point
+              <span className="text-paper">Orchid Line</span> (80K+ trophées minimum) est le point
               d&apos;entrée dans la famille — membres actifs et motivés, Discord et événements
-              obligatoires, avec le même état d&apos;esprit que nos deux autres lignes.
+              obligatoires, avec le même état d&apos;esprit que nos autres lignes.
             </p>
             <p>
               Ici, pas de place pour l&apos;individualisme : événements réguliers, communauté

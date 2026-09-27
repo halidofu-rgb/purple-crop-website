@@ -18,8 +18,8 @@ export default function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-xs text-xs leading-relaxed text-ash">
-              Structure de clubs Brawl Stars compétitive : Purple Line, Indigo Line et Iris Line,
-              réunis autour de la performance et de la progression.
+              Structure de clubs Brawl Stars compétitive : Purple Line, Indigo Line, Iris Line et
+              Orchid Line, réunis autour de la performance et de la progression.
             </p>
           </div>
 

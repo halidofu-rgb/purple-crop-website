@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const TOPICS = [
   {
     title: "Candidature",
-    body: "Tu veux rejoindre Purple Line, Indigo Line ou Iris Line ? Passe sur le Discord, le recrutement s'y fait en direct.",
+    body: "Tu veux rejoindre Purple Line, Indigo Line, Iris Line ou Orchid Line ? Passe sur le Discord, le recrutement s'y fait en direct.",
     cta: "Postuler",
     href: PURPLE_CORP_DISCORD_URL,
     icon: UserPlus,
