@@ -1,18 +1,15 @@
-import Link from "next/link";
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getRankedRowsForClubs, RankedRow } from "@/lib/rankedLive";
-import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
+import { rankLabelFromApi } from "@/lib/rankedTier";
 import { getCurrentSeason } from "@/lib/season";
-import { avatarColor } from "@/lib/avatarColor";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Tabs from "@/components/Tabs";
-import RankTierIcon from "@/components/RankTierIcon";
-import Podium from "@/components/Podium";
 import PageBanner from "@/components/PageBanner";
-import { TrophyGlyph, PushGlyph, RankedGlyph } from "@/components/icons";
+import ClassementBoard, { ClassementEntry } from "@/components/ClassementBoard";
+import { TrophyGlyph, RankedGlyph } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -22,125 +19,6 @@ function formatNumber(n: number): string {
 
 interface TrophyRow extends ClubMember {
   clubName: string;
-}
-
-const ROW =
-  "grid grid-cols-[48px_minmax(0,1fr)_96px_132px] items-center gap-3.5 px-4 sm:px-6";
-
-function Avatar({ name, rankLabel }: { name: string; rankLabel?: string }) {
-  return (
-    <span
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
-      style={{ backgroundColor: avatarColor(name) }}
-    >
-      {name.trim().charAt(0).toUpperCase()}
-      {rankLabel && (
-        <RankTierIcon
-          src={rankedTierIconPath(rankLabel)}
-          label={rankLabel}
-          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
-        />
-      )}
-    </span>
-  );
-}
-
-function ListHeader({ valueLabel, deltaLabel }: { valueLabel: string; deltaLabel: string }) {
-  return (
-    <div className={`${ROW} border-b border-paper/10 py-3.5 text-[10.5px] uppercase tracking-[0.14em] text-steel-600`}>
-      <span>Rang</span>
-      <span>Joueur</span>
-      <span className="text-right">{deltaLabel}</span>
-      <span className="text-right">{valueLabel}</span>
-    </div>
-  );
-}
-
-function Row({
-  index,
-  tag,
-  name,
-  sub,
-  rankLabel,
-  value,
-  delta,
-  last,
-}: {
-  index: number;
-  tag: string;
-  name: string;
-  sub: string;
-  rankLabel?: string;
-  value: number;
-  delta?: number;
-  last: boolean;
-}) {
-  return (
-    <Link
-      href={`/joueurs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
-      className={`${ROW} py-3 no-underline transition hover:bg-panel2 ${
-        last ? "" : "border-b border-paper/[0.07]"
-      }`}
-    >
-      <span className="rank-index text-xs text-zest2">[{String(index + 1).padStart(2, "0")}]</span>
-      <span className="flex min-w-0 items-center gap-3">
-        <Avatar name={name} rankLabel={rankLabel} />
-        <span className="min-w-0">
-          <span className="block truncate text-sm text-paper">{name}</span>
-          <span className="block truncate text-xs text-steel-400">{sub}</span>
-        </span>
-      </span>
-      <span className="justify-self-end">
-        {delta !== undefined && (
-          <span
-            className={`stat-mono flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] ${
-              delta >= 0
-                ? "border border-signal/35 bg-signal/10 text-signal"
-                : "border border-paper/15 text-blush"
-            }`}
-          >
-            {delta >= 0 && <PushGlyph className="h-3 w-3" />}
-            {delta >= 0 ? "+" : "−"}
-            {formatNumber(Math.abs(delta))}
-          </span>
-        )}
-      </span>
-      <span className="flex items-center justify-end gap-1.5">
-        {rankLabel ? (
-          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-6 w-6 shrink-0" />
-        ) : (
-          <TrophyGlyph className="h-4 w-4 shrink-0" />
-        )}
-        <span className="stat-mono whitespace-nowrap text-right text-[15px] text-zest2">
-          {formatNumber(value)}
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-function RankedList({ rows, valueKey }: { rows: RankedRow[]; valueKey: "elo" | "bestElo" }) {
-  const nameKey = valueKey === "elo" ? "rankName" : "bestRankName";
-  return (
-    <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
-      <ListHeader valueLabel="Elo" deltaLabel="" />
-      {rows.map((row, i) => {
-        const label = rankLabelFromApi(row[nameKey]);
-        return (
-          <Row
-            key={row.tag}
-            index={i}
-            tag={row.tag}
-            name={row.name}
-            sub={`${row.clubName} · ${label}`}
-            rankLabel={label}
-            value={row[valueKey]}
-            last={i === rows.length - 1}
-          />
-        );
-      })}
-    </div>
-  );
 }
 
 export default async function ClassementPage({
@@ -184,64 +62,49 @@ export default async function ClassementPage({
   }
 
   const totalTrophies = trophyRows.reduce((sum, m) => sum + m.trophies, 0);
+  const clubNames = loadedClubs.map((c) => c.name);
+
+  const trophyEntries: ClassementEntry[] = trophyRows.map((m) => ({
+    tag: m.tag,
+    name: m.name,
+    clubName: m.clubName,
+    value: m.trophies,
+    delta: pushByTag.get(m.tag),
+  }));
 
   const trophiesPanel = (
-    <>
-      <Podium
-        valueIcon={<TrophyGlyph className="h-6 w-6" />}
-        entries={trophyRows.slice(0, 3).map((m) => ({
-          tag: m.tag,
-          name: m.name,
-          clubName: m.clubName,
-          value: m.trophies,
-          delta: pushByTag.get(m.tag),
-        }))}
-      />
-      <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
-        <ListHeader valueLabel="Trophées" deltaLabel="Push" />
-        {trophyRows.map((member, i) => (
-          <Row
-            key={member.tag}
-            index={i}
-            tag={member.tag}
-            name={member.name}
-            sub={member.clubName}
-            value={member.trophies}
-            delta={pushByTag.get(member.tag)}
-            last={i === trophyRows.length - 1}
-          />
-        ))}
-      </div>
-    </>
-  );
-
-  const emptyRanked = (
-    <p className="rounded-2xl border border-paper/10 bg-panel px-6 py-8 text-sm text-steel-400">
-      Personne n&apos;a encore de rang Ranked (débloqué à 1 000 trophées, puis un premier combat
-      Ranked joué).
-    </p>
+    <ClassementBoard
+      entries={trophyEntries}
+      clubNames={clubNames}
+      valueLabel="Trophées"
+      deltaLabel="Push"
+      valueIcon={<TrophyGlyph className="h-4 w-4 shrink-0" />}
+      emptyMessage="Aucun membre à classer."
+    />
   );
 
   function rankedPanel(rows: RankedRow[], key: "elo" | "bestElo", note: string) {
-    if (rows.length === 0) return emptyRanked;
     const nameKey = key === "elo" ? "rankName" : "bestRankName";
+    const entries: ClassementEntry[] = rows.map((r) => ({
+      tag: r.tag,
+      name: r.name,
+      clubName: r.clubName,
+      value: r[key],
+      rankLabel: rankLabelFromApi(r[nameKey]),
+    }));
     return (
       <div>
         <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
           {note}
         </p>
-        <Podium
-          entries={rows.slice(0, 3).map((r) => ({
-            tag: r.tag,
-            name: r.name,
-            clubName: r.clubName,
-            value: r[key],
-            rankIconSrc: rankedTierIconPath(rankLabelFromApi(r[nameKey])),
-            rankLabel: rankLabelFromApi(r[nameKey]),
-          }))}
+        <ClassementBoard
+          entries={entries}
+          clubNames={clubNames}
+          valueLabel="Elo"
+          subLabel={(e) => `${e.clubName} · ${e.rankLabel}`}
+          emptyMessage="Personne n'a encore de rang Ranked (débloqué à 1 000 trophées, puis un premier combat Ranked joué)."
         />
-        <RankedList rows={rows} valueKey={key} />
       </div>
     );
   }

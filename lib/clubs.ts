@@ -6,6 +6,7 @@ export const CLUBS = [
   { tag: "80CLJG9LQ", label: "Purple Line", discordUrl: "" },
   { tag: "2QJ0Q29CL", label: "Indigo Line", discordUrl: "" },
   { tag: "2Q29PJVYL", label: "Iris Line", discordUrl: "" },
+  { tag: "ULJUU99Q", label: "Orchid Line", discordUrl: "" },
 ];
 
 export function clubTags(): string[] {
