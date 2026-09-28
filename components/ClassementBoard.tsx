@@ -127,7 +127,6 @@ export default function ClassementBoard({
   valueLabel,
   deltaLabel = "",
   valueIcon,
-  subLabel,
   emptyMessage,
 }: {
   entries: ClassementEntry[];
@@ -135,7 +134,6 @@ export default function ClassementBoard({
   valueLabel: string;
   deltaLabel?: string;
   valueIcon?: ReactNode;
-  subLabel?: (entry: ClassementEntry) => string;
   emptyMessage: string;
 }) {
   const [scope, setScope] = useState("Tous les clubs");
@@ -196,7 +194,7 @@ export default function ClassementBoard({
                 index={i}
                 tag={e.tag}
                 name={e.name}
-                sub={subLabel ? subLabel(e) : e.clubName}
+                sub={e.rankLabel ? `${e.clubName} · ${e.rankLabel}` : e.clubName}
                 rankLabel={e.rankLabel}
                 value={e.value}
                 delta={e.delta}

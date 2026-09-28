@@ -102,7 +102,6 @@ export default async function ClassementPage({
           entries={entries}
           clubNames={clubNames}
           valueLabel="Elo"
-          subLabel={(e) => `${e.clubName} · ${e.rankLabel}`}
           emptyMessage="Personne n'a encore de rang Ranked (débloqué à 1 000 trophées, puis un premier combat Ranked joué)."
         />
       </div>
