@@ -28,7 +28,7 @@ function siteUrl(): URL {
       // ignore, retombe sur la valeur par défaut ci-dessous
     }
   }
-  return new URL("https://purple-corp-website.vercel.app");
+  return new URL("https://purple-corp.vercel.app");
 }
 
 const TITLE = "Purple Corp — Brawl Stars";
