@@ -84,8 +84,9 @@ export default async function OpengraphImage() {
                 padding: "16px 24px",
                 borderRadius: 16,
                 border: c.lead ? "3px solid rgba(181,171,252,0.55)" : "3px solid rgba(233,233,237,0.16)",
-                backgroundColor: c.lead ? undefined : "#232532",
-                backgroundImage: c.lead ? "linear-gradient(120deg, rgba(66,58,106,0.75), rgba(35,37,50,0.9))" : undefined,
+                backgroundImage: c.lead
+                  ? "linear-gradient(120deg, rgba(66,58,106,0.75), rgba(35,37,50,0.9))"
+                  : "linear-gradient(120deg, #232532, #232532)",
               }}
             >
               <div style={{ display: "flex", flexDirection: "column" }}>
