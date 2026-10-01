@@ -6,24 +6,16 @@ import { join } from "path";
 // fond ink, bannière section en haut à gauche, deux lignes violettes,
 // une seule carte saturée (Purple Line). Flex uniquement — Satori ne gère
 // pas grid, mask-image ni skew.
+//
+// Pas de police custom chargée depuis Google Fonts : tenté une fois, ça
+// cassait le build Vercel (le format téléchargé selon l'environnement fait
+// planter le parseur de polices de Satori, erreur type "Cannot read
+// properties of undefined"). On reste sur la police par défaut de Satori,
+// quitte à perdre le rendu "mono" sur les chiffres — fiable > joli.
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Purple Corp — classement, push et Ranked en direct";
-
-async function googleFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  try {
-    const css = await (
-      await fetch(`https://fonts.googleapis.com/css2?family=${family}:wght@${weight}`, {
-        headers: { "User-Agent": "Mozilla/5.0" }, // force un format lisible par Satori (ttf)
-      })
-    ).text();
-    const url = css.match(/src: url\((.+?)\) format/)?.[1];
-    return url ? await (await fetch(url)).arrayBuffer() : null;
-  } catch {
-    return null; // pas de réseau au build → police par défaut, l'image reste générée
-  }
-}
 
 // Seuils et rôles alignés sur le texte "Notre histoire" de la home
 // (app/page.tsx) — à garder synchronisé si ces chiffres bougent encore.
@@ -36,12 +28,6 @@ const CLUBS = [
 
 export default async function OpengraphImage() {
   const logo = `data:image/png;base64,${readFileSync(join(process.cwd(), "public", "logo.png")).toString("base64")}`;
-  const [inter, mono] = await Promise.all([googleFont("Inter", 500), googleFont("JetBrains+Mono", 500)]);
-
-  const fonts = [
-    ...(inter ? [{ name: "Inter", data: inter, weight: 500 as const, style: "normal" as const }] : []),
-    ...(mono ? [{ name: "Mono", data: mono, weight: 500 as const, style: "normal" as const }] : []),
-  ];
 
   return new ImageResponse(
     (
@@ -55,7 +41,6 @@ export default async function OpengraphImage() {
           backgroundImage:
             "radial-gradient(circle at 12% 0%, #262a60 0%, rgba(38,42,96,0) 58%), radial-gradient(circle at 92% 18%, rgba(145,132,217,0.22) 0%, rgba(145,132,217,0) 45%)",
           color: "#e9e9ed",
-          fontFamily: "Inter",
         }}
       >
         <div style={{ position: "absolute", top: 0, bottom: 0, left: 600, width: 3, backgroundImage: "linear-gradient(to bottom, rgba(181,171,252,0.55), rgba(181,171,252,0))" }} />
@@ -107,7 +92,7 @@ export default async function OpengraphImage() {
                 <span style={{ fontSize: 36, lineHeight: 1, letterSpacing: -1, textTransform: "uppercase" }}>{c.name}</span>
                 <span style={{ fontSize: 20, marginTop: 7, color: c.lead ? "#d2cefd" : "#b2b6ca" }}>{c.role}</span>
               </div>
-              <span style={{ fontFamily: mono ? "Mono" : "Inter", fontSize: 42, letterSpacing: -2, color: c.lead ? "#b5abfc" : "#d2cefd" }}>
+              <span style={{ fontSize: 42, letterSpacing: -2, color: c.lead ? "#b5abfc" : "#d2cefd" }}>
                 {c.min}
               </span>
             </div>
@@ -115,6 +100,6 @@ export default async function OpengraphImage() {
         </div>
       </div>
     ),
-    { ...size, fonts }
+    { ...size }
   );
 }
