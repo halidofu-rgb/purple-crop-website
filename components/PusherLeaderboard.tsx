@@ -91,7 +91,7 @@ function PodiumCard({
           <>
             <p className="flex items-center gap-2">
               {entry.rankLabel && (
-                <RankTierIcon src={entry.rankIconSrc} label={entry.rankLabel} className="h-8 w-8 shrink-0" />
+                <RankTierIcon src={entry.rankIconSrc} label={entry.rankLabel} className="h-12 w-12 shrink-0" />
               )}
               <span className="stat-mono text-[34px] leading-none tracking-[-0.02em] text-signal">
                 {formatNumber(entry.value)}
@@ -223,7 +223,7 @@ export default function PusherLeaderboard({
                       <RankTierIcon
                         src={entry.rankIconSrc}
                         label={entry.rankLabel}
-                        className="h-7 w-7 shrink-0"
+                        className="h-10 w-10 shrink-0"
                       />
                     )}
                     <span

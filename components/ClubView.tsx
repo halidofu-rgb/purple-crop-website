@@ -100,7 +100,7 @@ function RosterRow({
       </span>
       <span className="flex items-center justify-end gap-1.5">
         {rankLabel ? (
-          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-8 w-8 shrink-0" />
+          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-10 w-10 shrink-0" />
         ) : (
           valueIcon
         )}

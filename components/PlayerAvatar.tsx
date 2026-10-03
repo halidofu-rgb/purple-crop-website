@@ -6,8 +6,8 @@ import { avatarColor } from "@/lib/avatarColor";
 import { rankedTierIconPath } from "@/lib/rankedTier";
 
 const SIZES = {
-  sm: { box: "h-9 w-9 text-sm", badge: "h-5 w-5 -bottom-1.5 -right-1.5" },
-  lg: { box: "h-11 w-11 text-[17px]", badge: "h-6 w-6 -bottom-1.5 -right-1.5" },
+  sm: { box: "h-9 w-9 text-sm", badge: "h-7 w-7 -bottom-2 -right-2" },
+  lg: { box: "h-11 w-11 text-[17px]", badge: "h-8 w-8 -bottom-2 -right-2" },
 };
 
 // Vraie icône de profil Brawl Stars quand on la connaît, sinon l'initiale

@@ -80,7 +80,7 @@ export default function Podium({
             <div className="relative mt-5 flex items-end justify-between border-t border-paper/10 pt-4">
               <span className="flex items-center gap-2">
                 {entry.rankLabel ? (
-                  <RankTierIcon src={entry.rankIconSrc ?? null} label={entry.rankLabel} className="h-7 w-7 shrink-0" />
+                  <RankTierIcon src={entry.rankIconSrc ?? null} label={entry.rankLabel} className="h-12 w-12 shrink-0" />
                 ) : (
                   valueIcon
                 )}
