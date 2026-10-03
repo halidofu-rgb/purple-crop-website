@@ -1,6 +1,7 @@
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
+import { getMemberIconUrls } from "@/lib/assets";
 import { getRankedRowsForClubs } from "@/lib/rankedLive";
 import { getCurrentSeason } from "@/lib/season";
 import ClubView from "@/components/ClubView";
@@ -22,7 +23,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
   const allTags = clubTags();
   const season = getCurrentSeason();
 
-  const [allClubs, baseline, rankedRows] = await Promise.all([
+  const [allClubs, baseline, rankedRows, iconUrls] = await Promise.all([
     Promise.all(
       allTags.map(async (tag) => {
         try {
@@ -34,6 +35,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
     ),
     getSeasonBaseline(season.key).catch(() => null),
     getRankedRowsForClubs([club]).catch(() => []),
+    getMemberIconUrls([club]).catch(() => ({})),
   ]);
 
   const ranked = allClubs
@@ -60,6 +62,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
         pushByTag={pushByTag}
         rankedRows={rankedRows}
         seasonLabel={season.label}
+        iconUrls={iconUrls}
       />
       <Footer />
     </>

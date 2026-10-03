@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
 import { TrophyGlyph } from "@/components/icons";
-import { avatarColor } from "@/lib/avatarColor";
+import PlayerAvatar from "@/components/PlayerAvatar";
 
 export interface PusherEntry {
   tag: string;
@@ -14,28 +14,11 @@ export interface PusherEntry {
   value: number; // push de trophées (peut être négatif) OU Elo Ranked actuel
   rankLabel: string | null;
   rankIconSrc: string | null;
+  iconUrl?: string | null;
 }
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
-}
-
-function Avatar({ name, rankLabel, rankIconSrc }: { name: string; rankLabel: string | null; rankIconSrc: string | null }) {
-  return (
-    <span
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
-      style={{ backgroundColor: avatarColor(name) }}
-    >
-      {name.trim().charAt(0).toUpperCase()}
-      {rankLabel && (
-        <RankTierIcon
-          src={rankIconSrc}
-          label={rankLabel}
-          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
-        />
-      )}
-    </span>
-  );
 }
 
 function PodiumCard({
@@ -80,7 +63,7 @@ function PodiumCard({
         </span>
       </div>
       <div className="relative flex items-center gap-4">
-        <Avatar name={entry.name} rankLabel={mode === "ranked" ? entry.rankLabel : null} rankIconSrc={entry.rankIconSrc} />
+        <PlayerAvatar name={entry.name} iconUrl={entry.iconUrl} rankLabel={mode === "ranked" ? entry.rankLabel : null} rankIconSrc={entry.rankIconSrc} />
         <div className="min-w-0">
           <p className="truncate text-xl leading-tight tracking-[-0.01em] text-paper">
             {entry.name}
@@ -217,7 +200,7 @@ export default function PusherLeaderboard({
                     {String(i + 4).padStart(2, "0")}
                   </span>
                   <span className="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
-                    <Avatar name={entry.name} rankLabel={entry.rankLabel} rankIconSrc={entry.rankIconSrc} />
+                    <PlayerAvatar name={entry.name} iconUrl={entry.iconUrl} rankLabel={mode === "ranked" ? entry.rankLabel : null} rankIconSrc={entry.rankIconSrc} />
                     <span className="min-w-0">
                       <span className="block truncate text-[15px] text-paper">{entry.name}</span>
                       <span className="block truncate text-[11.5px] text-steel-500">

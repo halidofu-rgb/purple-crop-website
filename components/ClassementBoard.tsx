@@ -9,7 +9,7 @@ import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
 import Podium from "@/components/Podium";
 import { rankedTierIconPath } from "@/lib/rankedTier";
-import { avatarColor } from "@/lib/avatarColor";
+import PlayerAvatar from "@/components/PlayerAvatar";
 import { PushGlyph } from "@/components/icons";
 
 export interface ClassementEntry {
@@ -19,6 +19,7 @@ export interface ClassementEntry {
   value: number;
   delta?: number;
   rankLabel?: string | null;
+  iconUrl?: string | null;
 }
 
 function formatNumber(n: number): string {
@@ -26,24 +27,6 @@ function formatNumber(n: number): string {
 }
 
 const ROW = "grid grid-cols-[48px_minmax(0,1fr)_96px_132px] items-center gap-3.5 px-4 sm:px-6";
-
-function Avatar({ name, rankLabel }: { name: string; rankLabel?: string | null }) {
-  return (
-    <span
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
-      style={{ backgroundColor: avatarColor(name) }}
-    >
-      {name.trim().charAt(0).toUpperCase()}
-      {rankLabel && (
-        <RankTierIcon
-          src={rankedTierIconPath(rankLabel)}
-          label={rankLabel}
-          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
-        />
-      )}
-    </span>
-  );
-}
 
 function ListHeader({ valueLabel, deltaLabel }: { valueLabel: string; deltaLabel: string }) {
   return (
@@ -62,6 +45,7 @@ function Row({
   name,
   sub,
   rankLabel,
+  iconUrl,
   value,
   delta,
   last,
@@ -72,6 +56,7 @@ function Row({
   name: string;
   sub: string;
   rankLabel?: string | null;
+  iconUrl?: string | null;
   value: number;
   delta?: number;
   last: boolean;
@@ -86,7 +71,7 @@ function Row({
     >
       <span className="rank-index text-xs text-zest2">[{String(index + 1).padStart(2, "0")}]</span>
       <span className="flex min-w-0 items-center gap-3">
-        <Avatar name={name} rankLabel={rankLabel} />
+        <PlayerAvatar name={name} iconUrl={iconUrl} rankLabel={rankLabel} />
         <span className="min-w-0">
           <span className="block truncate text-sm text-paper">{name}</span>
           <span className="block truncate text-xs text-steel-400">{sub}</span>
@@ -184,6 +169,8 @@ export default function ClassementBoard({
               value: e.value,
               delta: e.delta,
               rankLabel: e.rankLabel ?? undefined,
+              iconUrl: e.iconUrl,
+              rankIconSrc: e.rankLabel ? rankedTierIconPath(e.rankLabel) : null,
             }))}
           />
           <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
@@ -196,6 +183,7 @@ export default function ClassementBoard({
                 name={e.name}
                 sub={e.rankLabel ? `${e.clubName} · ${e.rankLabel}` : e.clubName}
                 rankLabel={e.rankLabel}
+                iconUrl={e.iconUrl}
                 value={e.value}
                 delta={e.delta}
                 last={i === filtered.length - 1}

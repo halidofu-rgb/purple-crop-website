@@ -1,6 +1,7 @@
 import { getClub, ClubMember } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
+import { getMemberIconUrls } from "@/lib/assets";
 import { getRankedRowsForClubs, RankedRow } from "@/lib/rankedLive";
 import { rankLabelFromApi } from "@/lib/rankedTier";
 import { getCurrentSeason } from "@/lib/season";
@@ -41,9 +42,10 @@ export default async function ClassementPage({
 
   const loadedClubs = clubs.filter((c): c is NonNullable<typeof c> => c !== null);
 
-  const [baseline, rankedByCurrent] = await Promise.all([
+  const [baseline, rankedByCurrent, iconUrls] = await Promise.all([
     getSeasonBaseline(season.key).catch(() => null),
     getRankedRowsForClubs(loadedClubs).catch(() => []),
+    getMemberIconUrls(loadedClubs).catch(() => ({} as Record<string, string>)),
   ]);
 
   const rankedByBest = [...rankedByCurrent].sort((a, b) => b.bestElo - a.bestElo);
@@ -70,6 +72,7 @@ export default async function ClassementPage({
     clubName: m.clubName,
     value: m.trophies,
     delta: pushByTag.get(m.tag),
+    iconUrl: iconUrls[m.tag.toUpperCase()],
   }));
 
   const trophiesPanel = (
@@ -91,6 +94,7 @@ export default async function ClassementPage({
       clubName: r.clubName,
       value: r[key],
       rankLabel: rankLabelFromApi(r[nameKey]),
+      iconUrl: iconUrls[r.tag.toUpperCase()],
     }));
     return (
       <div>

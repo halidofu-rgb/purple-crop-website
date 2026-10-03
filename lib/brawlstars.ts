@@ -52,6 +52,7 @@ export interface ClubMember {
   role: "member" | "president" | "senior" | "vicePresident";
   trophies: number;
   nameColor?: string;
+  icon?: { id: number };
 }
 
 export interface Club {

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
-import { avatarColor } from "@/lib/avatarColor";
+import PlayerAvatar from "@/components/PlayerAvatar";
 
 export interface PodiumEntry {
   tag: string;
@@ -11,6 +11,7 @@ export interface PodiumEntry {
   delta?: number;
   rankIconSrc?: string | null;
   rankLabel?: string;
+  iconUrl?: string | null;
 }
 
 function formatNumber(n: number): string {
@@ -63,19 +64,13 @@ export default function Podium({
             </div>
 
             <div className="relative flex items-center gap-3.5">
-              <span
-                className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[17px] font-medium text-ink"
-                style={{ backgroundColor: avatarColor(entry.name) }}
-              >
-                {entry.name.trim().charAt(0).toUpperCase()}
-                {entry.rankLabel && (
-                  <RankTierIcon
-                    src={entry.rankIconSrc ?? null}
-                    label={entry.rankLabel}
-                    className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_10px_rgba(0,0,0,0.35)]"
-                  />
-                )}
-              </span>
+              <PlayerAvatar
+                name={entry.name}
+                iconUrl={entry.iconUrl}
+                rankLabel={entry.rankLabel}
+                rankIconSrc={entry.rankIconSrc}
+                size="lg"
+              />
               <div className="min-w-0">
                 <p className="truncate text-[23px] leading-tight tracking-[-0.02em] text-paper">{entry.name}</p>
                 {entry.rankLabel && <p className="mt-0.5 truncate text-xs text-ash">{entry.rankLabel}</p>}

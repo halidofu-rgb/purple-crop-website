@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Club, sortByTrophies } from "@/lib/brawlstars";
 import { discordUrlForTag } from "@/lib/clubs";
 import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
-import { avatarColor } from "@/lib/avatarColor";
+import PlayerAvatar from "@/components/PlayerAvatar";
 import ClubBadge from "@/components/ClubBadge";
 import RankTierIcon from "@/components/RankTierIcon";
 import Tabs from "@/components/Tabs";
@@ -40,24 +40,6 @@ function playerHref(tag: string): string {
 
 const ROW = "grid grid-cols-[48px_minmax(0,1fr)_132px] items-center gap-3.5 px-4 sm:px-6";
 
-function Avatar({ name, rankLabel }: { name: string; rankLabel?: string }) {
-  return (
-    <span
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-ink"
-      style={{ backgroundColor: avatarColor(name) }}
-    >
-      {name.trim().charAt(0).toUpperCase()}
-      {rankLabel && (
-        <RankTierIcon
-          src={rankedTierIconPath(rankLabel)}
-          label={rankLabel}
-          className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-full border-2 border-panel bg-panel2 p-0.5 shadow-[0_0_8px_rgba(0,0,0,0.35)]"
-        />
-      )}
-    </span>
-  );
-}
-
 /** En-tête de colonne des listes d'effectif. */
 function RosterHeader({ valueLabel }: { valueLabel: string }) {
   return (
@@ -77,6 +59,7 @@ function RosterRow({
   name,
   sub,
   rankLabel,
+  iconUrl,
   valueIcon,
   value,
   tone = "accent",
@@ -87,6 +70,7 @@ function RosterRow({
   name: string;
   sub?: string;
   rankLabel?: string;
+  iconUrl?: string | null;
   valueIcon?: ReactNode;
   value: string;
   tone?: "accent" | "signal" | "blush" | "muted";
@@ -108,7 +92,7 @@ function RosterRow({
     >
       <span className="rank-index text-xs text-zest">[{String(index + 1).padStart(2, "0")}]</span>
       <span className="flex min-w-0 items-center gap-3">
-        <Avatar name={name} rankLabel={rankLabel} />
+        <PlayerAvatar name={name} iconUrl={iconUrl} rankLabel={rankLabel} />
         <span className="min-w-0">
           <span className="block truncate text-sm text-paper">{name}</span>
           {sub && <span className="block truncate text-xs text-steel-400">{sub}</span>}
@@ -152,6 +136,7 @@ export default function ClubView({
   pushByTag,
   rankedRows = [],
   seasonLabel,
+  iconUrls = {},
 }: {
   club: Club;
   clubRank?: number;
@@ -159,6 +144,7 @@ export default function ClubView({
   pushByTag?: Map<string, number>;
   rankedRows?: ClubRankedRow[];
   seasonLabel?: string;
+  iconUrls?: Record<string, string>;
 }) {
   const roster = sortByTrophies(club.members);
   const average = roster.length > 0 ? Math.round(club.trophies / roster.length) : 0;
@@ -173,6 +159,7 @@ export default function ClubView({
           index={i}
           tag={member.tag}
           name={member.name}
+          iconUrl={iconUrls[member.tag.toUpperCase()]}
           sub={ROLE_LABEL[member.role] ?? member.role}
           valueIcon={<TrophyGlyph className="h-4 w-4 shrink-0" />}
           value={formatNumber(member.trophies)}
@@ -200,6 +187,7 @@ export default function ClubView({
               index={i}
               tag={member.tag}
               name={member.name}
+              iconUrl={iconUrls[member.tag.toUpperCase()]}
               sub={ROLE_LABEL[member.role] ?? member.role}
               valueIcon={delta !== undefined ? <PushGlyph className="h-4 w-4 shrink-0" /> : undefined}
               value={delta === undefined ? "—" : `${delta >= 0 ? "+" : "−"}${formatNumber(Math.abs(delta))}`}
@@ -226,6 +214,7 @@ export default function ClubView({
             index={i}
             tag={row.tag}
             name={row.name}
+            iconUrl={iconUrls[row.tag.toUpperCase()]}
             sub={`${rankLabelFromApi(row.rankName)} · record ${formatNumber(row.bestElo)}`}
             rankLabel={rankLabelFromApi(row.rankName)}
             value={formatNumber(row.elo)}

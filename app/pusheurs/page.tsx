@@ -1,10 +1,12 @@
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
+import { getMemberIconUrls } from "@/lib/assets";
 import { getRankedRowsForClubs } from "@/lib/rankedLive";
 import { rankLabelFromApi, rankedTierIconPath } from "@/lib/rankedTier";
 import { getCurrentSeason, formatCountdown } from "@/lib/season";
 import Link from "next/link";
+import { History } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Tabs from "@/components/Tabs";
@@ -88,6 +90,7 @@ export default async function PusheursPage({
   const loadedClubs = clubs.filter((c): c is NonNullable<typeof c> => c !== null);
 
   const rankedRows = await getRankedRowsForClubs(loadedClubs).catch(() => []);
+  const iconUrls = await getMemberIconUrls(loadedClubs).catch(() => ({} as Record<string, string>));
   const rankedByTag = new Map(rankedRows.map((r) => [r.tag.toUpperCase(), r]));
   const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));
 
@@ -105,6 +108,7 @@ export default async function PusheursPage({
         value: delta,
         rankLabel,
         rankIconSrc: rankLabel ? rankedTierIconPath(rankLabel) : null,
+        iconUrl: iconUrls[m.tag.toUpperCase()],
       };
     })
   );
@@ -126,6 +130,7 @@ export default async function PusheursPage({
           value: ranked.elo,
           rankLabel,
           rankIconSrc: rankedTierIconPath(rankLabel),
+          iconUrl: iconUrls[m.tag.toUpperCase()],
         },
       ];
     })
@@ -163,9 +168,11 @@ export default async function PusheursPage({
               </p>
               <Link
                 href="/saisons"
-                className="mt-3 inline-block font-mono text-[11px] uppercase tracking-widest text-steel-400 transition hover:text-signal"
+                className="mt-6 inline-flex items-center gap-2.5 rounded-lg border border-zest bg-zest/10 px-6 py-3.5 text-[13px] uppercase tracking-[0.12em] text-zest2 transition-colors hover:bg-zest/25 active:bg-zest/35"
               >
-                voir les saisons passées →
+                <History className="h-4 w-4" />
+                Saisons passées
+                <span aria-hidden="true">→</span>
               </Link>
             </div>
             <dl className="flex border-t border-paper/10 pt-5">

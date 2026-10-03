@@ -41,6 +41,25 @@ export async function getPlayerIconUrl(iconId: number): Promise<string | null> {
   return icons?.player[String(iconId)]?.imageUrl ?? null;
 }
 
+// URL d'icône de profil de chaque membre des clubs donnés, indexée par tag
+// en MAJUSCULES (objet simple, sérialisable vers les composants client).
+// L'icône vient déjà dans la liste des membres d'un club : aucun appel API
+// supplémentaire côté Brawl Stars, juste la table d'icônes (mise en cache).
+export async function getMemberIconUrls(
+  clubs: { members: { tag: string; icon?: { id: number } }[] }[]
+): Promise<Record<string, string>> {
+  const icons = await getIcons();
+  const out: Record<string, string> = {};
+  if (!icons) return out;
+  for (const club of clubs) {
+    for (const m of club.members) {
+      const url = m.icon ? icons.player[String(m.icon.id)]?.imageUrl : undefined;
+      if (url) out[m.tag.toUpperCase()] = url;
+    }
+  }
+  return out;
+}
+
 export async function getClubBadgeUrl(badgeId: number): Promise<string | null> {
   const icons = await getIcons();
   return icons?.club[String(badgeId)]?.imageUrl ?? null;
