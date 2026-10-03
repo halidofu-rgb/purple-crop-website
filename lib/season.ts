@@ -62,6 +62,19 @@ export function labelForKey(key: string): string {
   return `${MONTH_LABELS[month - 1]} ${year}`;
 }
 
+// Clé de la saison précédente ("2026-08" → "2026-07", "2026-01" → "2025-12")
+// — utilisée par le cron pour retrouver la photo de départ de la saison qui
+// vient de se terminer quand une nouvelle photo est créée.
+export function previousSeasonKey(key: string): string {
+  let [year, month] = key.split("-").map(Number);
+  month -= 1;
+  if (month < 1) {
+    month = 12;
+    year -= 1;
+  }
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
 export function formatCountdown(target: Date, now: Date = new Date()): string {
   const ms = target.getTime() - now.getTime();
   if (ms <= 0) return "d'un instant à l'autre";

@@ -3,7 +3,9 @@ import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, setSeasonBaseline, BaselinePlayer } from "@/lib/kv";
 import { recordTrophySnapshot, getTrophiesAtOrBefore } from "@/lib/trophyHistory";
-import { getCurrentSeason } from "@/lib/season";
+import { getCurrentSeason, previousSeasonKey } from "@/lib/season";
+import { computeSeasonPush } from "@/lib/seasonPush";
+import { postSeasonRecapToDiscord } from "@/lib/discordWebhook";
 
 // Appelée automatiquement chaque jour par Vercel Cron (voir vercel.json).
 // Enregistre aussi un point d'historique de trophées par joueur (voir
@@ -81,11 +83,23 @@ export async function GET(request: NextRequest) {
     const baselinePlayers = await Promise.all(
       players.map(async (p) => ({ ...p, trophies: await preResetTrophies(p.tag, p.trophies) }))
     );
-    await setSeasonBaseline({
+    const newBaseline = {
       seasonKey: season.key,
       capturedAt: new Date().toISOString(),
       players: baselinePlayers,
-    });
+    };
+    await setSeasonBaseline(newBaseline);
+
+    // Cette photo sert aussi de point final à la saison précédente (voir
+    // lib/seasonPush.ts) — sa création marque donc la clôture de cette
+    // saison-là. On en profite pour poster le classement final sur Discord.
+    const prevKey = previousSeasonKey(season.key);
+    const prevBaseline = await getSeasonBaseline(prevKey);
+    if (prevBaseline) {
+      const rows = computeSeasonPush(prevBaseline, newBaseline);
+      await postSeasonRecapToDiscord(prevKey, rows);
+    }
+
     return NextResponse.json({ ok: true, season: season.key, created: baselinePlayers.length });
   }
 
