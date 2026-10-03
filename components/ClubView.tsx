@@ -38,7 +38,7 @@ function playerHref(tag: string): string {
   return `/joueurs/${encodeURIComponent(tag.replace(/^#/, ""))}`;
 }
 
-const ROW = "grid grid-cols-[48px_minmax(0,1fr)_132px] items-center gap-3.5 px-4 sm:px-6";
+const ROW = "grid grid-cols-[48px_minmax(0,1fr)_156px] items-center gap-3.5 px-4 sm:px-6";
 
 /** En-tête de colonne des listes d'effectif. */
 function RosterHeader({ valueLabel }: { valueLabel: string }) {
@@ -100,11 +100,11 @@ function RosterRow({
       </span>
       <span className="flex items-center justify-end gap-1.5">
         {rankLabel ? (
-          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-6 w-6 shrink-0" />
+          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-8 w-8 shrink-0" />
         ) : (
           valueIcon
         )}
-        <span className={`stat-mono whitespace-nowrap text-right text-[15px] ${valueColor}`}>
+        <span className={`stat-mono whitespace-nowrap text-right text-[18px] ${valueColor}`}>
           {value}
         </span>
       </span>

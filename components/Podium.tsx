@@ -84,12 +84,12 @@ export default function Podium({
                 ) : (
                   valueIcon
                 )}
-                <span className="stat-mono whitespace-nowrap text-[28px] leading-none tracking-[-0.02em] text-paper">
+                <span className="stat-mono whitespace-nowrap text-[31px] leading-none tracking-[-0.02em] text-paper">
                   {formatNumber(entry.value)}
                 </span>
               </span>
               {entry.delta !== undefined && (
-                <span className={`text-xs ${entry.delta >= 0 ? "text-signal" : "text-blush"}`}>
+                <span className={`text-sm ${entry.delta >= 0 ? "text-signal" : "text-blush"}`}>
                   {entry.delta >= 0 ? "+" : ""}
                   {formatNumber(entry.delta)}
                 </span>

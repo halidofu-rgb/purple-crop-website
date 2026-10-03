@@ -26,7 +26,7 @@ function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-const ROW = "grid grid-cols-[48px_minmax(0,1fr)_96px_132px] items-center gap-3.5 px-4 sm:px-6";
+const ROW = "grid grid-cols-[48px_minmax(0,1fr)_110px_156px] items-center gap-3.5 px-4 sm:px-6";
 
 function ListHeader({ valueLabel, deltaLabel }: { valueLabel: string; deltaLabel: string }) {
   return (
@@ -80,7 +80,7 @@ function Row({
       <span className="justify-self-end">
         {delta !== undefined && (
           <span
-            className={`stat-mono flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] ${
+            className={`stat-mono flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[13.5px] ${
               delta >= 0
                 ? "border border-signal/35 bg-signal/10 text-signal"
                 : "border border-paper/15 text-blush"
@@ -94,11 +94,11 @@ function Row({
       </span>
       <span className="flex items-center justify-end gap-1.5">
         {rankLabel ? (
-          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-6 w-6 shrink-0" />
+          <RankTierIcon src={rankedTierIconPath(rankLabel)} label={rankLabel} className="h-8 w-8 shrink-0" />
         ) : (
           valueIcon
         )}
-        <span className="stat-mono whitespace-nowrap text-right text-[15px] text-zest2">
+        <span className="stat-mono whitespace-nowrap text-right text-[18px] text-zest2">
           {formatNumber(value)}
         </span>
       </span>

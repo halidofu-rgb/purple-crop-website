@@ -75,7 +75,7 @@ function PodiumCard({
         {mode === "push" ? (
           <>
             <p
-              className={`stat-mono flex items-center gap-1.5 text-3xl leading-none tracking-[-0.02em] ${
+              className={`stat-mono flex items-center gap-1.5 text-[34px] leading-none tracking-[-0.02em] ${
                 entry.value >= 0 ? "text-signal" : "text-blush"
               }`}
             >
@@ -93,7 +93,7 @@ function PodiumCard({
               {entry.rankLabel && (
                 <RankTierIcon src={entry.rankIconSrc} label={entry.rankLabel} className="h-8 w-8 shrink-0" />
               )}
-              <span className="stat-mono text-3xl leading-none tracking-[-0.02em] text-signal">
+              <span className="stat-mono text-[34px] leading-none tracking-[-0.02em] text-signal">
                 {formatNumber(entry.value)}
               </span>
             </p>
@@ -184,7 +184,7 @@ export default function PusherLeaderboard({
         </p>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
-          <div className="hidden items-center gap-4 border-b border-paper/10 px-4 py-3 text-[10.5px] tracking-[0.14em] uppercase text-steel-600 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_200px]">
+          <div className="hidden items-center gap-4 border-b border-paper/10 px-4 py-3 text-[10.5px] tracking-[0.14em] uppercase text-steel-600 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_230px]">
             <span>Rang</span>
             <span>Joueur</span>
             <span className="text-right">{valueColumnLabel}</span>
@@ -194,7 +194,7 @@ export default function PusherLeaderboard({
               <li key={entry.tag}>
                 <Link
                   href={`/joueurs/${encodeURIComponent(entry.tag.replace(/^#/, ""))}`}
-                  className="flex items-center gap-4 px-4 py-3.5 transition hover:bg-panel2 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_200px]"
+                  className="flex items-center gap-4 px-4 py-3.5 transition hover:bg-panel2 sm:grid sm:grid-cols-[48px_minmax(0,1fr)_230px]"
                 >
                   <span className="stat-mono hidden text-lg text-steel-500 sm:block">
                     {String(i + 4).padStart(2, "0")}
@@ -223,11 +223,11 @@ export default function PusherLeaderboard({
                       <RankTierIcon
                         src={entry.rankIconSrc}
                         label={entry.rankLabel}
-                        className="h-6 w-6 shrink-0"
+                        className="h-7 w-7 shrink-0"
                       />
                     )}
                     <span
-                      className={`stat-mono flex shrink-0 items-center gap-1 text-[15px] whitespace-nowrap ${
+                      className={`stat-mono flex shrink-0 items-center gap-1 text-[18px] whitespace-nowrap ${
                         mode === "push"
                           ? entry.value >= 0
                             ? "text-zest2"
@@ -235,7 +235,7 @@ export default function PusherLeaderboard({
                           : "text-zest2"
                       }`}
                     >
-                      {mode === "push" && <TrophyGlyph className="h-3.5 w-3.5" />}
+                      {mode === "push" && <TrophyGlyph className="h-4 w-4" />}
                       {mode === "push" && entry.value >= 0 ? "+" : ""}
                       {formatNumber(entry.value)}
                     </span>
