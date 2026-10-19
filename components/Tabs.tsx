@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 
 export interface TabDef {
   id: string;
@@ -27,6 +27,14 @@ export default function Tabs({
 }) {
   const [active, setActive] = useState(defaultTab ?? tabs[0]?.id);
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
+
+  // Lien du type /pusheurs?tab=ranked : lu côté navigateur, pour que la page
+  // reste statique (lire searchParams côté serveur la rendrait dynamique).
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (wanted && tabs.some((t) => t.id === wanted)) setActive(wanted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const barClass = seamless
     ? "overflow-x-auto border-x border-b border-paper/10 bg-void2/60 px-3 sm:px-7"

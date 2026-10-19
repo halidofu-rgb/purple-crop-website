@@ -10,7 +10,7 @@ import { PushGlyph } from "@/components/icons";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");

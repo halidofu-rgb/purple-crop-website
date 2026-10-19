@@ -13,7 +13,7 @@ import Tabs from "@/components/Tabs";
 import { TrophyGlyph, RankedGlyph } from "@/components/icons";
 import PusherLeaderboard, { PusherEntry } from "@/components/PusherLeaderboard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
@@ -26,14 +26,9 @@ const ROLE_LABEL: Record<string, string> = {
   member: "Membre",
 };
 
-export default async function PusheursPage({
-  searchParams,
-}: {
-  searchParams?: { tab?: string };
-}) {
+export default async function PusheursPage() {
   const season = getCurrentSeason();
   const tags = clubTags();
-  const defaultTab = searchParams?.tab === "ranked" ? "ranked" : "push";
 
   let baseline;
   let baselineError: string | null = null;
@@ -209,7 +204,7 @@ export default async function PusheursPage({
         <section className="px-4 py-8 sm:px-8 lg:px-12">
           <div className="mx-auto max-w-[1200px]">
             <Tabs
-              defaultTab={defaultTab}
+              defaultTab="push"
               tabs={[
                 {
                   id: "push",

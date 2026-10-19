@@ -13,6 +13,10 @@ export interface SearchEntry {
 // Brawl Stars ne permet pas de chercher un joueur par nom, seulement par
 // tag exact — donc on construit cet index nous-mêmes, à partir de ce
 // qu'on a déjà (l'effectif de nos propres clubs).
+// Mis en cache 5 min côté CDN : la recherche ne relance pas une fonction à
+// chaque ouverture de la barre.
+export const revalidate = 300;
+
 export async function GET() {
   const tags = clubTags();
   const entries: SearchEntry[] = [];

@@ -16,9 +16,9 @@ import RankTierIcon from "@/components/RankTierIcon";
 import { MessageCircle } from "lucide-react";
 import { TrophyGlyph, PushGlyph, SwordsGlyph } from "@/components/icons";
 
-// La partie "meilleur pusher" dépend de Redis, pas du cache fetch() —
-// on garde la page toujours calculée à la demande.
-export const dynamic = "force-dynamic";
+// Page régénérée au plus toutes les 5 min (et pas à chaque visite) : c'est
+// ce qui garde la consommation de CPU Vercel sous le quota gratuit.
+export const revalidate = 300;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");

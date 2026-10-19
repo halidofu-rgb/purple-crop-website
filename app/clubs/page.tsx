@@ -9,7 +9,7 @@ import ClubBadge from "@/components/ClubBadge";
 import PageBanner from "@/components/PageBanner";
 import { TrophyGlyph, PushGlyph } from "@/components/icons";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");

@@ -12,7 +12,7 @@ import PageBanner from "@/components/PageBanner";
 import ClassementBoard, { ClassementEntry } from "@/components/ClassementBoard";
 import { TrophyGlyph, RankedGlyph } from "@/components/icons";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
@@ -22,11 +22,7 @@ interface TrophyRow extends ClubMember {
   clubName: string;
 }
 
-export default async function ClassementPage({
-  searchParams,
-}: {
-  searchParams?: { tab?: string };
-}) {
+export default async function ClassementPage() {
   const tags = clubTags();
   const season = getCurrentSeason();
 
@@ -112,8 +108,6 @@ export default async function ClassementPage({
     );
   }
 
-  const defaultTab = searchParams?.tab === "ranked-alltime" ? "ranked-alltime" : "trophies";
-
   return (
     <>
       <Navbar />
@@ -138,7 +132,7 @@ export default async function ClassementPage({
 
           <Tabs
             attached
-            defaultTab={defaultTab}
+            defaultTab="trophies"
             tabs={[
               { id: "trophies", label: "Trophées", panel: trophiesPanel },
               {
