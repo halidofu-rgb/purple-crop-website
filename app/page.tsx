@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getClub } from "@/lib/brawlstars";
+import { getClub, shouldRethrow } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { listNews } from "@/lib/news";
@@ -34,6 +34,7 @@ export default async function HomePage() {
         const club = await getClub(tag);
         return { tag, club, error: null as string | null };
       } catch (err) {
+        if (shouldRethrow(err)) throw err;
         return { tag, club: null, error: (err as Error).message };
       }
     })
@@ -50,7 +51,7 @@ export default async function HomePage() {
 
   const [baseline, rankedRows, newsPosts] = await Promise.all([
     getSeasonBaseline(season.key).catch(() => null),
-    getRankedRowsForClubs(loadedClubs).catch(() => []),
+    getRankedRowsForClubs(loadedClubs),
     listNews().catch(() => []),
   ]);
   const latestNews = newsPosts[0];

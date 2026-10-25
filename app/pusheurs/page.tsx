@@ -1,4 +1,4 @@
-import { getClub } from "@/lib/brawlstars";
+import { getClub, shouldRethrow } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberIconUrls } from "@/lib/assets";
@@ -77,14 +77,15 @@ export default async function PusheursPage() {
     tags.map(async (tag) => {
       try {
         return await getClub(tag);
-      } catch {
+      } catch (err) {
+        if (shouldRethrow(err)) throw err;
         return null;
       }
     })
   );
   const loadedClubs = clubs.filter((c): c is NonNullable<typeof c> => c !== null);
 
-  const rankedRows = await getRankedRowsForClubs(loadedClubs).catch(() => []);
+  const rankedRows = await getRankedRowsForClubs(loadedClubs);
   const iconUrls = await getMemberIconUrls(loadedClubs).catch(() => ({} as Record<string, string>));
   const rankedByTag = new Map(rankedRows.map((r) => [r.tag.toUpperCase(), r]));
   const baselineByTag = new Map(baseline.players.map((p) => [p.tag, p]));

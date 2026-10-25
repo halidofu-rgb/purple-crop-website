@@ -1,4 +1,4 @@
-import { getClub } from "@/lib/brawlstars";
+import { getClub, isNotFoundError, shouldRethrow } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberIconUrls } from "@/lib/assets";
@@ -16,7 +16,7 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
   try {
     club = await getClub(params.tag);
   } catch (err) {
-    console.error(err);
+    if (!isNotFoundError(err)) throw err;
     notFound();
   }
 
@@ -28,13 +28,14 @@ export default async function ClubPage({ params }: { params: { tag: string } }) 
       allTags.map(async (tag) => {
         try {
           return await getClub(tag);
-        } catch {
+        } catch (err) {
+          if (shouldRethrow(err)) throw err;
           return null;
         }
       })
     ),
     getSeasonBaseline(season.key).catch(() => null),
-    getRankedRowsForClubs([club]).catch(() => []),
+    getRankedRowsForClubs([club]),
     getMemberIconUrls([club]).catch(() => ({})),
   ]);
 

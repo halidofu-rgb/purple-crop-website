@@ -1,4 +1,4 @@
-import { getClub, ClubMember } from "@/lib/brawlstars";
+import { getClub, ClubMember, shouldRethrow } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberIconUrls } from "@/lib/assets";
@@ -30,7 +30,8 @@ export default async function ClassementPage() {
     tags.map(async (tag) => {
       try {
         return await getClub(tag);
-      } catch {
+      } catch (err) {
+        if (shouldRethrow(err)) throw err;
         return null;
       }
     })
@@ -40,7 +41,7 @@ export default async function ClassementPage() {
 
   const [baseline, rankedByCurrent, iconUrls] = await Promise.all([
     getSeasonBaseline(season.key).catch(() => null),
-    getRankedRowsForClubs(loadedClubs).catch(() => []),
+    getRankedRowsForClubs(loadedClubs),
     getMemberIconUrls(loadedClubs).catch(() => ({} as Record<string, string>)),
   ]);
 

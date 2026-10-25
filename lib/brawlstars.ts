@@ -20,23 +20,61 @@ function apiKey(): string {
   return key;
 }
 
-async function bsFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      Authorization: `Bearer ${apiKey()}`,
-      Accept: "application/json",
-    },
-    // Les trophées bougent en continu : on rafraîchit le cache toutes les
-    // 2 minutes plutôt que de rappeler l'API à chaque visite du site.
-    next: { revalidate: 120 },
-  });
+export class BrawlApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Brawl Stars API ${res.status} sur ${path} : ${body}`);
+// Seul un vrai 404 (tag inconnu) doit donner une page "introuvable" : toute
+// autre erreur (proxy RoyaleAPI en panne, Cloudflare 52x...) est transitoire
+// et ne doit surtout pas être figée dans le cache des pages (ISR).
+export function isNotFoundError(err: unknown): boolean {
+  return err instanceof BrawlApiError && err.status === 404;
+}
+
+// Pendant `next build`, on ne veut jamais qu'une panne passagère de l'API
+// fasse échouer le déploiement : la page est générée avec ce qu'on a et sera
+// régénérée au bout de 5 min. Hors build (ISR en production), l'erreur est
+// relancée pour que Next garde la dernière version valide de la page.
+export function shouldRethrow(err: unknown): boolean {
+  if (isNotFoundError(err)) return false;
+  return process.env.NEXT_PHASE !== "phase-production-build";
+}
+
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAYS_MS = [400, 1200];
+
+async function bsFetch<T>(path: string): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt - 1]));
+    try {
+      const res = await fetch(`${BASE_URL}${path}`, {
+        headers: {
+          Authorization: `Bearer ${apiKey()}`,
+          Accept: "application/json",
+        },
+        // Les trophées bougent en continu : on rafraîchit le cache toutes les
+        // 2 minutes plutôt que de rappeler l'API à chaque visite du site.
+        next: { revalidate: 120 },
+      });
+
+      if (res.ok) return (await res.json()) as T;
+
+      const body = await res.text().catch(() => "");
+      const err = new BrawlApiError(`Brawl Stars API ${res.status} sur ${path} : ${body}`, res.status);
+      // 4xx = erreur définitive, inutile de réessayer ; 5xx = on réessaie.
+      if (res.status < 500) throw err;
+      lastError = err;
+    } catch (err) {
+      if (err instanceof BrawlApiError && err.status < 500) throw err;
+      lastError = err as Error;
+    }
   }
 
-  return res.json() as Promise<T>;
+  throw lastError ?? new Error(`Brawl Stars API injoignable (${path})`);
 }
 
 // Un tag de club/joueur peut être saisi avec ou sans "#", en minuscule ou

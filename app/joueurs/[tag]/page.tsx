@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPlayer, getClub, getBattleLog, sortByTrophies } from "@/lib/brawlstars";
+import { getPlayer, getClub, getBattleLog, sortByTrophies, isNotFoundError, shouldRethrow } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getMemberLinkByTag } from "@/lib/members";
@@ -63,7 +63,7 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
   try {
     player = await getPlayer(params.tag);
   } catch (err) {
-    console.error(err);
+    if (!isNotFoundError(err)) throw err;
     notFound();
   }
 
@@ -75,7 +75,8 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
       allTags.map(async (tag) => {
         try {
           return await getClub(tag);
-        } catch {
+        } catch (err) {
+          if (shouldRethrow(err)) throw err;
           return null;
         }
       })

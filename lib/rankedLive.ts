@@ -4,7 +4,7 @@
 // inutile depuis qu'on a confirmé que l'API renvoie déjà rankedElo &
 // consorts (voir README, correction du 20/08/2026).
 import { unstable_cache } from "next/cache";
-import { getPlayer, Club } from "@/lib/brawlstars";
+import { getPlayer, Club, isNotFoundError, shouldRethrow } from "@/lib/brawlstars";
 
 export interface RankedRow {
   tag: string;
@@ -22,6 +22,7 @@ export interface RankedRow {
 // et partagé entre toutes les pages et tous les visiteurs.
 const fetchRankedRows = unstable_cache(
   async (members: { tag: string; clubName: string }[]): Promise<RankedRow[]> => {
+    let failures = 0;
     const rows = await Promise.all(
       members.map(async ({ tag, clubName }): Promise<RankedRow | null> => {
         try {
@@ -36,11 +37,20 @@ const fetchRankedRows = unstable_cache(
             bestElo: player.highestAllTimeRankedElo ?? player.rankedElo,
             bestRankName: player.highestAllTimeRankedRankName ?? player.rankedRankName,
           };
-        } catch {
+        } catch (err) {
+          // Joueur introuvable = on l'ignore ; panne de l'API = on compte.
+          if (!isNotFoundError(err)) failures++;
           return null;
         }
       })
     );
+
+    // Trop d'échecs : on préfère faire échouer le calcul (donc ne RIEN mettre
+    // en cache, et laisser la page garder sa dernière version valide) plutôt
+    // que figer 5 minutes un classement amputé d'une partie des joueurs.
+    if (shouldRethrow(new Error("api")) && failures > Math.max(3, members.length * 0.05)) {
+      throw new Error(`Calcul Ranked abandonné : ${failures}/${members.length} appels en échec`);
+    }
 
     return rows
       .filter((r): r is RankedRow => r !== null)

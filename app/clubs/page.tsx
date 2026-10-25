@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getClub } from "@/lib/brawlstars";
+import { getClub, shouldRethrow } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline } from "@/lib/kv";
 import { getCurrentSeason } from "@/lib/season";
@@ -26,6 +26,7 @@ export default async function ClubsListPage() {
           const club = await getClub(tag);
           return { tag, club, error: null as string | null };
         } catch (err) {
+          if (shouldRethrow(err)) throw err;
           return { tag, club: null, error: (err as Error).message };
         }
       })
