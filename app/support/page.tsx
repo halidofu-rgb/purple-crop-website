@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { UserPlus, Flag, Bug, MessageCircle } from "lucide-react";
 
-export const revalidate = 300;
+export const revalidate = 900;
 
 const TOPICS = [
   {

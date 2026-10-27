@@ -22,7 +22,7 @@ import { notFound } from "next/navigation";
 // Le rang dans le club / global et le push dépendent de données croisées
 // (tous les clubs, Redis) — on calcule à chaque requête plutôt que de figer
 // au build.
-export const revalidate = 300;
+export const revalidate = 1800;
 
 const ROLE_LABEL: Record<string, string> = {
   president: "Président",

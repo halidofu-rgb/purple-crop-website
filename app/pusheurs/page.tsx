@@ -13,7 +13,7 @@ import Tabs from "@/components/Tabs";
 import { TrophyGlyph, RankedGlyph } from "@/components/icons";
 import PusherLeaderboard, { PusherEntry } from "@/components/PusherLeaderboard";
 
-export const revalidate = 300;
+export const revalidate = 900;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");

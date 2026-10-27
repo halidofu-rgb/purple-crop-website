@@ -9,7 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { notFound } from "next/navigation";
 
-export const revalidate = 300;
+export const revalidate = 1800;
 
 export default async function ClubPage({ params }: { params: { tag: string } }) {
   let club;

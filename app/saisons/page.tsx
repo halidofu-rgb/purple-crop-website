@@ -8,7 +8,7 @@ import PageBanner from "@/components/PageBanner";
 import { CrownGlyph, PushGlyph } from "@/components/icons";
 import { ChevronRight } from "lucide-react";
 
-export const revalidate = 300;
+export const revalidate = 900;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");

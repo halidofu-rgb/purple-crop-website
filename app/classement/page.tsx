@@ -12,7 +12,7 @@ import PageBanner from "@/components/PageBanner";
 import ClassementBoard, { ClassementEntry } from "@/components/ClassementBoard";
 import { TrophyGlyph, RankedGlyph } from "@/components/icons";
 
-export const revalidate = 300;
+export const revalidate = 900;
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");

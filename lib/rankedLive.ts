@@ -18,7 +18,7 @@ export interface RankedRow {
 
 // ~120 appels getPlayer() par calcul : c'est de loin le plus gros poste de
 // CPU du site (chaque réponse joueur pèse des dizaines de Ko à parser). Le
-// résultat — une centaine de petites lignes — est donc mis en cache 5 min
+// résultat — une centaine de petites lignes — est donc mis en cache 15 min
 // et partagé entre toutes les pages et tous les visiteurs.
 const fetchRankedRows = unstable_cache(
   async (members: { tag: string; clubName: string }[]): Promise<RankedRow[]> => {
@@ -57,7 +57,7 @@ const fetchRankedRows = unstable_cache(
       .sort((a, b) => b.elo - a.elo);
   },
   ["ranked-rows"],
-  { revalidate: 300 }
+  { revalidate: 900 }
 );
 
 // clubs déjà chargés par la page appelante — on ne refait pas l'appel /clubs.
