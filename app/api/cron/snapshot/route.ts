@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClub } from "@/lib/brawlstars";
 import { clubTags } from "@/lib/clubs";
 import { getSeasonBaseline, setSeasonBaseline, BaselinePlayer } from "@/lib/kv";
-import { recordTrophySnapshot, getTrophiesAtOrBefore } from "@/lib/trophyHistory";
+import { recordTrophySnapshot, getTrophyHistory, baselineFromHistory } from "@/lib/trophyHistory";
 import { getCurrentSeason, previousSeasonKey } from "@/lib/season";
 import { computeSeasonPush } from "@/lib/seasonPush";
 import { postSeasonRecapToDiscord } from "@/lib/discordWebhook";
@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
   const cutoffDate = season.start.toISOString().slice(0, 10);
 
   async function preResetTrophies(tag: string, fallback: number): Promise<number> {
-    const historical = await getTrophiesAtOrBefore(tag, cutoffDate).catch(() => null);
-    return historical ?? fallback;
+    const history = await getTrophyHistory(tag).catch(() => []);
+    return baselineFromHistory(history, cutoffDate) ?? fallback;
   }
 
   const existing = await getSeasonBaseline(season.key);
@@ -103,17 +103,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, season: season.key, created: baselinePlayers.length });
   }
 
-  // Corrige les entrées existantes si un point pré-reset plus bas est
-  // apparu depuis (rattrape une première capture qui avait raté la
-  // fenêtre pré-reset) — ne touche jamais à un membre sans historique
-  // utilisable, et ne baisse jamais un point déjà correct.
+  // Recalcule la valeur de départ de chaque entrée existante à partir de
+  // l'historique (voir baselineFromHistory) : rattrape une première capture
+  // qui avait raté la fenêtre pré-reset, ET une joueuse partie puis revenue
+  // (absence >= 30 jours) dont le départ de saison datait d'avant son départ.
+  // Sans historique exploitable, l'entrée n'est jamais touchée.
   let correctedCount = 0;
   const correctedExisting = await Promise.all(
     existing.players.map(async (p) => {
-      const historical = await getTrophiesAtOrBefore(p.tag, cutoffDate).catch(() => null);
-      if (historical !== null && historical < p.trophies) {
+      const history = await getTrophyHistory(p.tag).catch(() => []);
+      const expected = baselineFromHistory(history, cutoffDate);
+      if (expected !== null && expected !== p.trophies) {
         correctedCount++;
-        return { ...p, trophies: historical };
+        return { ...p, trophies: expected };
       }
       return p;
     })
