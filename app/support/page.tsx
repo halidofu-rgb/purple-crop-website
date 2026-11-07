@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: "Comment lier mon compte Discord à mon tag Brawl Stars ?",
-    a: "Connecte-toi avec Discord (bouton en haut à droite), puis va sur /compte pour renseigner ton tag et une présentation.",
+    a: "Connecte-toi avec Discord (bouton en haut à droite), puis va sur /compte pour renseigner ton tag. Une seule fois suffit : tu apparais ensuite avec ton club dans le classement d'Activité Discord et ton niveau Discord s'affiche sur ta fiche. Tu peux aussi y ajouter une présentation.",
   },
   {
     q: "Comment rejoindre un club Purple Corp ?",

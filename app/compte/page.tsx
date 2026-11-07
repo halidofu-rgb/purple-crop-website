@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getMemberLink } from "@/lib/members";
 import { getPlayer } from "@/lib/brawlstars";
+import { getDiscordLevel } from "@/lib/draftbotLevels";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AccountLinkForm from "@/components/AccountLinkForm";
@@ -31,8 +32,9 @@ export default async function ComptePage() {
               Connecte-toi pour continuer
             </h1>
             <p className="mt-2 max-w-sm text-sm text-steel-400">
-              Lie ton compte Discord à ton tag Brawl Stars pour ajouter une présentation et
-              retrouver ta fiche facilement.
+              Lie ton compte Discord à ton tag Brawl Stars pour apparaître avec ton club dans
+              le classement d&apos;Activité Discord, afficher ton niveau Discord sur ta fiche
+              joueur et ajouter une présentation.
             </p>
             <div className="mt-5 flex justify-center">
               <Button href="/api/auth/signin/discord" icon={<LogIn className="h-4 w-4" />}>
@@ -55,6 +57,7 @@ export default async function ComptePage() {
       player = null;
     }
   }
+  const discordLevel = link ? await getDiscordLevel(discordId).catch(() => null) : null;
   const hasRanked = typeof player?.rankedElo === "number";
   const currentRankLabel =
     hasRanked && player!.rankedRankName ? rankLabelFromApi(player!.rankedRankName) : null;
@@ -118,6 +121,13 @@ export default async function ComptePage() {
                 </p>
               </div>
             </div>
+            {discordLevel && (
+              <p className="relative mt-5 border-t border-paper/10 pt-4 text-xs text-steel-400">
+                Discord : <span className="text-paper">niveau {discordLevel.level}</span> ·{" "}
+                {formatNumber(discordLevel.totalXp)} XP
+                <span className="text-steel-600"> (#{discordLevel.rank} du serveur)</span>
+              </p>
+            )}
             {!hasRanked && (
               <p className="mt-4 text-[11px] text-steel-400">
                 Pas encore de rang Ranked sur ce compte (débloqué à 1 000 trophées, puis un
@@ -129,7 +139,7 @@ export default async function ComptePage() {
 
         <section className="mx-auto mt-8 max-w-lg rounded-2xl border border-paper/10 bg-panel p-6">
           <h2 className="mb-4 text-sm font-semibold text-paper">
-            {link ? "Modifier ma liaison" : "Lier mon compte Brawl Stars"}
+            {link ? "Mon compte Brawl Stars lié" : "Lier mon compte Brawl Stars"}
           </h2>
           <AccountLinkForm existingTag={link?.tag} existingBio={link?.bio} />
         </section>
