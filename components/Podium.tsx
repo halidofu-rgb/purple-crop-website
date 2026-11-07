@@ -14,6 +14,8 @@ export interface PodiumEntry {
   iconUrl?: string | null;
   /** Lien de la carte ; null = pas de lien (ex. membre Discord sans compte lié). */
   href?: string | null;
+  /** Ligne de détail sous le nom (à la place du rang Ranked). */
+  detail?: string;
 }
 
 function formatNumber(n: number): string {
@@ -98,7 +100,9 @@ export default function Podium({
               />
               <div className="min-w-0">
                 <p className="truncate text-[23px] leading-tight tracking-[-0.02em] text-paper">{entry.name}</p>
-                {entry.rankLabel && <p className="mt-0.5 truncate text-xs text-ash">{entry.rankLabel}</p>}
+                {(entry.detail || entry.rankLabel) && (
+                  <p className="mt-0.5 truncate text-xs text-ash">{entry.detail ?? entry.rankLabel}</p>
+                )}
               </div>
             </div>
 

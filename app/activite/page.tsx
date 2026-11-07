@@ -127,6 +127,27 @@ export default async function ActivitePage() {
   }
   const totalVoiceHours = voiceEntries.reduce((sum, e) => sum + e.value, 0);
 
+  // Score d'activité = XP texte gagnée sur la saison + vocal converti en XP.
+  // Taux par défaut = celui de DraftBot pour le vocal (≈ 20 XP / 2 min, soit
+  // 600 XP/h) ; modifiable avec la variable VOICE_XP_PER_HOUR.
+  const voiceXpPerHour = Number(process.env.VOICE_XP_PER_HOUR) > 0 ? Number(process.env.VOICE_XP_PER_HOUR) : 600;
+  const scoreEntries: ClassementEntry[] = [];
+  for (const id of new Set([...Object.keys(levels), ...Object.keys(voiceSeconds)])) {
+    if (excluded.has(id)) continue;
+    const lvl = levels[id];
+    const textGain = lvl && baseline ? Math.max(0, lvl.totalXp - (baseline.users[id] ?? 0)) : 0;
+    const seconds = voiceSeconds[id] ?? 0;
+    const score = textGain + Math.round((seconds / 3600) * voiceXpPerHour);
+    if (score <= 0) continue;
+    const name = lvl?.name ?? voiceNames[id] ?? linkById.get(id)?.discordName ?? "Membre Discord";
+    const hours = (seconds / 3600).toFixed(1).replace(".", ",");
+    scoreEntries.push({
+      ...baseFor(id, name),
+      value: score,
+      detail: `${formatNumber(textGain)} XP texte · ${hours} h vocal`,
+    });
+  }
+
   const clubNames = [...loadedClubs.map((c) => c.name), ...extraScopes];
   const totalGain = gainEntries.reduce((sum, e) => sum + e.value, 0);
 
@@ -172,6 +193,23 @@ export default async function ActivitePage() {
     </div>
   );
 
+  const scorePanel = (
+    <div>
+      <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
+        Score = XP gagnée à l&apos;écrit + temps en vocal (1 h en vocal = {formatNumber(voiceXpPerHour)}{" "}
+        XP). {baseline ? note : ""}
+      </p>
+      <ClassementBoard
+        entries={scoreEntries}
+        clubNames={clubNames}
+        valueLabel="Score"
+        valueIcon={<PushGlyph className="h-4 w-4 shrink-0" />}
+        emptyMessage="Pas encore de données : le suivi démarre au prochain passage automatique."
+      />
+    </div>
+  );
+
   const voicePanel = (
     <div>
       <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
@@ -203,9 +241,9 @@ export default async function ActivitePage() {
                 Discord
               </>
             }
-            intro="Qui est le plus actif sur le Discord cette saison, mesuré en XP gagnée. Les membres dont le compte Discord est lié au site apparaissent avec leur club."
+            intro="Qui est le plus actif sur le Discord cette saison : messages écrits et temps en vocal réunis en un seul score. Les membres dont le compte Discord est lié au site apparaissent avec leur club."
             stats={[
-              { value: formatNumber(gainEntries.length), label: "Membres actifs" },
+              { value: formatNumber(scoreEntries.length), label: "Membres actifs" },
               { value: formatNumber(totalGain), label: "XP gagnée" },
               { value: formatNumber(Math.round(totalVoiceHours)), label: "Heures en vocal" },
             ]}
@@ -213,9 +251,10 @@ export default async function ActivitePage() {
 
           <Tabs
             attached
-            defaultTab="gain"
+            defaultTab="score"
             tabs={[
-              { id: "gain", label: "Saison en cours", panel: gainPanel },
+              { id: "score", label: "Activité", panel: scorePanel },
+              { id: "gain", label: "Texte", panel: gainPanel },
               { id: "voice", label: "Vocal", panel: voicePanel },
               { id: "total", label: "XP totale", panel: totalPanel },
             ]}

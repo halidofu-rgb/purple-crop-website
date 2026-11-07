@@ -21,6 +21,8 @@ export interface ClassementEntry {
   iconUrl?: string | null;
   /** undefined = fiche joueur du tag ; null = pas de lien. */
   href?: string | null;
+  /** Détail affiché sous le nom (ex. « 300 XP texte · 2,5 h vocal »). */
+  detail?: string;
 }
 
 function formatNumber(n: number): string {
@@ -177,6 +179,7 @@ export default function ClassementBoard({
               iconUrl: e.iconUrl,
               rankIconSrc: e.rankLabel ? rankedTierIconPath(e.rankLabel) : null,
               href: entryHref(e),
+              detail: e.detail,
             }))}
           />
           <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
@@ -187,7 +190,13 @@ export default function ClassementBoard({
                 index={i}
                 href={entryHref(e)}
                 name={e.name}
-                sub={e.rankLabel ? `${e.clubName} · ${e.rankLabel}` : e.clubName}
+                sub={
+                  e.detail
+                    ? `${e.clubName} · ${e.detail}`
+                    : e.rankLabel
+                      ? `${e.clubName} · ${e.rankLabel}`
+                      : e.clubName
+                }
                 rankLabel={e.rankLabel}
                 iconUrl={e.iconUrl}
                 value={e.value}
