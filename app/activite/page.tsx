@@ -4,6 +4,7 @@ import { getMemberIconUrls } from "@/lib/assets";
 import { listAllMemberLinks } from "@/lib/members";
 import { getAllDiscordLevels } from "@/lib/draftbotLevels";
 import { getXpBaseline } from "@/lib/discordXp";
+import { getVoiceSeconds, getVoiceNames } from "@/lib/discordVoice";
 import { getCurrentSeason } from "@/lib/season";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -34,11 +35,22 @@ const normTag = (tag: string) => tag.replace(/^#/, "").toUpperCase();
 export default async function ActivitePage() {
   const season = getCurrentSeason();
 
-  const [levels, baseline, links] = await Promise.all([
+  const [levels, baseline, links, voiceSeconds, voiceNames] = await Promise.all([
     getAllDiscordLevels().catch(() => null),
     getXpBaseline(season.key).catch(() => null),
     listAllMemberLinks().catch(() => []),
+    getVoiceSeconds(season.key).catch(() => ({} as Record<string, number>)),
+    getVoiceNames().catch(() => ({} as Record<string, string>)),
   ]);
+
+  // Comptes à ne pas classer (ex. le gérant du serveur) : ids Discord séparés
+  // par des virgules dans la variable ACTIVITY_EXCLUDE_IDS.
+  const excluded = new Set(
+    (process.env.ACTIVITY_EXCLUDE_IDS ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
 
   if (!levels) {
     return (
@@ -81,23 +93,39 @@ export default async function ActivitePage() {
   const totalEntries: ClassementEntry[] = [];
   const extraScopes = new Set<string>();
 
-  for (const [id, lvl] of Object.entries(levels)) {
+  // Champs communs d'une ligne de classement : club et lien si le compte
+  // Discord est lié à un joueur Brawl Stars, sinon ligne sans lien.
+  function baseFor(id: string, name: string): Omit<ClassementEntry, "value" | "delta"> {
     const link = linkById.get(id);
     const clubName = link ? clubByTag.get(normTag(link.tag)) ?? OUT_OF_CLUBS : UNLINKED;
     if (clubName === UNLINKED || clubName === OUT_OF_CLUBS) extraScopes.add(clubName);
-
-    const gain = baseline ? Math.max(0, lvl.totalXp - (baseline.users[id] ?? 0)) : 0;
-    const base: Omit<ClassementEntry, "value" | "delta"> = {
+    return {
       tag: link ? link.tag : `discord-${id}`,
-      name: lvl.name,
+      name,
       clubName,
       iconUrl: link ? iconUrls[`#${normTag(link.tag)}`] ?? iconUrls[normTag(link.tag)] : undefined,
       href: link ? undefined : null,
     };
+  }
+
+  for (const [id, lvl] of Object.entries(levels)) {
+    if (excluded.has(id)) continue;
+    const gain = baseline ? Math.max(0, lvl.totalXp - (baseline.users[id] ?? 0)) : 0;
+    const base = baseFor(id, lvl.name);
 
     totalEntries.push({ ...base, value: lvl.totalXp, delta: baseline ? gain : undefined });
     if (gain > 0) gainEntries.push({ ...base, value: gain });
   }
+
+  // Vocal : valeur en heures (arrondie à 0,1 h), seulement à partir de 6 minutes.
+  const voiceEntries: ClassementEntry[] = [];
+  for (const [id, seconds] of Object.entries(voiceSeconds)) {
+    if (excluded.has(id) || seconds < 360) continue;
+    const name =
+      levels[id]?.name ?? voiceNames[id] ?? linkById.get(id)?.discordName ?? "Membre Discord";
+    voiceEntries.push({ ...baseFor(id, name), value: Math.round(seconds / 360) / 10 });
+  }
+  const totalVoiceHours = voiceEntries.reduce((sum, e) => sum + e.value, 0);
 
   const clubNames = [...loadedClubs.map((c) => c.name), ...extraScopes];
   const totalGain = gainEntries.reduce((sum, e) => sum + e.value, 0);
@@ -144,6 +172,22 @@ export default async function ActivitePage() {
     </div>
   );
 
+  const voicePanel = (
+    <div>
+      <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
+        Temps passé en vocal cette saison, relevé toutes les 10 minutes environ (sourdine et
+        AFK compris).
+      </p>
+      <ClassementBoard
+        entries={voiceEntries}
+        clubNames={clubNames}
+        valueLabel="Heures en vocal"
+        emptyMessage="Pas encore de données : le suivi du vocal démarre au prochain relevé."
+      />
+    </div>
+  );
+
   return (
     <>
       <Navbar />
@@ -163,6 +207,7 @@ export default async function ActivitePage() {
             stats={[
               { value: formatNumber(gainEntries.length), label: "Membres actifs" },
               { value: formatNumber(totalGain), label: "XP gagnée" },
+              { value: formatNumber(Math.round(totalVoiceHours)), label: "Heures en vocal" },
             ]}
           />
 
@@ -171,6 +216,7 @@ export default async function ActivitePage() {
             defaultTab="gain"
             tabs={[
               { id: "gain", label: "Saison en cours", panel: gainPanel },
+              { id: "voice", label: "Vocal", panel: voicePanel },
               { id: "total", label: "XP totale", panel: totalPanel },
             ]}
           />
