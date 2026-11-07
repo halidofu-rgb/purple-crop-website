@@ -6,6 +6,11 @@ export const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      // Discord ajoute `iss=https://discord.com` à sa réponse d'autorisation
+      // (RFC 9207). openid-client compare ce paramètre à l'émetteur du
+      // fournisseur et plante ("issuer must be configured on the issuer")
+      // s'il n'en a pas : on le renseigne.
+      issuer: "https://discord.com",
     }),
   ],
   callbacks: {
