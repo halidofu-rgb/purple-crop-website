@@ -6,6 +6,8 @@ import { recordTrophySnapshot, getTrophyHistory, baselineFromHistory } from "@/l
 import { getCurrentSeason, previousSeasonKey } from "@/lib/season";
 import { computeSeasonPush } from "@/lib/seasonPush";
 import { postSeasonRecapToDiscord } from "@/lib/discordWebhook";
+import { fetchAllDiscordLevels } from "@/lib/draftbotLevels";
+import { recordXpSnapshot, ensureXpBaseline, XpMap } from "@/lib/discordXp";
 
 // Appelée automatiquement chaque jour par Vercel Cron (voir vercel.json).
 // Enregistre aussi un point d'historique de trophées par joueur (voir
@@ -72,6 +74,26 @@ export async function GET(request: NextRequest) {
   // reset" de cette saison — voir le commentaire au-dessus.
   const cutoffDate = season.start.toISOString().slice(0, 10);
 
+  // XP Discord (DraftBot) : photo du jour + photo de départ de la saison si
+  // elle n'existe pas encore (voir lib/discordXp.ts). Isolé : un échec de
+  // l'API DraftBot ne doit jamais empêcher le reste du snapshot.
+  let discordXp: { ok: boolean; members?: number; baselineCreated?: boolean; baselineDate?: string; error?: string };
+  try {
+    const levels = await fetchAllDiscordLevels();
+    const xp: XpMap = Object.fromEntries(Object.entries(levels).map(([id, l]) => [id, l.totalXp]));
+    await recordXpSnapshot(today, xp);
+    const { created, baseline } = await ensureXpBaseline(season.key, cutoffDate, today, xp);
+    discordXp = {
+      ok: true,
+      members: Object.keys(xp).length,
+      baselineCreated: created,
+      baselineDate: baseline.sourceDate,
+    };
+  } catch (err) {
+    console.error("Snapshot XP Discord : échec", err);
+    discordXp = { ok: false, error: (err as Error).message };
+  }
+
   async function preResetTrophies(tag: string, fallback: number): Promise<number> {
     const history = await getTrophyHistory(tag).catch(() => []);
     return baselineFromHistory(history, cutoffDate) ?? fallback;
@@ -100,7 +122,7 @@ export async function GET(request: NextRequest) {
       await postSeasonRecapToDiscord(prevKey, rows);
     }
 
-    return NextResponse.json({ ok: true, season: season.key, created: baselinePlayers.length });
+    return NextResponse.json({ ok: true, season: season.key, created: baselinePlayers.length, discordXp });
   }
 
   // Recalcule la valeur de départ de chaque entrée existante à partir de
@@ -137,5 +159,6 @@ export async function GET(request: NextRequest) {
     corrected: correctedCount,
     added: newcomers.length,
     newcomers: newcomers.map((p) => p.name),
+    discordXp,
   });
 }

@@ -9,6 +9,7 @@ import { avatarColor } from "@/lib/avatarColor";
 import { getPlayerIconUrl } from "@/lib/assets";
 import { rankLabelFromApi, rankedTierIconPath, rankedTierProgress } from "@/lib/rankedTier";
 import { getTrophyHistory } from "@/lib/trophyHistory";
+import { getDiscordLevel } from "@/lib/draftbotLevels";
 import RankTierIcon from "@/components/RankTierIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -87,6 +88,11 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
     getBattleLog(params.tag).catch(() => []),
     getTrophyHistory(params.tag).catch(() => []),
   ]);
+
+  // Niveau Discord (DraftBot) : seulement si le joueur a lié son compte Discord.
+  const discordLevel = memberLink
+    ? await getDiscordLevel(memberLink.discordId).catch(() => null)
+    : null;
 
   const loadedClubs = allClubs.filter((c): c is NonNullable<typeof c> => c !== null);
   const homeClub = loadedClubs.find((c) => c.tag === player.club?.tag);
@@ -214,6 +220,15 @@ export default async function PlayerPage({ params }: { params: { tag: string } }
                   </h1>
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px] text-steel-400">
                     <span>Niveau {player.expLevel}</span>
+                    {discordLevel && (
+                      <>
+                        <span className="text-steel-800">/</span>
+                        <span title={`${formatNumber(discordLevel.currentLevelXp)} / ${formatNumber(discordLevel.levelXp)} XP vers le niveau suivant`}>
+                          Discord : niveau {discordLevel.level} · {formatNumber(discordLevel.totalXp)} XP
+                          <span className="text-steel-600"> (#{discordLevel.rank})</span>
+                        </span>
+                      </>
+                    )}
                     {player.club && (
                       <>
                         <span className="text-steel-800">/</span>

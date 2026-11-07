@@ -1,0 +1,182 @@
+import { getClub, shouldRethrow } from "@/lib/brawlstars";
+import { clubTags } from "@/lib/clubs";
+import { getMemberIconUrls } from "@/lib/assets";
+import { listAllMemberLinks } from "@/lib/members";
+import { getAllDiscordLevels } from "@/lib/draftbotLevels";
+import { getXpBaseline } from "@/lib/discordXp";
+import { getCurrentSeason } from "@/lib/season";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Tabs from "@/components/Tabs";
+import PageBanner from "@/components/PageBanner";
+import ClassementBoard, { ClassementEntry } from "@/components/ClassementBoard";
+import { PushGlyph } from "@/components/icons";
+
+export const revalidate = 900;
+
+const UNLINKED = "Compte non lié";
+const OUT_OF_CLUBS = "Hors des clubs";
+
+function formatNumber(n: number): string {
+  return n.toLocaleString("fr-FR");
+}
+
+function formatDay(date: string): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+const normTag = (tag: string) => tag.replace(/^#/, "").toUpperCase();
+
+export default async function ActivitePage() {
+  const season = getCurrentSeason();
+
+  const [levels, baseline, links] = await Promise.all([
+    getAllDiscordLevels().catch(() => null),
+    getXpBaseline(season.key).catch(() => null),
+    listAllMemberLinks().catch(() => []),
+  ]);
+
+  if (!levels) {
+    return (
+      <>
+        <Navbar />
+        <main className="flex min-h-[70vh] items-center justify-center px-6 text-center">
+          <div>
+            <h1 className="text-2xl font-bold text-paper">Activité Discord indisponible</h1>
+            <p className="mt-2 max-w-md text-sm text-steel-400">
+              Impossible de lire le classement de niveaux pour l&apos;instant. Réessaie dans
+              quelques minutes.
+            </p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  const clubs = await Promise.all(
+    clubTags().map(async (tag) => {
+      try {
+        return await getClub(tag);
+      } catch (err) {
+        if (shouldRethrow(err)) throw err;
+        return null;
+      }
+    })
+  );
+  const loadedClubs = clubs.filter((c): c is NonNullable<typeof c> => c !== null);
+  const iconUrls = await getMemberIconUrls(loadedClubs).catch(() => ({} as Record<string, string>));
+
+  const clubByTag = new Map<string, string>();
+  for (const club of loadedClubs) {
+    for (const m of club.members) clubByTag.set(normTag(m.tag), club.name);
+  }
+  const linkById = new Map(links.map((l) => [l.discordId, l]));
+
+  const gainEntries: ClassementEntry[] = [];
+  const totalEntries: ClassementEntry[] = [];
+  const extraScopes = new Set<string>();
+
+  for (const [id, lvl] of Object.entries(levels)) {
+    const link = linkById.get(id);
+    const clubName = link ? clubByTag.get(normTag(link.tag)) ?? OUT_OF_CLUBS : UNLINKED;
+    if (clubName === UNLINKED || clubName === OUT_OF_CLUBS) extraScopes.add(clubName);
+
+    const gain = baseline ? Math.max(0, lvl.totalXp - (baseline.users[id] ?? 0)) : 0;
+    const base: Omit<ClassementEntry, "value" | "delta"> = {
+      tag: link ? link.tag : `discord-${id}`,
+      name: lvl.name,
+      clubName,
+      iconUrl: link ? iconUrls[`#${normTag(link.tag)}`] ?? iconUrls[normTag(link.tag)] : undefined,
+      href: link ? undefined : null,
+    };
+
+    totalEntries.push({ ...base, value: lvl.totalXp, delta: baseline ? gain : undefined });
+    if (gain > 0) gainEntries.push({ ...base, value: gain });
+  }
+
+  const clubNames = [...loadedClubs.map((c) => c.name), ...extraScopes];
+  const totalGain = gainEntries.reduce((sum, e) => sum + e.value, 0);
+
+  const note = baseline
+    ? baseline.exact
+      ? `XP gagnée depuis le début de la saison (${formatDay(baseline.sourceDate)}).`
+      : `XP gagnée depuis le ${formatDay(baseline.sourceDate)} — début du suivi : les jours précédents de la saison ne sont pas comptés.`
+    : "La photo de départ de la saison n'a pas encore été prise : elle l'est au prochain passage automatique (chaque matin).";
+
+  const gainPanel = (
+    <div>
+      <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
+        {note}
+      </p>
+      <ClassementBoard
+        entries={gainEntries}
+        clubNames={clubNames}
+        valueLabel="XP gagnée"
+        valueIcon={<PushGlyph className="h-4 w-4 shrink-0" />}
+        emptyMessage={
+          baseline
+            ? "Personne n'a encore gagné d'XP depuis le début du suivi."
+            : "Pas encore de données : la photo de départ arrive au prochain passage automatique."
+        }
+      />
+    </div>
+  );
+
+  const totalPanel = (
+    <div>
+      <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
+        XP totale sur le Discord, depuis toujours. Le badge indique le gain de la saison.
+      </p>
+      <ClassementBoard
+        entries={totalEntries}
+        clubNames={clubNames}
+        valueLabel="XP totale"
+        deltaLabel="Saison"
+        emptyMessage="Aucun membre classé."
+      />
+    </div>
+  );
+
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen animate-fadeInUp px-4 pb-20 sm:px-8 lg:px-16">
+        <div className="mx-auto max-w-[1160px]">
+          <PageBanner
+            flush
+            kicker={`Purple Corp — Saison ${season.label}`}
+            title={
+              <>
+                Activité
+                <br />
+                Discord
+              </>
+            }
+            intro="Qui est le plus actif sur le Discord cette saison, mesuré en XP gagnée. Les membres dont le compte Discord est lié au site apparaissent avec leur club."
+            stats={[
+              { value: formatNumber(gainEntries.length), label: "Membres actifs" },
+              { value: formatNumber(totalGain), label: "XP gagnée" },
+            ]}
+          />
+
+          <Tabs
+            attached
+            defaultTab="gain"
+            tabs={[
+              { id: "gain", label: "Saison en cours", panel: gainPanel },
+              { id: "total", label: "XP totale", panel: totalPanel },
+            ]}
+          />
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}

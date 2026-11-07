@@ -29,6 +29,7 @@ export default function Footer() {
               <li><Link href="/clubs" className="hover:text-paper">Clubs</Link></li>
               <li><Link href="/classement" className="hover:text-paper">Classement</Link></li>
               <li><Link href="/pusheurs" className="hover:text-paper">Pusheurs</Link></li>
+              <li><Link href="/activite" className="hover:text-paper">Activité Discord</Link></li>
               <li><Link href="/actualites" className="hover:text-paper">Actualités</Link></li>
               <li><Link href="/saisons" className="hover:text-paper">Saisons passées</Link></li>
               <li><Link href="/support" className="hover:text-paper">Support</Link></li>

@@ -5,9 +5,8 @@
 // (components/PusherLeaderboard.tsx), pour rester cohérent sur tout le
 // site dès qu'un classement mélange plusieurs clubs.
 import { useMemo, useState, ReactNode } from "react";
-import Link from "next/link";
 import RankTierIcon from "@/components/RankTierIcon";
-import Podium from "@/components/Podium";
+import Podium, { MaybeLink } from "@/components/Podium";
 import { rankedTierIconPath } from "@/lib/rankedTier";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import { PushGlyph } from "@/components/icons";
@@ -20,6 +19,8 @@ export interface ClassementEntry {
   delta?: number;
   rankLabel?: string | null;
   iconUrl?: string | null;
+  /** undefined = fiche joueur du tag ; null = pas de lien. */
+  href?: string | null;
 }
 
 function formatNumber(n: number): string {
@@ -41,7 +42,7 @@ function ListHeader({ valueLabel, deltaLabel }: { valueLabel: string; deltaLabel
 
 function Row({
   index,
-  tag,
+  href,
   name,
   sub,
   rankLabel,
@@ -52,7 +53,7 @@ function Row({
   valueIcon,
 }: {
   index: number;
-  tag: string;
+  href: string | null;
   name: string;
   sub: string;
   rankLabel?: string | null;
@@ -63,8 +64,8 @@ function Row({
   valueIcon?: ReactNode;
 }) {
   return (
-    <Link
-      href={`/joueurs/${encodeURIComponent(tag.replace(/^#/, ""))}`}
+    <MaybeLink
+      href={href}
       className={`${ROW} py-3 no-underline transition hover:bg-panel2 ${
         last ? "" : "border-b border-paper/[0.07]"
       }`}
@@ -102,8 +103,12 @@ function Row({
           {formatNumber(value)}
         </span>
       </span>
-    </Link>
+    </MaybeLink>
   );
+}
+
+function entryHref(e: ClassementEntry): string | null {
+  return e.href === undefined ? `/joueurs/${encodeURIComponent(e.tag.replace(/^#/, ""))}` : e.href;
 }
 
 export default function ClassementBoard({
@@ -171,6 +176,7 @@ export default function ClassementBoard({
               rankLabel: e.rankLabel ?? undefined,
               iconUrl: e.iconUrl,
               rankIconSrc: e.rankLabel ? rankedTierIconPath(e.rankLabel) : null,
+              href: entryHref(e),
             }))}
           />
           <div className="overflow-hidden rounded-2xl border border-paper/10 bg-panel">
@@ -179,7 +185,7 @@ export default function ClassementBoard({
               <Row
                 key={e.tag}
                 index={i}
-                tag={e.tag}
+                href={entryHref(e)}
                 name={e.name}
                 sub={e.rankLabel ? `${e.clubName} · ${e.rankLabel}` : e.clubName}
                 rankLabel={e.rankLabel}

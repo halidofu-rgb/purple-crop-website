@@ -12,10 +12,31 @@ export interface PodiumEntry {
   rankIconSrc?: string | null;
   rankLabel?: string;
   iconUrl?: string | null;
+  /** Lien de la carte ; null = pas de lien (ex. membre Discord sans compte lié). */
+  href?: string | null;
 }
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR");
+}
+
+// Lien si on a une cible, simple bloc sinon.
+export function MaybeLink({
+  href,
+  className,
+  children,
+}: {
+  href: string | null;
+  className: string;
+  children: ReactNode;
+}) {
+  return href ? (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <div className={className}>{children}</div>
+  );
 }
 
 // Top 3 en trois cartes de même hauteur : seul le #1 porte la lueur violette
@@ -36,10 +57,14 @@ export default function Podium({
     <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {entries.slice(0, 3).map((entry, i) => {
         const lead = i === 0;
+        const href =
+          entry.href === undefined
+            ? `/joueurs/${encodeURIComponent(entry.tag.replace(/^#/, ""))}`
+            : entry.href;
         return (
-          <Link
+          <MaybeLink
             key={entry.tag}
-            href={`/joueurs/${encodeURIComponent(entry.tag.replace(/^#/, ""))}`}
+            href={href}
             className={`relative overflow-hidden rounded-2xl px-6 py-6 no-underline transition ${
               lead
                 ? "border border-zest2/40 bg-gradient-to-br from-iris/70 to-panel/85 hover:border-zest2/70"
@@ -95,7 +120,7 @@ export default function Podium({
                 </span>
               )}
             </div>
-          </Link>
+          </MaybeLink>
         );
       })}
     </div>
