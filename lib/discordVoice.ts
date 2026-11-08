@@ -3,9 +3,9 @@
 // Discord ne garde aucun historique de présence en vocal, et DraftBot ne
 // donne l'XP vocale qu'en Premium. On interroge donc régulièrement l'API REST
 // (GET /guilds/{id}/voice-states/{user}) pour chaque membre : s'il est
-// connecté à un salon vocal à cet instant (même en sourdine ou AFK), on lui
-// crédite le temps écoulé depuis le dernier passage. Le cumul est stocké par
-// saison dans Redis (voir /activite).
+// connecté à un salon vocal à cet instant, on lui crédite le temps écoulé
+// depuis le dernier passage — sauf s'il est dans le salon AFK ou a son micro
+// coupé (anti-abus). Le cumul est stocké par saison dans Redis (voir /activite).
 //
 // Aucune connexion permanente : un passage (route /api/cron/voice) toutes les
 // ~10 minutes suffit. Le bot a seulement besoin des permissions « Voir les
@@ -76,19 +76,51 @@ export async function listGuildMembers(): Promise<GuildMember[] | null> {
   return out;
 }
 
-// true = connecté à un salon vocal, false = non (Discord répond 404),
-// null = on ne sait pas (ex. salon que le bot n'a pas le droit de voir).
-async function isInVoice(userId: string): Promise<boolean | null> {
-  const res = await botFetch(`/guilds/${VOICE_GUILD_ID}/voice-states/${userId}`);
-  if (res.status === 404) return false;
+// Salon d'inactivité (AFK) du serveur : Paramètres du serveur > Vue d'ensemble.
+async function getAfkChannelId(): Promise<string | null> {
+  const res = await botFetch(`/guilds/${VOICE_GUILD_ID}`);
   if (!res.ok) return null;
-  const state = (await res.json()) as { channel_id?: string | null };
-  return !!state.channel_id;
+  const json = (await res.json()) as { afk_channel_id?: string | null };
+  return json.afk_channel_id ?? null;
+}
+
+// Salons supplémentaires à ignorer (ids séparés par des virgules), en plus du
+// salon AFK configuré sur le serveur.
+function extraIgnoredChannels(): string[] {
+  return (process.env.VOICE_IGNORED_CHANNEL_IDS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+type VoiceStatus = "active" | "ignored" | "absent" | "unknown";
+
+// absent = pas en vocal (Discord répond 404) ; ignored = connecté mais pas
+// compté (salon AFK, micro coupé ou sourdine) ; unknown = on ne sait pas
+// (ex. salon que le bot n'a pas le droit de voir).
+async function getVoiceStatus(userId: string, ignoredChannels: Set<string>): Promise<VoiceStatus> {
+  const res = await botFetch(`/guilds/${VOICE_GUILD_ID}/voice-states/${userId}`);
+  if (res.status === 404) return "absent";
+  if (!res.ok) return "unknown";
+  const s = (await res.json()) as {
+    channel_id?: string | null;
+    mute?: boolean;
+    self_mute?: boolean;
+    deaf?: boolean;
+    self_deaf?: boolean;
+  };
+  if (!s.channel_id) return "absent";
+  if (ignoredChannels.has(s.channel_id)) return "ignored";
+  // Micro coupé (par le membre ou par un modérateur). La sourdine casque
+  // coupe aussi le micro côté Discord, elle est donc couverte.
+  if (s.mute || s.self_mute || s.deaf || s.self_deaf) return "ignored";
+  return "active";
 }
 
 export interface VoiceSweepResult {
   polled: number;
-  inVoice: number;
+  inVoice: number; // comptés
+  ignored: number; // connectés mais non comptés (AFK / micro coupé)
   errors: number;
   creditedSeconds: number;
 }
@@ -104,8 +136,12 @@ export async function runVoiceSweep(
     ? Math.min(MAX_CREDIT_SECONDS, Math.max(MIN_CREDIT_SECONDS, Math.round((now - Number(lastRaw)) / 1000)))
     : DEFAULT_CREDIT_SECONDS;
 
+  const afk = await getAfkChannelId().catch(() => null);
+  const ignoredChannels = new Set([...(afk ? [afk] : []), ...extraIgnoredChannels()]);
+
   const queue = [...members];
   const present: string[] = [];
+  let ignored = 0;
   let errors = 0;
 
   await Promise.all(
@@ -113,9 +149,10 @@ export async function runVoiceSweep(
       for (;;) {
         const m = queue.pop();
         if (!m) return;
-        const inVoice = await isInVoice(m.id);
-        if (inVoice === null) errors += 1;
-        else if (inVoice) present.push(m.id);
+        const status = await getVoiceStatus(m.id, ignoredChannels);
+        if (status === "unknown") errors += 1;
+        else if (status === "ignored") ignored += 1;
+        else if (status === "active") present.push(m.id);
       }
     })
   );
@@ -127,7 +164,13 @@ export async function runVoiceSweep(
   }
   await redis.set(LAST_RUN_KEY, String(now));
 
-  return { polled: members.length, inVoice: present.length, errors, creditedSeconds: credit };
+  return {
+    polled: members.length,
+    inVoice: present.length,
+    ignored,
+    errors,
+    creditedSeconds: credit,
+  };
 }
 
 export async function saveVoiceNames(members: GuildMember[]): Promise<void> {

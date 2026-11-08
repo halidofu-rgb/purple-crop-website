@@ -214,8 +214,8 @@ export default async function ActivitePage() {
     <div>
       <p className="mb-4 flex items-center gap-2.5 text-xs text-steel-400">
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-signal shadow-[0_0_8px_#45E0D0]" />
-        Temps passé en vocal cette saison, relevé toutes les 10 minutes environ (sourdine et
-        AFK compris).
+        Temps passé en vocal cette saison, relevé toutes les 10 minutes environ. Les membres
+        dans le salon AFK ou avec le micro coupé ne sont pas comptés.
       </p>
       <ClassementBoard
         entries={voiceEntries}
