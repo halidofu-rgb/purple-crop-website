@@ -36,7 +36,12 @@ export default async function ActivitePage() {
   const season = getCurrentSeason();
 
   const [levels, baseline, links, voiceSeconds, voiceNames] = await Promise.all([
-    getAllDiscordLevels().catch(() => null),
+    // Hors build, une panne remonte : Next garde alors la dernière page
+    // correcte au lieu de figer « indisponible » pendant 15 minutes.
+    getAllDiscordLevels().catch((err) => {
+      if (shouldRethrow(err)) throw err;
+      return null;
+    }),
     getXpBaseline(season.key).catch(() => null),
     listAllMemberLinks().catch(() => []),
     getVoiceSeconds(season.key).catch(() => ({} as Record<string, number>)),

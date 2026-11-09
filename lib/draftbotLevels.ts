@@ -29,10 +29,14 @@ interface ApiUser {
   totalXp: string;
 }
 
-async function fetchPage(page: number): Promise<ApiUser[]> {
+// `fresh` : lecture toujours à jour (route du cron). Sinon, lecture mise en
+// cache par Next — indispensable pour les pages pré-générées : un `no-store`
+// y fait échouer le rendu au build ("Dynamic server usage") et la page se
+// retrouve figée sur son message d'erreur.
+async function fetchPage(page: number, fresh: boolean): Promise<ApiUser[]> {
   const res = await fetch(`${API_URL}/${GUILD_ID}?page=${page}`, {
     headers: { "User-Agent": "PurpleCorpSite/1.0" },
-    cache: "no-store",
+    ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: 1800 } }),
   });
   if (!res.ok) throw new Error(`DraftBot API ${res.status}`);
   const json = (await res.json()) as { users?: ApiUser[] };
@@ -41,11 +45,11 @@ async function fetchPage(page: number): Promise<ApiUser[]> {
 
 // Lit tout le classement (toutes les pages). Lève si l'API échoue : on ne
 // veut jamais enregistrer un classement partiel comme si c'était complet.
-export async function fetchAllDiscordLevels(): Promise<Record<string, DiscordLevel>> {
+async function loadAll(fresh: boolean): Promise<Record<string, DiscordLevel>> {
   const out: Record<string, DiscordLevel> = {};
   let rank = 0;
   for (let page = 0; page < MAX_PAGES; page++) {
-    const users = await fetchPage(page);
+    const users = await fetchPage(page, fresh);
     if (users.length === 0) break;
     for (const u of users) {
       rank += 1;
@@ -62,9 +66,12 @@ export async function fetchAllDiscordLevels(): Promise<Record<string, DiscordLev
   return out;
 }
 
+/** Lecture toujours à jour (cron quotidien). */
+export const fetchAllDiscordLevels = () => loadAll(true);
+
 // Mis en cache 30 min : le classement bouge peu et on évite ~4 appels par
 // visite de page. Si l'API échoue, la fonction lève (rien n'est mis en cache).
-export const getAllDiscordLevels = unstable_cache(fetchAllDiscordLevels, ["draftbot-levels", GUILD_ID], {
+export const getAllDiscordLevels = unstable_cache(() => loadAll(false), ["draftbot-levels", GUILD_ID], {
   revalidate: 1800,
 });
 
