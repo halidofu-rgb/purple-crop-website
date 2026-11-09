@@ -43,7 +43,10 @@ export default async function ActivitePage() {
       return null;
     }),
     getXpBaseline(season.key).catch(() => null),
-    listAllMemberLinks().catch(() => []),
+    listAllMemberLinks().catch((err) => {
+      if (shouldRethrow(err)) throw err;
+      return null;
+    }),
     getVoiceSeconds(season.key).catch(() => ({} as Record<string, number>)),
     getVoiceNames().catch(() => ({} as Record<string, string>)),
   ]);
@@ -57,7 +60,22 @@ export default async function ActivitePage() {
       .filter(Boolean)
   );
 
-  if (!levels) {
+  // Liaisons ou clubs introuvables (ex. page préparée pendant un déploiement) :
+  // on n'affiche rien plutôt que de marquer tout le monde « non lié » ou
+  // « hors des clubs » à tort.
+  const clubsForCheck = await Promise.all(
+    clubTags().map(async (tag) => {
+      try {
+        return await getClub(tag);
+      } catch (err) {
+        if (shouldRethrow(err)) throw err;
+        return null;
+      }
+    })
+  );
+  const loadedClubs = clubsForCheck.filter((c): c is NonNullable<typeof c> => c !== null);
+
+  if (!levels || !links || loadedClubs.length < clubTags().length) {
     return (
       <>
         <Navbar />
@@ -75,17 +93,6 @@ export default async function ActivitePage() {
     );
   }
 
-  const clubs = await Promise.all(
-    clubTags().map(async (tag) => {
-      try {
-        return await getClub(tag);
-      } catch (err) {
-        if (shouldRethrow(err)) throw err;
-        return null;
-      }
-    })
-  );
-  const loadedClubs = clubs.filter((c): c is NonNullable<typeof c> => c !== null);
   const iconUrls = await getMemberIconUrls(loadedClubs).catch(() => ({} as Record<string, string>));
 
   const clubByTag = new Map<string, string>();
