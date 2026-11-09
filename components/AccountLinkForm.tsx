@@ -59,9 +59,8 @@ export default function AccountLinkForm({
           className="w-full rounded-xl border border-paper/10 bg-panel2 px-4 py-2.5 text-sm text-paper placeholder:text-steel-400 focus:border-zest focus:outline-none"
         />
         <p className="mt-1.5 text-[11px] text-steel-400">
-          Ça relie ton Discord à ton profil Brawl Stars : tu apparais avec ton club dans le
-          classement d&apos;Activité Discord et ton niveau Discord s&apos;affiche sur ta fiche
-          joueur. Tu ne le fais qu&apos;une fois.
+          Ça relie ton Discord à ton profil Brawl Stars : ton niveau Discord s&apos;affiche sur ta
+          fiche joueur. Facultatif, et tu ne le fais qu&apos;une fois.
         </p>
       </div>
 

@@ -32,9 +32,8 @@ export default async function ComptePage() {
               Connecte-toi pour continuer
             </h1>
             <p className="mt-2 max-w-sm text-sm text-steel-400">
-              Lie ton compte Discord à ton tag Brawl Stars pour apparaître avec ton club dans
-              le classement d&apos;Activité Discord, afficher ton niveau Discord sur ta fiche
-              joueur et ajouter une présentation.
+              Lie ton compte Discord à ton tag Brawl Stars pour afficher ton niveau Discord sur
+              ta fiche joueur et ajouter une présentation.
             </p>
             <div className="mt-5 flex justify-center">
               <Button href="/api/auth/signin/discord" icon={<LogIn className="h-4 w-4" />}>

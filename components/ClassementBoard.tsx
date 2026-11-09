@@ -14,7 +14,8 @@ import { PushGlyph } from "@/components/icons";
 export interface ClassementEntry {
   tag: string;
   name: string;
-  clubName: string;
+  /** Absent = pas de notion de club (ex. classement d'activité Discord). */
+  clubName?: string;
   value: number;
   delta?: number;
   rankLabel?: string | null;
@@ -146,20 +147,22 @@ export default function ClassementBoard({
 
   return (
     <div>
-      <div className="mb-4 flex w-fit flex-wrap gap-0.5 rounded-lg border border-paper/10 p-0.5">
-        {scopes.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setScope(s)}
-            className={`rounded-md px-3.5 py-1.5 text-xs tracking-[0.1em] uppercase transition-colors ${
-              scope === s ? "bg-zest/20 text-zest2" : "text-steel-500 hover:text-steel-300"
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      {clubNames.length > 0 && (
+        <div className="mb-4 flex w-fit flex-wrap gap-0.5 rounded-lg border border-paper/10 p-0.5">
+          {scopes.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setScope(s)}
+              className={`rounded-md px-3.5 py-1.5 text-xs tracking-[0.1em] uppercase transition-colors ${
+                scope === s ? "bg-zest/20 text-zest2" : "text-steel-500 hover:text-steel-300"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <p className="rounded-2xl border border-paper/10 bg-panel px-6 py-8 text-sm text-steel-400">
@@ -190,13 +193,7 @@ export default function ClassementBoard({
                 index={i}
                 href={entryHref(e)}
                 name={e.name}
-                sub={
-                  e.detail
-                    ? `${e.clubName} · ${e.detail}`
-                    : e.rankLabel
-                      ? `${e.clubName} · ${e.rankLabel}`
-                      : e.clubName
-                }
+                sub={[e.clubName, e.detail ?? e.rankLabel].filter(Boolean).join(" · ")}
                 rankLabel={e.rankLabel}
                 iconUrl={e.iconUrl}
                 value={e.value}

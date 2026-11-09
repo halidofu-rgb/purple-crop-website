@@ -6,7 +6,7 @@ import PlayerAvatar from "@/components/PlayerAvatar";
 export interface PodiumEntry {
   tag: string;
   name: string;
-  clubName: string;
+  clubName?: string;
   value: number;
   delta?: number;
   rankIconSrc?: string | null;
@@ -81,13 +81,15 @@ export default function Podium({
               <span className={`rank-index text-[13px] tracking-[0.08em] ${lead ? "text-zest2" : "text-ash"}`}>
                 [{String(i + 1).padStart(2, "0")}]
               </span>
-              <span
-                className={`rounded-md px-2.5 py-1 text-[10.5px] uppercase tracking-[0.14em] ${
-                  lead ? "border border-zest2/40 bg-iris/60 text-zest2" : "border border-paper/15 text-steel-400"
-                }`}
-              >
-                {entry.clubName}
-              </span>
+              {entry.clubName && (
+                <span
+                  className={`rounded-md px-2.5 py-1 text-[10.5px] uppercase tracking-[0.14em] ${
+                    lead ? "border border-zest2/40 bg-iris/60 text-zest2" : "border border-paper/15 text-steel-400"
+                  }`}
+                >
+                  {entry.clubName}
+                </span>
+              )}
             </div>
 
             <div className="relative flex items-center gap-3.5">
