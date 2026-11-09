@@ -17,7 +17,7 @@ export const VOICE_GUILD_ID =
   process.env.DISCORD_GUILD_ID || process.env.DRAFTBOT_GUILD_ID || "1424376123411796038";
 
 const MIN_CREDIT_SECONDS = 60;
-const MAX_CREDIT_SECONDS = 15 * 60; // un trou (site endormi...) ne crédite jamais plus de 15 min
+const MAX_CREDIT_SECONDS = 25 * 60; // au-delà, c'est une coupure : on crédite le défaut
 const DEFAULT_CREDIT_SECONDS = 10 * 60;
 const CONCURRENCY = 6;
 
@@ -132,9 +132,13 @@ export async function runVoiceSweep(
   const redis = getRedis();
   const now = Date.now();
   const lastRaw = await redis.get(LAST_RUN_KEY);
-  const credit = lastRaw
-    ? Math.min(MAX_CREDIT_SECONDS, Math.max(MIN_CREDIT_SECONDS, Math.round((now - Number(lastRaw)) / 1000)))
-    : DEFAULT_CREDIT_SECONDS;
+  // Temps crédité = temps écoulé depuis le dernier passage, tant que
+  // l'intervalle reste raisonnable (le déclencheur peut être espacé, par
+  // exemple toutes les 15-20 min). Après une longue coupure (nuit, déclencheur
+  // en pause), on ne sait pas depuis quand les gens sont là : crédit par défaut.
+  const elapsed = lastRaw ? Math.round((now - Number(lastRaw)) / 1000) : Infinity;
+  const credit =
+    elapsed <= MAX_CREDIT_SECONDS ? Math.max(MIN_CREDIT_SECONDS, elapsed) : DEFAULT_CREDIT_SECONDS;
 
   const afk = await getAfkChannelId().catch(() => null);
   const ignoredChannels = new Set([...(afk ? [afk] : []), ...extraIgnoredChannels()]);
